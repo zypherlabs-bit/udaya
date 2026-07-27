@@ -1,0 +1,114 @@
+{
+  "proposal_threshold": {
+    "value": 0.1,
+    "unit": "percentage of circulating supply",
+    "description": "Minimum UDYA required to submit a proposal"
+  },
+  "voting_period": {
+    "blocks": 20160,
+    "approx_days": 14
+  },
+  "quorum": {
+    "percentage": 10,
+    "description": "Minimum percentage of circulating supply required to vote"
+  },
+  "pass_threshold": {
+    "percentage": 51,
+    "description": "Simple majority required for standard proposals"
+  },
+  "supermajority": {
+    "percentage": 60,
+    "description": "Required for constitutional amendments and monetary policy changes"
+  },
+  "vote_weight": "1 UDYA = 1 vote",
+  "max_vote_cap": {
+    "percentage": 10,
+    "description": "Maximum voting power any single wallet can exert"
+  },
+  "current_stats": {
+    "total_proposals": 12,
+    "active_proposals": 4,
+    "passed_proposals": 6,
+    "rejected_proposals": 2,
+    "total_votes_cast": 8234,
+    "voter_turnout_percentage": 67.2,
+    "treasury_balance": 145678,
+    "last_election_date": "2026-05-01",
+    "next_election_date": "2027-05-01"
+  },
+  "active_proposals": [
+    {
+      "id": "BFIP-004",
+      "title": "Protocol Upgrade v1.2 — Taproot Optimization",
+      "created_days_ago": 14,
+      "ends_in_days": 7,
+      "author": "Udaya Core Devs",
+      "for_percentage": 78,
+      "against_percentage": 12,
+      "abstain_percentage": 10,
+      "votes": 1847,
+      "status": "active"
+    },
+    {
+      "id": "BFIP-005",
+      "title": "Community Treasury Grant — Developer SDK Fund",
+      "created_days_ago": 10,
+      "ends_in_days": 11,
+      "author": "Community Member",
+      "for_percentage": 62,
+      "against_percentage": 28,
+      "abstain_percentage": 10,
+      "votes": 934,
+      "status": "active"
+    },
+    {
+      "id": "BFIP-006",
+      "title": "Mining Decentralization Incentive Program",
+      "created_days_ago": 8,
+      "ends_in_days": 13,
+      "author": "Mining Pool Operators",
+      "for_percentage": 85,
+      "against_percentage": 8,
+      "abstain_percentage": 7,
+      "votes": 2104,
+      "status": "active"
+    }
+  ],
+  "council_members": [
+    {
+      "role": "Council Chair",
+      "region": "North America",
+      "term_end": "2027-05-01"
+    },
+    {
+      "role": "Council Vice-Chair",
+      "region": "Europe",
+      "term_end": "2027-05-01"
+    },
+    {
+      "role": "Technical Lead",
+      "region": "Asia Pacific",
+      "term_end": "2028-05-01"
+    },
+    {
+      "role": "Treasury Chair",
+      "region": "North America",
+      "term_end": "2028-05-01"
+    },
+    {
+      "role": "Community Representative",
+      "region": "Europe",
+      "term_end": "2027-05-01"
+    },
+    {
+      "role": "Security Lead",
+      "region": "Asia Pacific",
+      "term_end": "2028-05-01"
+    },
+    {
+      "role": "Mining Representative",
+      "region": "Global",
+      "term_end": "2027-05-01"
+    }
+  ]
+}

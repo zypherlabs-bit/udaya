@@ -1,0 +1,99 @@
+{
+  "transactions": [
+    {
+      "id": "TREAS-001",
+      "date": "2026-05-01",
+      "type": "deposit",
+      "source": "Block subsidy (blocks 0-4199)",
+      "amount": 84000,
+      "balance_after": 84000,
+      "txid": "N/A (genesis block)",
+      "approval": "Protocol-enforced",
+      "purpose": "Initial treasury accumulation from block subsidy allocation"
+    },
+    {
+      "id": "TREAS-002",
+      "date": "2026-05-08",
+      "type": "deposit",
+      "source": "Block subsidy (blocks 4200-8399)",
+      "amount": 84000,
+      "balance_after": 168000,
+      "txid": "N/A (in-block)",
+      "approval": "Protocol-enforced",
+      "purpose": "Weekly treasury accumulation"
+    },
+    {
+      "id": "TREAS-003",
+      "date": "2026-05-15",
+      "type": "deposit",
+      "source": "Block subsidy (blocks 8400-12599)",
+      "amount": 84000,
+      "balance_after": 252000,
+      "txid": "N/A (in-block)",
+      "approval": "Protocol-enforced",
+      "purpose": "Weekly treasury accumulation"
+    },
+    {
+      "id": "TREAS-004",
+      "date": "2026-05-22",
+      "type": "transfer_to_ecosystem",
+      "source": "Treasury",
+      "amount": 50000,
+      "balance_after": 202000,
+      "destination": "Ecosystem Fund",
+      "approval": "5-of-7 Council multisig",
+      "purpose": "Seed ecosystem fund for exchange listings and market making"
+    },
+    {
+      "id": "TREAS-005",
+      "date": "2026-05-22",
+      "type": "transfer_to_grants",
+      "source": "Treasury",
+      "amount": 25000,
+      "balance_after": 177000,
+      "destination": "Community Grants",
+      "approval": "5-of-7 Council multisig",
+      "purpose": "Seed community grants program"
+    },
+    {
+      "id": "TREAS-006",
+      "date": "2026-05-22",
+      "type": "transfer_to_bounty",
+      "source": "Treasury",
+      "amount": 10000,
+      "balance_after": 167000,
+      "destination": "Bug Bounty",
+      "approval": "5-of-7 Council multisig",
+      "purpose": "Seed bug bounty program"
+    },
+    {
+      "id": "TREAS-007",
+      "date": "2026-06-01",
+      "type": "grant_disbursement",
+      "source": "Grants",
+      "amount": 5322,
+      "balance_after": 161678,
+      "destination": "Developer SDK Grant",
+      "approval": "3-of-5 Grants Committee",
+      "purpose": "Phase 1 disbursement for SDK development grant (BFIP-001)"
+    },
+    {
+      "id": "TREAS-008",
+      "date": "2026-06-01",
+      "type": "operational_expense",
+      "source": "Treasury",
+      "amount": 16000,
+      "balance_after": 145678,
+      "destination": "Infrastructure providers",
+      "approval": "5-of-7 Council multisig",
+      "purpose": "Seed node hosting, DNS infrastructure, monitoring (Q2 2026)"
+    }
+  ],
+  "balance_summary": {
+    "treasury": 145678,
+    "ecosystem": 50000,
+    "grants": 19678,
+    "bug_bounty": 10000,
+    "total_under_management": 225356
+  }
+}

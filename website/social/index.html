@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Social & Community</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <style>
+        .post-card { padding: 1.25rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 0.75rem; }
+        .post-card .post-meta { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.5rem; }
+        .post-card .post-content { font-size: 0.9rem; line-height: 1.6; }
+        .post-card .post-stats { display: flex; gap: 1rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--text-muted); }
+        .social-card { padding: 1.5rem; text-align: center; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); transition: var(--transition); }
+        .social-card:hover { border-color: var(--border-hover); transform: translateY(-2px); }
+        .social-card .social-icon { font-size: 2.5rem; margin-bottom: 0.5rem; }
+        .social-card .social-name { font-size: 1rem; font-weight: 600; }
+        .social-card .social-followers { font-size: 0.85rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand"><span class="brand-icon">⚡</span> Udaya Ecosystem</a>
+            <button class="nav-toggle">☰</button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a><a href="/ecosystem/">Ecosystem</a><a href="/verification/">Verification</a>
+                <a href="/bug-bounty/">Bounty</a><a href="/mining/">Mining</a><a href="/developer/">Developers</a>
+                <a href="/social/" class="active">Social</a><a href="/metrics/">Metrics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding:40px 20px;">
+        <span class="hero-badge badge-blue">📱 Social Media Growth Engine</span>
+        <h1>Udaya Social Hub</h1>
+        <p>Follow Udaya across all platforms for daily ecosystem updates, blockchain tutorials, mining guides, and community news.</p>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Social Stats -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">5.2K</div><div class="stat-label">Total Followers</div></div>
+            <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">500+</div><div class="stat-label">Total Posts</div></div>
+            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">15%</div><div class="stat-label">Avg Engagement</div></div>
+        </div>
+
+        <!-- Social Channels -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📱 Follow Udaya</h2></div>
+            <div class="grid grid-3">
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">𝕏</div>
+                    <div class="social-name">X / Twitter</div>
+                    <div class="social-followers">@UdayaChain · 2.5K followers</div>
+                    <div class="badge badge-blue" style="margin-top:0.5rem;">Daily Updates</div>
+                </a>
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">✈️</div>
+                    <div class="social-name">Telegram</div>
+                    <div class="social-followers">t.me/Udaya · 1.8K members</div>
+                    <div class="badge badge-green" style="margin-top:0.5rem;">Community Chat</div>
+                </a>
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">💬</div>
+                    <div class="social-name">Discord</div>
+                    <div class="social-followers">discord.gg/Udaya · 850 members</div>
+                    <div class="badge badge-purple" style="margin-top:0.5rem;">Developer Chat</div>
+                </a>
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">📺</div>
+                    <div class="social-name">YouTube</div>
+                    <div class="social-followers">Udaya Channel · 320 subscribers</div>
+                    <div class="badge badge-red" style="margin-top:0.5rem;">Tutorials</div>
+                </a>
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">💼</div>
+                    <div class="social-name">LinkedIn</div>
+                    <div class="social-followers">Udaya Foundation · 450 followers</div>
+                    <div class="badge badge-orange" style="margin-top:0.5rem;">Professional</div>
+                </a>
+                <a href="#" class="social-card" style="text-decoration:none;color:inherit;">
+                    <div class="social-icon">📂</div>
+                    <div class="social-name">GitHub</div>
+                    <div class="social-followers">github.com/Udaya · 75 stars</div>
+                    <div class="badge badge-blue" style="margin-top:0.5rem;">Open Source</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Recent Posts -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📝 Recent Posts</h2><p>Latest content from across our social channels.</p></div>
+            <div class="post-card">
+                <div class="post-meta"><span>𝕏 Twitter</span><span>2 hours ago</span></div>
+                <div class="post-content">⚡ Udaya Mainnet is ready! Our comprehensive Go/No-Go review confirms all 14 critical success criteria are met. Independent users can now run nodes, mine, and transact. The decentralized future starts today. 🔗 Udaya.org</div>
+                <div class="post-stats"><span>❤️ 128</span><span>🔄 45</span><span>💬 12</span></div>
+            </div>
+            <div class="post-card">
+                <div class="post-meta"><span>📺 YouTube</span><span>1 day ago</span></div>
+                <div class="post-content">🎬 New Tutorial: "How to Run a Udaya Full Node in 10 Minutes" - Step-by-step guide covering installation, configuration, and synchronization. Watch now → youtube.com/Udaya</div>
+                <div class="post-stats"><span>👁️ 230 views</span><span>👍 45</span><span>💬 8</span></div>
+            </div>
+            <div class="post-card">
+                <div class="post-meta"><span>✈️ Telegram</span><span>3 days ago</span></div>
+                <div class="post-content">📢 Community Update: Udaya Bug Bounty program is now live! Rewards up to $50,000 in UDYA for critical vulnerabilities. Help us secure the network and earn rewards. Details: bounty.Udaya.org</div>
+                <div class="post-stats"><span>👁️ 450 views</span><span>💬 23</span></div>
+            </div>
+            <div class="post-card">
+                <div class="post-meta"><span>💼 LinkedIn</span><span>5 days ago</span></div>
+                <div class="post-content">Udaya Foundation is hiring! We're looking for Rust developers, blockchain engineers, and community managers to help build the decentralized future. Remote-first, competitive UDYA compensation. Apply at Udaya.org/careers</div>
+                <div class="post-stats"><span>👍 89</span><span>💬 15</span></div>
+            </div>
+        </div>
+
+        <!-- Newsletter -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📧 Ecosystem Newsletter</h2><p>Subscribe for weekly updates, tutorials, and ecosystem news.</p></div>
+            <div class="card">
+                <div style="display:flex;gap:1rem;align-items:center;flex-wrap:wrap;">
+                    <input type="email" class="form-input" placeholder="your@email.com" style="flex:1;min-width:250px;">
+                    <button class="btn btn-primary" onclick="alert('Subscribed! Check your inbox for confirmation.')">📬 Subscribe</button>
+                </div>
+                <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">Weekly ecosystem updates · No spam · Unsubscribe anytime</p>
+            </div>
+        </div>
+
+        <!-- Content Calendar -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📅 Content Calendar</h2><p>Automated content schedule for the next 7 days.</p></div>
+            <div class="table-container">
+                <table>
+                    <thead><tr><th>Day</th><th>Platform</th><th>Content Type</th><th>Topic</th></tr></thead>
+                    <tbody>
+                        <tr><td>Mon</td><td>𝕏 Twitter</td><td>Educational</td><td>How SHA-256d Mining Works</td></tr>
+                        <tr><td>Tue</td><td>📺 YouTube</td><td>Tutorial</td><td>Setting Up Your First Udaya Wallet</td></tr>
+                        <tr><td>Wed</td><td>✈️ Telegram</td><td>Community</td><td>Weekly Development Update</td></tr>
+                        <tr><td>Thu</td><td>💼 LinkedIn</td><td>Technical</td><td>Udaya Architecture Deep Dive</td></tr>
+                        <tr><td>Fri</td><td>𝕏 Twitter</td><td>Milestone</td><td>Ecosystem Growth Report</td></tr>
+                        <tr><td>Sat</td><td>📺 YouTube</td><td>Mining Guide</td><td>ASIC Mining Optimization Tips</td></tr>
+                        <tr><td>Sun</td><td>All</td><td>Weekly Summary</td><td>Weekly Ecosystem Newsletter</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Automation Stats -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>🤖 Growth Automation</h2><p>AI-powered content creation, scheduling, and engagement tracking.</p></div>
+            <div class="grid grid-3">
+                <div class="card card-glow"><div class="card-icon" style="background:rgba(59,130,246,0.1);color:var(--accent-blue);">🤖</div><h3>AI Content Generator</h3><p style="font-size:0.85rem;">Automatically generates educational content, tutorials, and ecosystem updates optimized for each platform.</p></div>
+                <div class="card card-glow-blue"><div class="card-icon" style="background:rgba(16,185,129,0.1);color:var(--accent-green);">📅</div><h3>Smart Scheduling</h3><p style="font-size:0.85rem;">Optimal posting times calculated per platform to maximize engagement and reach.</p></div>
+                <div class="card card-glow"><div class="card-icon" style="background:rgba(247,147,26,0.1);color:var(--accent-orange);">📊</div><h3>Analytics Engine</h3><p style="font-size:0.85rem;">Tracks followers, engagement rates, conversions, and wallet downloads per campaign.</p></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div><h4>⚡ Udaya Ecosystem</h4><p>Follow us for the latest Udaya news, tutorials, and community updates.</p></div>
+            <div><h4>Social</h4><a href="#">X / Twitter</a><a href="#">Telegram</a><a href="#">Discord</a><a href="#">YouTube</a></div>
+            <div><h4>Content</h4><a href="#">Blog</a><a href="#">Newsletter</a><a href="#">Tutorials</a><a href="#">Documentation</a></div>
+            <div><h4>Resources</h4><a href="https://github.com/Udaya/Udaya">GitHub</a><a href="#">Brand Assets</a></div>
+        </div>
+        <div class="footer-bottom"><span>Udaya Foundation © 2026</span><span>social.Udaya.org</span></div>
+    </footer>
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

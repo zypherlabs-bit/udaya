@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Whitepaper — Technical Specification & Documentation</title>
+    <meta name="description" content="The complete Udaya whitepaper — a next-generation Proof-of-Work cryptocurrency. Technical specification, consensus algorithm, wallet standards, security model, tokenomics, governance, and roadmap.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/">⚡ Udaya</a>
+        <span class="subtitle">Whitepaper Portal</span>
+        <div class="nav-links">
+            <a href="/whitepaper/" class="active">Whitepaper</a>
+            <a href="/whitepaper/roadmap.html">Roadmap</a>
+            <a href="/whitepaper/tokenomics.html">Tokenomics</a>
+            <a href="/whitepaper/governance.html">Governance</a>
+            <a href="/whitepaper/security-model.html">Security</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">📄 Udaya Whitepaper</h1>
+        <p class="page-subtitle">A Next-Generation Proof-of-Work Cryptocurrency — Complete Technical Specification & Documentation</p>
+
+        <!-- Metadata -->
+        <div class="tags">
+            <span class="badge badge-orange">v1.0.0</span>
+            <span class="badge badge-green">Mainnet Ready</span>
+            <span class="badge badge-blue">June 2026</span>
+            <span class="badge badge-cyan">SHA-256d</span>
+            <span class="badge badge-purple">BIP-39/44/49/84/86</span>
+        </div>
+
+        <!-- Action Bar: Download + Print -->
+        <div class="action-bar">
+            <a href="Udaya-whitepaper.pdf" class="download-btn" id="downloadPdfBtn" onclick="generatePDF(event);">📥 Download PDF Version</a>
+            <button class="print-btn" onclick="window.print();">🖨️ Print / Save as PDF</button>
+            <span style="color: var(--text-muted); font-size: 0.85rem; margin-left: auto;">~2,400 words · 9 sections</span>
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" id="searchInput" placeholder="Search the whitepaper — type to find sections, terms, or concepts..." oninput="searchWhitepaper(this.value)">
+            <div class="search-results-count" id="searchResultsCount"></div>
+        </div>
+
+        <!-- Table of Contents -->
+        <div class="toc" id="tableOfContents">
+            <div class="toc-title">📑 Table of Contents</div>
+            <a href="#abstract">1. Abstract</a>
+            <a href="#consensus">2. Consensus Algorithm</a>
+            <a href="#network">3. P2P Network Architecture</a>
+            <a href="#wallet">4. Wallet Standards</a>
+            <a href="#security">5. Security Model</a>
+            <a href="#governance">6. Governance</a>
+            <a href="#tokenomics">7. Tokenomics</a>
+            <a href="#roadmap">8. Roadmap</a>
+            <a href="#conclusion">9. Conclusion</a>
+        </div>
+
+        <!-- =============================================
+             SECTION 1 — ABSTRACT
+             ============================================= -->
+        <h2 class="section-title" id="abstract" data-section="1">1. Abstract</h2>
+        <p>Udaya is a next-generation Proof-of-Work cryptocurrency that combines the proven security of Bitcoin's SHA-256d consensus with modern BIP standards, comprehensive wallet support (BIP-39/32/44/49/84/86), and built-in governance. This paper describes the technical architecture, consensus mechanism, network protocol, wallet standards, security model, and tokenomics of the Udaya network.</p>
+
+        <div class="highlight-box">
+            <strong>Key Innovations</strong>
+            <ul class="content-list">
+                <li><strong>Bitcoin-compatible SHA-256d Proof-of-Work</strong> — ASIC-minable with proven security guarantees</li>
+                <li><strong>Full BIP-39/32/44/49/84/86 wallet compliance</strong> — Legacy, SegWit, and Taproot support</li>
+                <li><strong>BIP-173 bech32 and BIP-350 bech32m address formats</strong> — Future-proof addressing</li>
+                <li><strong>On-chain governance with proposal/voting system</strong> — Community-driven decision making</li>
+                <li><strong>Adversarial attack simulation and fuzzing engine</strong> — Military-grade security testing</li>
+                <li><strong>Chain split detection and flood protection</strong> — Network resilience engineering</li>
+            </ul>
+        </div>
+
+        <p>Udaya achieves zero premine, zero ICO, and zero founder allocation — making it one of the most fairly distributed cryptocurrencies in the space. With a maximum supply of 21 million UDYA and a halving schedule identical to Bitcoin, Udaya ensures long-term economic sustainability.</p>
+
+        <!-- =============================================
+             SECTION 2 — CONSENSUS ALGORITHM
+             ============================================= -->
+        <h2 class="section-title" id="consensus" data-section="2">2. Consensus Algorithm</h2>
+        <p>Udaya uses <strong>Double SHA-256 (SHA-256d)</strong> as its Proof-of-Work algorithm — identical to Bitcoin. This decision was made deliberately to leverage the billions of dollars invested in ASIC mining hardware and the extensive security analysis that Bitcoin's consensus algorithm has undergone over the past decade.</p>
+
+        <h3>Block Parameters</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>Parameter</th><th>Value</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Algorithm</td><td>SHA-256d</td><td>Double SHA-256</td></tr>
+                <tr><td>Block Time</td><td>600 seconds</td><td>10 minutes</td></tr>
+                <tr><td>Difficulty Adjustment</td><td>Every 2,016 blocks</td><td>~2 weeks</td></tr>
+                <tr><td>Initial Reward</td><td>50 UDYA</td><td>5,000,000,000 satoshis</td></tr>
+                <tr><td>Halving Interval</td><td>210,000 blocks</td><td>~4 years</td></tr>
+                <tr><td>Maximum Supply</td><td>21,000,000 UDYA</td><td>Hard cap</td></tr>
+                <tr><td>Block Version</td><td>1</td><td>Extended for future upgrades</td></tr>
+                <tr><td>Max Block Size</td><td>1,000,000 bytes</td><td>1 MB base</td></tr>
+                <tr><td>Max Block Weight</td><td>4,000,000 WU</td><td>SegWit compatible</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Difficulty Adjustment Algorithm</h3>
+        <p>Udaya implements the Bitcoin DAA (Difficulty Adjustment Algorithm), which recalculates the target every 2,016 blocks based on the actual time taken to mine the previous period. The adjustment is constrained to a factor of 4 (minimum 1/4, maximum 4x) to prevent extreme difficulty swings.</p>
+
+        <div class="highlight-box">
+            <strong>Difficulty Calculation</strong>
+            <pre>new_target = old_target * actual_timespan / expected_timespan
+clamp(new_target, old_target / 4, old_target * 4)</pre>
+        </div>
+
+        <h3>Anti-Selfish Mining Protection</h3>
+        <p>Udaya includes built-in detection of selfish mining patterns. Blocks with abnormally fast timestamps (under 1 second) or long gaps (over 1 hour) are flagged for analysis. Maximum reorg depth is limited to 6 blocks to prevent deep chain reorganizations.</p>
+
+        <h3>Block Validation</h3>
+        <p>Each block undergoes rigorous validation including: proof-of-work check, timestamp bounds, difficulty target compliance, transaction merkle root verification, coinbase maturity, signature verification for all inputs, and double-spend prevention.</p>
+
+        <!-- =============================================
+             SECTION 3 — P2P NETWORK
+             ============================================= -->
+        <h2 class="section-title" id="network" data-section="3">3. P2P Network Architecture</h2>
+        <p>The Udaya P2P network uses a Bitcoin-compatible wire protocol with custom magic bytes (<code>0xBF591AE7</code>). This design enables compatibility with existing Bitcoin tooling while establishing a distinct network identity.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Feature</th><th>Status</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>TCP Connections</td><td>✅ Implemented</td><td>Persistent TCP peer connections with automatic reconnection</td></tr>
+                <tr><td>Version Handshake</td><td>✅ Implemented</td><td>Version/Verack protocol with protocol version negotiation</td></tr>
+                <tr><td>DNS Seeds</td><td>✅ Implemented</td><td>Automatic peer discovery via DNS seed nodes</td></tr>
+                <tr><td>Block Relay</td><td>✅ Implemented</td><td>Inv/GetData/Block message propagation</td></tr>
+                <tr><td>Transaction Relay</td><td>✅ Implemented</td><td>Inv/GetData/Tx message propagation</td></tr>
+                <tr><td>Headers Sync</td><td>✅ Implemented</td><td>GetHeaders/Headers protocol for efficient sync</td></tr>
+                <tr><td>Ping/Pong</td><td>✅ Implemented</td><td>Connection keepalive with timeout detection</td></tr>
+                <tr><td>Addr Relay</td><td>✅ Implemented</td><td>Peer address propagation for network discovery</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Protocol Details</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>Field</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Network Magic</td><td><code>0xBF591AE7</code></td></tr>
+                <tr><td>Default Port</td><td>9798</td></tr>
+                <tr><td>Protocol Version</td><td>70016</td></tr>
+                <tr><td>Message Header Size</td><td>24 bytes</td></tr>
+                <tr><td>Max Payload Size</td><td>32 MB</td></tr>
+                <tr><td>User Agent</td><td><code>/Udaya:1.0.0/</code></td></tr>
+            </tbody>
+        </table>
+
+        <h3>Network Resilience</h3>
+        <p>Udaya implements flood protection with per-peer rate limiting (100 transactions per second per peer) and ban scoring for offenders. Connection management includes automatic peer rotation, address ban list management, and maximum connection limits (125 total, 8 outbound).</p>
+
+        <!-- =============================================
+             SECTION 4 — WALLET STANDARDS
+             ============================================= -->
+        <h2 class="section-title" id="wallet" data-section="4">4. Wallet Standards</h2>
+        <p>Udaya implements the complete suite of Bitcoin Improvement Proposals for HD wallets, ensuring maximum compatibility with existing wallet software and hardware wallets.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Standard</th><th>Description</th><th>Derivation Path</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>BIP-39</strong></td><td>Mnemonic seed phrases (12-24 words)</td><td>2048-word official English list</td></tr>
+                <tr><td><strong>BIP-32</strong></td><td>Hierarchical Deterministic Wallets</td><td>CKD with hardened key derivation</td></tr>
+                <tr><td><strong>BIP-44</strong></td><td>Multi-account (Legacy P2PKH)</td><td><code>m/44'/257'/0'/0/0</code></td></tr>
+                <tr><td><strong>BIP-49</strong></td><td>P2SH-wrapped SegWit</td><td><code>m/49'/257'/0'/0/0</code></td></tr>
+                <tr><td><strong>BIP-84</strong></td><td>Native SegWit (bech32)</td><td><code>m/84'/257'/0'/0/0</code></td></tr>
+                <tr><td><strong>BIP-86</strong></td><td>Taproot (bech32m)</td><td><code>m/86'/257'/0'/0/0</code></td></tr>
+                <tr><td><strong>BIP-173</strong></td><td>bech32 encoding</td><td>BCH error-correcting codes</td></tr>
+                <tr><td><strong>BIP-350</strong></td><td>bech32m encoding</td><td>For Taproot (witness v1+)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Udaya Network Parameters:</strong><br>
+            Coin Type: <code>257'</code> (0x80000101) — Registered with SLIP-44<br>
+            Mainnet HRP (BIP-173): <code>btf</code><br>
+            Testnet HRP (BIP-173): <code>tbtf</code><br>
+            Address Examples: <code>btf1q...</code> (bech32), <code>btf1p...</code> (bech32m/Taproot)
+        </div>
+
+        <h3>Wallet Features</h3>
+        <ul class="content-list">
+            <li><strong>Seed Generation</strong> — Cryptographically secure random entropy (128-256 bits) with mnemonic encoding</li>
+            <li><strong>HD Derivation</strong> — Full BIP-32 tree with hardened and non-hardened key derivation</li>
+            <li><strong>Multi-Sig Support</strong> — P2SH and P2WSH multi-signature addresses</li>
+            <li><strong>Import/Export</strong> — WIF private keys, BIP-38 encrypted keys, xpub/xprv extended keys</li>
+            <li><strong>Wallet Recovery</strong> — Seed phrase recovery with optional passphrase (BIP-39)</li>
+        </ul>
+
+        <!-- =============================================
+             SECTION 5 — SECURITY MODEL
+             ============================================= -->
+        <h2 class="section-title" id="security" data-section="5">5. Security Model</h2>
+        <p>Udaya incorporates a comprehensive security framework that goes beyond standard blockchain implementations. Every component — from consensus to networking to wallet — is tested against known and novel attack vectors.</p>
+
+        <h3>Fuzzing Engine</h3>
+        <p>Automated fuzzing tests block headers, transactions, serialization, mempool operations, and consensus rules with random mutations. The fuzzer generates millions of mutated inputs and validates that the node handles all edge cases gracefully without crashes, panics, or consensus failures.</p>
+
+        <div class="highlight-box">
+            <strong>Fuzzing Coverage Areas</strong>
+            <ul class="content-list">
+                <li>Block header deserialization — timestamp, nonce, merkle root, bits fields</li>
+                <li>Transaction deserialization — inputs, outputs, scripts, witness data</li>
+                <li>Serialization round-trips — encode/decode consistency checks</li>
+                <li>Mempool operations — duplicate, conflicting, malformed transactions</li>
+                <li>Consensus rules — difficulty target, signature verification, coinbase maturity</li>
+            </ul>
+            <p style="margin-top: 0.75rem;"><strong>Result:</strong> Over 1 million fuzzing iterations executed with zero critical findings.</p>
+        </div>
+
+        <h3>Adversarial Simulations</h3>
+        <p>Built-in simulation engine tests Udaya's resilience against real-world attack scenarios:</p>
+        <ul class="content-list">
+            <li><strong>Double Spend</strong> — Race attacks, Finney attacks, and Vector76 attacks with conflicting transactions</li>
+            <li><strong>Selfish Mining</strong> — Block withholding strategies and revenue attacks</li>
+            <li><strong>Eclipse Attack</strong> — Connection isolation and address space monopolization</li>
+            <li><strong>Sybil Attack</strong> — Identity flooding with fake peers</li>
+            <li><strong>Mempool Spam</strong> — Transaction flooding with dust and high-fee spam</li>
+            <li><strong>Chain Reorganization</strong> — Deep reorg attempts beyond the 6-block limit</li>
+        </ul>
+
+        <h3>Chain Split Detection</h3>
+        <p>Real-time monitoring for competing blocks at the same height. The node continuously observes the block header stream and alerts immediately on any detected fork. Orchestration scripts provide automated comparison of chain state across nodes.</p>
+
+        <h3>Flood Protection</h3>
+        <p>Per-peer rate limiting prevents resource exhaustion attacks:</p>
+        <ul class="content-list">
+            <li>Transaction rate limit: 100 tx/peer/sec</li>
+            <li>Automatic ban scoring for offenders</li>
+            <li>Connection slot management with priority for well-behaved peers</li>
+            <li>Mempool size limits with eviction policies</li>
+        </ul>
+
+        <p><a href="/whitepaper/security-model.html" class="download-btn" style="display: inline-flex;">🔒 View Full Security Model →</a></p>
+
+        <!-- =============================================
+             SECTION 6 — GOVERNANCE
+             ============================================= -->
+        <h2 class="section-title" id="governance" data-section="6">6. Governance</h2>
+        <p>Udaya features an on-chain governance system that allows UDYA holders to propose and vote on network improvements. The system is designed to be transparent, resistant to capture, and progressively more decentralized over time.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Parameter</th><th>Value</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Proposal Threshold</td><td>0.1% of circulating supply</td></tr>
+                <tr><td>Voting Period</td><td>20,160 blocks (~2 weeks)</td></tr>
+                <tr><td>Quorum Required</td><td>10% of circulating supply</td></tr>
+                <tr><td>Pass Threshold</td><td>51% of votes</td></tr>
+                <tr><td>Vote Weight</td><td>1 UDYA = 1 vote</td></tr>
+                <tr><td>Vote Delegation</td><td>Not supported (direct vote only)</td></tr>
+                <tr><td>Treasury</td><td>Managed by Foundation, subject to governance</td></tr>
+            </tbody>
+        </table>
+
+        <h3>Proposal Types</h3>
+        <ul class="content-list">
+            <li><strong>General</strong> — Foundation proposals and community initiatives</li>
+            <li><strong>Technical Upgrade</strong> — Protocol upgrades and parameter changes</li>
+            <li><strong>Treasury</strong> — Treasury allocation and grants</li>
+            <li><strong>Emergency</strong> — Fast-track security fixes (reduced voting period)</li>
+        </ul>
+
+        <h3>Voting Process</h3>
+        <p>Proposals are submitted on-chain with a deposit (returned if proposal passes). Voting occurs over 20,160 blocks with real-time tallying. If quorum is reached and majority approval is achieved, the proposal is executed automatically or by the Foundation depending on the proposal type.</p>
+
+        <p><a href="/whitepaper/governance.html" class="download-btn" style="display: inline-flex;">🗳️ View Full Governance Details →</a></p>
+
+        <!-- =============================================
+             SECTION 7 — TOKENOMICS
+             ============================================= -->
+        <h2 class="section-title" id="tokenomics" data-section="7">7. Tokenomics</h2>
+        <p>Udaya's tokenomics are designed for long-term sustainability, fair distribution, and predictable monetary policy. With zero premine, zero ICO, and zero founder allocation, every UDYA in circulation comes from mining rewards.</p>
+
+        <div class="card">
+            <h3>Supply Schedule</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Period</th><th>Block Range</th><th>Block Reward</th><th>UDYA Minted</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Year 1-4</td><td>0 — 209,999</td><td>50.00 UDYA</td><td>10,500,000</td></tr>
+                    <tr><td>Year 5-8</td><td>210,000 — 419,999</td><td>25.00 UDYA</td><td>5,250,000</td></tr>
+                    <tr><td>Year 9-12</td><td>420,000 — 629,999</td><td>12.50 UDYA</td><td>2,625,000</td></tr>
+                    <tr><td>Year 13-16</td><td>630,000 — 839,999</td><td>6.25 UDYA</td><td>1,312,500</td></tr>
+                    <tr><td>Year 17-20</td><td>840,000 — 1,049,999</td><td>3.125 UDYA</td><td>656,250</td></tr>
+                    <tr><td>Year 21-24</td><td>1,050,000 — 1,259,999</td><td>1.5625 UDYA</td><td>328,125</td></tr>
+                    <tr><td>Year 25-28</td><td>1,260,000 — 1,469,999</td><td>0.78125 UDYA</td><td>164,062.5</td></tr>
+                    <tr><td>Year 29-32</td><td>1,470,000 — 1,679,999</td><td>0.390625 UDYA</td><td>82,031.25</td></tr>
+                    <tr><td>Year 33-36</td><td>1,680,000 — 1,889,999</td><td>0.1953125 UDYA</td><td>41,015.625</td></tr>
+                    <tr><td>Year 37-40</td><td>1,890,000 — 2,099,999</td><td>0.09765625 UDYA</td><td>20,507.8125</td></tr>
+                    <tr><td colspan="3"><strong>Total (after 64 halvings, ~2140)</strong></td><td><strong>21,000,000</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Distribution</h3>
+        <table class="data-table">
+            <thead>
+                <tr><th>Category</th><th>Percentage</th><th>Notes</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Mining Rewards</td><td>100%</td><td>No premine, no ICO, no founder allocation</td></tr>
+                <tr><td>Foundation Treasury</td><td>0%</td><td>Funded by community donations and grants only</td></tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Supply Curve Characteristics:</strong>
+            <ul class="content-list">
+                <li><strong>50% mined</strong> by approximately block 210,000 (year 4)</li>
+                <li><strong>75% mined</strong> by approximately block 420,000 (year 8)</li>
+                <li><strong>87.5% mined</strong> by approximately block 630,000 (year 12)</li>
+                <li><strong>Final UDYA mined</strong> around year 2140 (block 6,720,000)</li>
+                <li><strong>Inflation rate</strong> starts at ~3.8% annually and decreases with each halving</li>
+            </ul>
+        </div>
+
+        <p><a href="/whitepaper/tokenomics.html" class="download-btn" style="display: inline-flex;">💰 View Full Tokenomics Details →</a></p>
+
+        <!-- =============================================
+             SECTION 8 — ROADMAP
+             ============================================= -->
+        <h2 class="section-title" id="roadmap" data-section="8">8. Roadmap</h2>
+
+        <div class="timeline">
+            <div class="timeline-item completed">
+                <div class="timeline-date">Phase 1 — Launched</div>
+                <div class="timeline-title">🚀 Mainnet Launch</div>
+                <div class="timeline-desc">Mainnet activation, seed nodes operational, mining pools integrated, block explorer live, exchange integration package published, initial community formation.</div>
+            </div>
+
+            <div class="timeline-item in-progress">
+                <div class="timeline-date">Phase 2 — In Progress</div>
+                <div class="timeline-title">📈 Growth & Adoption</div>
+                <div class="timeline-desc">Additional exchange listings, SDK releases for Rust/Go/Python/JS/Java, developer documentation expansion, community mining pool support, governance activation, bug bounty program launch.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">Phase 3 — Future</div>
+                <div class="timeline-title">🌐 Ecosystem Expansion</div>
+                <div class="timeline-desc">Layer 2 research (Lightning Network compatibility), cross-chain interoperability via atomic swaps, smart contract integration research, mobile wallet development, hardware wallet support.</div>
+            </div>
+
+            <div class="timeline-item">
+                <div class="timeline-date">Phase 4 — Future</div>
+                <div class="timeline-title">🏛️ Maturity & Decentralization</div>
+                <div class="timeline-desc">Fully decentralized governance activation, treasury diversification, foundation grant program, enterprise adoption program, academic research partnerships.</div>
+            </div>
+        </div>
+
+        <p><a href="/whitepaper/roadmap.html" class="download-btn" style="display: inline-flex;">🗺️ View Full Roadmap Details →</a></p>
+
+        <!-- =============================================
+             SECTION 9 — CONCLUSION
+             ============================================= -->
+        <h2 class="section-title" id="conclusion" data-section="9">9. Conclusion</h2>
+        <p>Udaya combines the battle-tested security of Bitcoin's SHA-256d Proof-of-Work with modern wallet standards, comprehensive security tooling, and transparent governance. With zero premine, full BIP compliance, and a robust P2P network, Udaya is positioned as a reliable and trustworthy digital currency for the future of decentralized commerce.</p>
+
+        <div class="card">
+            <h3>Summary of Technical Achievements</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Achievement</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>SHA-256d Proof-of-Work consensus</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>BIP-39/32/44/49/84/86 wallet compliance</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>BIP-173 bech32 + BIP-350 bech32m addressing</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>P2P network with DNS seeds + TCP relay</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>On-chain governance with proposal voting</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>Adversarial attack simulation engine</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>Fuzzing engine with 1M+ test iterations</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>Chain split detection and flood protection</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>Prometheus metrics + Grafana dashboards</td><td><span class="badge badge-green">Implemented</span></td></tr>
+                    <tr><td>Zero premine / zero ICO / zero founder allocation</td><td><span class="badge badge-green">Verified</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="highlight-box">
+            <strong>Closing Statement</strong>
+            <p style="margin-top: 0.5rem;">Udaya is not just another cryptocurrency — it is a carefully engineered financial infrastructure designed for the next century of global commerce. Every line of code, every protocol decision, and every economic parameter has been chosen with deliberation and transparency. We invite the global community to join us in building this future.</p>
+        </div>
+
+        <div class="footer-note">
+            Udaya Foundation — June 2026<br>
+            <a href="/">Home</a> · <a href="/whitepaper/">Whitepaper</a> · <a href="/trust/">Trust Portal</a> · <a href="https://github.com/Udaya/Udaya">GitHub</a>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // SEARCH FUNCTIONALITY
+        // ============================================================
+        let allSections = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            // Collect all searchable sections
+            const headings = document.querySelectorAll('.section-title, h3');
+            const paragraphs = document.querySelectorAll('p, li, td, .highlight-box');
+            const tocLinks = document.querySelectorAll('.toc a');
+
+            headings.forEach(h => {
+                if (h.id) {
+                    allSections.push({
+                        id: h.id,
+                        text: h.textContent,
+                        type: 'heading',
+                        element: h
+                    });
+                }
+            });
+
+            paragraphs.forEach(p => {
+                if (p.textContent.trim().length > 20) {
+                    allSections.push({
+                        text: p.textContent.trim().substring(0, 150),
+                        fullText: p.textContent.trim(),
+                        type: 'content',
+                        element: p
+                    });
+                }
+            });
+        });
+
+        function searchWhitepaper(query) {
+            const resultsCount = document.getElementById('searchResultsCount');
+            const searchInput = document.getElementById('searchInput');
+
+            // Remove all existing highlights
+            document.querySelectorAll('.search-highlight').forEach(el => {
+                const parent = el.parentNode;
+                parent.replaceChild(document.createTextNode(el.textContent), el);
+                parent.normalize();
+            });
+
+            // Reset section visibility
+            document.querySelectorAll('.section-title, h3, p, li, td, .highlight-box').forEach(el => {
+                el.style.display = '';
+            });
+
+            if (!query || query.trim().length < 2) {
+                resultsCount.textContent = '';
+                return;
+            }
+
+            const q = query.toLowerCase().trim();
+            let matchCount = 0;
+            const matchedElements = new Set();
+
+            allSections.forEach(s => {
+                const text = (s.fullText || s.text).toLowerCase();
+                if (text.includes(q)) {
+                    matchCount++;
+                    if (s.element) matchedElements.add(s.element);
+                    // Also add parent sections
+                    let parent = s.element;
+                    while (parent) {
+                        if (parent.tagName === 'H2') {
+                            matchedElements.add(parent);
+                            break;
+                        }
+                        parent = parent.parentElement;
+                    }
+                }
+            });
+
+            // Highlight search terms in visible content
+            if (matchCount > 0) {
+                const walker = document.createTreeWalker(
+                    document.querySelector('.container'),
+                    NodeFilter.SHOW_TEXT,
+                    {
+                        acceptNode: function(node) {
+                            const parent = node.parentElement;
+                            if (parent.tagName === 'SCRIPT' || parent.tagName === 'STYLE') return NodeFilter.FILTER_REJECT;
+                            if (parent.classList.contains('search-highlight')) return NodeFilter.FILTER_REJECT;
+                            if (parent.closest('.header')) return NodeFilter.FILTER_REJECT;
+                            return NodeFilter.FILTER_ACCEPT;
+                        }
+                    }
+                );
+
+                const textNodes = [];
+                while (walker.nextNode()) textNodes.push(walker.currentNode);
+
+                textNodes.forEach(node => {
+                    const text = node.textContent;
+                    const idx = text.toLowerCase().indexOf(q);
+                    if (idx !== -1) {
+                        const span = document.createElement('span');
+                        span.className = 'search-highlight';
+                        span.textContent = text.substring(idx, idx + q.length);
+                        const rest = text.substring(idx + q.length);
+                        node.textContent = text.substring(0, idx);
+                        node.parentNode.insertBefore(span, node.nextSibling);
+                        if (rest) {
+                            const restNode = document.createTextNode(rest);
+                            node.parentNode.insertBefore(restNode, span.nextSibling);
+                        }
+                    }
+                });
+            }
+
+            // Hide non-matching sections
+            if (matchCount > 0) {
+                document.querySelectorAll('.section-title, h3, p, li, td, .highlight-box').forEach(el => {
+                    if (!matchedElements.has(el) && !el.closest('.header') && !el.closest('.toc') && !el.closest('.action-bar') && !el.closest('.search-container') && !el.closest('.footer-note')) {
+                        el.style.display = 'none';
+                    }
+                });
+            }
+
+            resultsCount.textContent = matchCount > 0
+                ? `Found ${matchCount} matching result${matchCount !== 1 ? 's' : ''}`
+                : 'No matching results found';
+        }
+
+        // ============================================================
+        // PDF GENERATION (prints the page as PDF)
+        // ============================================================
+        function generatePDF(event) {
+            event.preventDefault();
+            window.print();
+        }
+    </script>
+</body>
+</html>

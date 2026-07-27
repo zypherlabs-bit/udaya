@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Verification Portal</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <style>
+        .steps { display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap; }
+        .step { flex: 1; min-width: 150px; text-align: center; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); position: relative; }
+        .step.active { border-color: var(--accent-orange); box-shadow: var(--shadow-glow-orange); }
+        .step.completed { border-color: var(--accent-green); }
+        .step .step-num { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.5rem; font-weight: 700; font-size: 0.9rem; background: var(--border-color); color: var(--text-muted); }
+        .step.active .step-num { background: var(--accent-orange); color: #fff; }
+        .step.completed .step-num { background: var(--accent-green); color: #fff; }
+        .step .step-label { font-size: 0.8rem; color: var(--text-muted); }
+        .step.active .step-label { color: var(--accent-orange); font-weight: 600; }
+        .step.completed .step-label { color: var(--accent-green); }
+        .registration-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; }
+        .reg-type { padding: 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); text-align: center; }
+        .reg-type:hover { border-color: var(--accent-orange); transform: translateY(-2px); }
+        .reg-type.selected { border-color: var(--accent-orange); box-shadow: var(--shadow-glow-orange); }
+        .reg-type .reg-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+        .reg-type h4 { font-size: 0.95rem; margin-bottom: 0.3rem; }
+        .reg-type p { font-size: 0.8rem; color: var(--text-muted); }
+        .checklist-step { display: none; }
+        .checklist-step.active { display: block; animation: fadeIn 0.4s ease; }
+        .checklist-item { display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 0.5rem; cursor: pointer; transition: var(--transition); }
+        .checklist-item:hover { border-color: var(--border-hover); }
+        .checklist-item.done { border-color: rgba(16,185,129,0.3); background: rgba(16,185,129,0.05); }
+        .checklist-item .check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); font-size: 0.7rem; }
+        .checklist-item.done .check { background: var(--accent-green); border-color: var(--accent-green); color: #fff; }
+        .badge-display { display: none; text-align: center; padding: 2rem; }
+        .badge-display.active { display: block; animation: fadeIn 0.6s ease; }
+        .badge-image { width: 150px; height: 150px; border-radius: 50%; background: linear-gradient(135deg, rgba(16,185,129,0.2), rgba(16,185,129,0.1)); border: 3px solid var(--accent-green); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 4rem; box-shadow: 0 0 40px rgba(16,185,129,0.2); }
+        .badge-id { font-family: monospace; font-size: 0.85rem; color: var(--text-muted); }
+        .file-upload { border: 2px dashed var(--border-color); border-radius: var(--radius-md); padding: 2rem; text-align: center; cursor: pointer; transition: var(--transition); }
+        .file-upload:hover { border-color: var(--accent-orange); background: rgba(247,147,26,0.03); }
+        .file-upload.has-file { border-color: var(--accent-green); background: rgba(16,185,129,0.03); }
+    </style>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/" class="active">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding: 40px 20px;">
+        <span class="hero-badge badge-green">🔍 Independent Verification Portal</span>
+        <h1>verification.Udaya.org</h1>
+        <p>Register, run validation suites, and earn publicly verifiable badges proving you have independently verified the Udaya network.</p>
+    </div>
+
+    <div class="container-sm" style="padding-bottom:60px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value">128</div><div class="stat-label">Verified Users</div></div>
+            <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-value">92%</div><div class="stat-label">Pass Rate</div></div>
+            <div class="stat-card"><div class="stat-icon">🏅</div><div class="stat-value">156</div><div class="stat-label">Badges Issued</div></div>
+            <div class="stat-card"><div class="stat-icon">🖥️</div><div class="stat-value">5</div><div class="stat-label">Node Tests</div></div>
+        </div>
+
+        <!-- Steps Progress -->
+        <div class="steps" id="steps">
+            <div class="step active" data-step="1">
+                <div class="step-num">1</div>
+                <div class="step-label">Register</div>
+            </div>
+            <div class="step" data-step="2">
+                <div class="step-num">2</div>
+                <div class="step-label">Choose Type</div>
+            </div>
+            <div class="step" data-step="3">
+                <div class="step-num">3</div>
+                <div class="step-label">Run Tests</div>
+            </div>
+            <div class="step" data-step="4">
+                <div class="step-num">4</div>
+                <div class="step-label">Upload Logs</div>
+            </div>
+            <div class="step" data-step="5">
+                <div class="step-num">5</div>
+                <div class="step-label">Get Badge</div>
+            </div>
+        </div>
+
+        <!-- Step 1: Registration -->
+        <div class="checklist-step active" id="step1">
+            <div class="card">
+                <h3>📝 Register for Verification</h3>
+                <p style="color:var(--text-secondary);margin-bottom:1.5rem;">Complete your profile to begin the verification process.</p>
+                
+                <div class="form-group">
+                    <label>Full Name / Organization</label>
+                    <input type="text" class="form-input" id="regName" placeholder="e.g., John Doe or BitMiner Inc.">
+                </div>
+                
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" class="form-input" id="regEmail" placeholder="you@example.com">
+                </div>
+
+                <div class="form-group">
+                    <label>GitHub Username (optional)</label>
+                    <input type="text" class="form-input" id="regGithub" placeholder="github.com/yourhandle">
+                </div>
+
+                <div class="form-group">
+                    <label>UDYA Address (for reward distribution)</label>
+                    <input type="text" class="form-input" id="regAddress" placeholder="UDYA1...">
+                </div>
+
+                <div class="form-group">
+                    <label>I want to verify as:</label>
+                    <div class="checkbox-group">
+                        <label class="checkbox-label"><input type="checkbox" value="tester"> Tester</label>
+                        <label class="checkbox-label"><input type="checkbox" value="node-operator"> Node Operator</label>
+                        <label class="checkbox-label"><input type="checkbox" value="security-reviewer"> Security Reviewer</label>
+                        <label class="checkbox-label"><input type="checkbox" value="pool-operator"> Mining Pool Operator</label>
+                        <label class="checkbox-label"><input type="checkbox" value="exchange-engineer"> Exchange Engineer</label>
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;">
+                    <button class="btn btn-primary" onclick="nextStep(2)">Continue →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 2: Choose Registration Type -->
+        <div class="checklist-step" id="step2">
+            <div class="card">
+                <h3>🎯 Select Verification Type</h3>
+                <p style="color:var(--text-secondary);margin-bottom:1.5rem;">Choose what you want to verify. Each type has a specific test suite.</p>
+                
+                <div class="registration-types" id="regTypes">
+                    <div class="reg-type" onclick="selectRegType(this, 'Node Operator')">
+                        <div class="reg-icon">🖥️</div>
+                        <h4>Node Operator</h4>
+                        <p>Verify successful sync, block propagation, peer connectivity</p>
+                        <span class="badge badge-green" style="margin-top:0.5rem;">4 tests</span>
+                    </div>
+                    <div class="reg-type" onclick="selectRegType(this, 'Tester')">
+                        <div class="reg-icon">🧪</div>
+                        <h4>Tester</h4>
+                        <p>Run full validation suite, submit logs, earn tester badge</p>
+                        <span class="badge badge-blue" style="margin-top:0.5rem;">8 tests</span>
+                    </div>
+                    <div class="reg-type" onclick="selectRegType(this, 'Security Reviewer')">
+                        <div class="reg-icon">🔒</div>
+                        <h4>Security Reviewer</h4>
+                        <p>Audit codebase, run fuzzing, submit security report</p>
+                        <span class="badge badge-orange" style="margin-top:0.5rem;">6 tests</span>
+                    </div>
+                    <div class="reg-type" onclick="selectRegType(this, 'Mining Pool Operator')">
+                        <div class="reg-icon">⛏️</div>
+                        <h4>Pool Operator</h4>
+                        <p>Configure pool, submit shares, validate mining workflow</p>
+                        <span class="badge badge-purple" style="margin-top:0.5rem;">5 tests</span>
+                    </div>
+                    <div class="reg-type" onclick="selectRegType(this, 'Exchange Engineer')">
+                        <div class="reg-icon">🏦</div>
+                        <h4>Exchange Engineer</h4>
+                        <p>Test deposit/withdrawal, RPC stability, reorg handling</p>
+                        <span class="badge badge-red" style="margin-top:0.5rem;">7 tests</span>
+                    </div>
+                    <div class="reg-type" onclick="selectRegType(this, 'Wallet User')">
+                        <div class="reg-icon">👛</div>
+                        <h4>Wallet User</h4>
+                        <p>Generate keys, send/receive transactions, backup recovery</p>
+                        <span class="badge badge-green" style="margin-top:0.5rem;">4 tests</span>
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;display:flex;gap:1rem;">
+                    <button class="btn btn-secondary" onclick="prevStep(1)">← Back</button>
+                    <button class="btn btn-primary" onclick="nextStep(3)">Continue →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 3: Test Suite -->
+        <div class="checklist-step" id="step3">
+            <div class="card">
+                <h3>✅ Run Validation Suite</h3>
+                <p style="color:var(--text-secondary);margin-bottom:1.5rem;">Complete the following tests for your selected verification type.</p>
+
+                <div class="alert alert-info" style="margin-bottom:1rem;">
+                    <span>💡</span>
+                    <span>Run these commands locally and check each item as you complete it. All commands use the Udaya CLI tools.</span>
+                </div>
+
+                <div id="testChecklist">
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Build from Source</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">cargo build --release</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Start Node & Sync</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">./target/release/udayad -c config/testnet/udaya-testnet.conf start</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Verify Block Height</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">curl -X POST http://localhost:18332 -d '{"jsonrpc":"2.0","id":1,"method":"getblockcount","params":[]}'</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Generate Wallet</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">./target/release/udaya-wallet create</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Send Transaction</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">./target/release/udaya-wallet send <address> 1.0</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Verify Peer Connections</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">curl -X POST http://localhost:18332 -d '{"jsonrpc":"2.0","id":1,"method":"getpeers","params":[]}'</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Wallet Recovery Test</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">./target/release/udaya-wallet import-seed "your seed phrase"</code></p>
+                        </div>
+                    </div>
+                    <div class="checklist-item" onclick="toggleCheck(this)">
+                        <div class="check">✓</div>
+                        <div>
+                            <strong>Run Unit Tests</strong>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.2rem;">Run: <code style="color:var(--accent-orange);">cargo test --workspace</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:1rem;display:flex;gap:1rem;">
+                    <button class="btn btn-secondary" onclick="prevStep(2)">← Back</button>
+                    <button class="btn btn-primary" onclick="nextStep(4)">Continue →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 4: Upload Logs -->
+        <div class="checklist-step" id="step4">
+            <div class="card">
+                <h3>📤 Upload Validation Logs</h3>
+                <p style="color:var(--text-secondary);margin-bottom:1.5rem;">Upload your test logs and command outputs for verification.</p>
+
+                <div class="form-group">
+                    <label>Test Output Logs</label>
+                    <div class="file-upload" id="fileUpload" onclick="document.getElementById('logFile').click()">
+                        <div style="font-size:2rem;margin-bottom:0.5rem;">📄</div>
+                        <p style="color:var(--text-secondary);">Click to upload log files or drag & drop</p>
+                        <p style="font-size:0.8rem;color:var(--text-muted);margin-top:0.3rem;">Accepted: .log, .txt, .json (max 10MB)</p>
+                        <input type="file" id="logFile" accept=".log,.txt,.json" style="display:none" onchange="handleFileUpload(this)">
+                    </div>
+                    <p id="fileStatus" style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;"></p>
+                </div>
+
+                <div class="form-group">
+                    <label>Additional Notes / Observations</label>
+                    <textarea class="form-input" id="testNotes" placeholder="Describe any issues encountered, unexpected behavior, or observations..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Node Version & Platform</label>
+                    <input type="text" class="form-input" id="platformInfo" placeholder="e.g., Ubuntu 22.04, Rust 1.75, 8GB RAM">
+                </div>
+
+                <div style="margin-top:1rem;display:flex;gap:1rem;">
+                    <button class="btn btn-secondary" onclick="prevStep(3)">← Back</button>
+                    <button class="btn btn-primary" onclick="submitVerification()">Submit for Verification →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step 5: Badge -->
+        <div class="badge-display" id="step5">
+            <div class="badge-image">🏅</div>
+            <h2 style="margin-bottom:0.5rem;">Verification Complete! 🎉</h2>
+            <p style="color:var(--text-secondary);margin-bottom:1.5rem;">You have successfully completed the Udaya independent verification process.</p>
+            
+            <div class="verification-badge" style="margin:0 auto 1.5rem;padding:1rem 2rem;">
+                <div class="badge-check">✓</div>
+                <div>
+                    <strong>Udaya Verified</strong>
+                    <p style="font-size:0.8rem;opacity:0.8;">Independent Tester · Level 1</p>
+                </div>
+            </div>
+
+            <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:1rem;max-width:500px;margin:0 auto 1.5rem;">
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">8/8</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">Tests Passed</div>
+                </div>
+                <div class="card" style="text-align:center;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-orange);">BF-V1-XXXX</div>
+                    <div style="font-size:0.8rem;color:var(--text-muted);">Badge ID</div>
+                </div>
+            </div>
+
+            <div class="alert alert-success" style="margin-bottom:1.5rem;">
+                <span>✅</span>
+                <span>Your verification badge can be publicly verified at <strong>verification.Udaya.org/verify/BF-V1-XXXX</strong>. Share it on social media and your GitHub profile!</span>
+            </div>
+
+            <div style="display:flex;gap:1rem;justify-content:center;">
+                <button class="btn btn-primary" onclick="shareBadge()">📤 Share Badge</button>
+                <button class="btn btn-secondary" onclick="resetVerification()">🔄 Verify Another</button>
+                <a href="/ecosystem/" class="btn btn-blue">🌐 Explore Ecosystem</a>
+            </div>
+
+            <div class="card" style="margin-top:2rem;text-align:left;">
+                <h3>🏆 Public Hall of Fame</h3>
+                <p style="color:var(--text-secondary);margin-bottom:1rem;">Recent verified participants:</p>
+                <div id="hallOfFame">
+                    <div class="tx-item"><span>🧪 <strong>cryptoninja</strong></span><span>Tester</span><span class="badge badge-green">Verified</span></div>
+                    <div class="tx-item"><span>🖥️ <strong>node_wizard</strong></span><span>Node Operator</span><span class="badge badge-green">Verified</span></div>
+                    <div class="tx-item"><span>🔒 <strong>sec_auditor</strong></span><span>Security Reviewer</span><span class="badge badge-green">Verified</span></div>
+                    <div class="tx-item"><span>⛏️ <strong>pool_master</strong></span><span>Pool Operator</span><span class="badge badge-green">Verified</span></div>
+                    <div class="tx-item"><span>🏦 <strong>exchange_dev</strong></span><span>Exchange Engineer</span><span class="badge badge-green">Verified</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Tracker -->
+        <div class="card" style="margin-top:2rem;">
+            <h3>📊 Verification Tracker</h3>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1rem;margin-top:1rem;">
+                <div class="card" style="text-align:center;padding:1rem;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">45</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Successful Syncs</div>
+                </div>
+                <div class="card" style="text-align:center;padding:1rem;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">38</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Wallet Recoveries</div>
+                </div>
+                <div class="card" style="text-align:center;padding:1rem;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">22</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Mining Sessions</div>
+                </div>
+                <div class="card" style="text-align:center;padding:1rem;">
+                    <div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">51</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">TX Tests</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div>
+                <h4>⚡ Udaya Ecosystem</h4>
+                <p>Independent verification ensures trust and transparency in the Udaya network.</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <a href="/ecosystem/">Ecosystem Home</a>
+                <a href="/developer/">Developers</a>
+                <a href="/mining/">Mining</a>
+            </div>
+            <div>
+                <h4>Resources</h4>
+                <a href="https://github.com/Udaya/Udaya">GitHub</a>
+                <a href="/docs/">Documentation</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="#">X / Twitter</a>
+                <a href="#">Discord</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026</span>
+            <span>verification.Udaya.org</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+    <script>
+        let currentStep = 1;
+        let selectedRegType = null;
+        let uploadedFile = null;
+
+        function nextStep(step) {
+            if (step === 3 && !selectedRegType) {
+                alert('Please select a verification type first.');
+                return;
+            }
+            showStep(step);
+        }
+
+        function prevStep(step) { showStep(step); }
+
+        function showStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.checklist-step').forEach(el => el.classList.remove('active'));
+            document.getElementById('step' + step)?.classList.add('active');
+            document.querySelectorAll('.step').forEach(el => {
+                el.classList.remove('active');
+                const s = parseInt(el.dataset.step);
+                if (s === step) el.classList.add('active');
+                if (s < step) el.classList.add('completed');
+            });
+            if (step === 5) {
+                document.getElementById('step5').classList.add('active');
+            }
+        }
+
+        function selectRegType(el, type) {
+            document.querySelectorAll('.reg-type').forEach(r => r.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedRegType = type;
+        }
+
+        function toggleCheck(el) {
+            el.classList.toggle('done');
+            const check = el.querySelector('.check');
+            check.textContent = el.classList.contains('done') ? '✓' : '';
+        }
+
+        function handleFileUpload(input) {
+            if (input.files && input.files[0]) {
+                uploadedFile = input.files[0];
+                document.getElementById('fileUpload').classList.add('has-file');
+                document.getElementById('fileStatus').textContent = `✅ ${uploadedFile.name} (${(uploadedFile.size / 1024).toFixed(1)} KB)`;
+            }
+        }
+
+        function submitVerification() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            if (!name || !email) {
+                alert('Please fill in your name and email first.');
+                return;
+            }
+            showStep(5);
+            document.getElementById('step5').classList.add('active');
+        }
+
+        function shareBadge() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'I verified Udaya!',
+                    text: 'I just completed the Udaya independent verification process. Join the decentralized future! ⚡🔍',
+                    url: window.location.href
+                }).catch(() => {});
+            } else {
+                const text = 'I just completed the Udaya independent verification! ⚡🔍 verification.Udaya.org';
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('Link copied! Share it on social media 🎉');
+                }).catch(() => {});
+            }
+        }
+
+        function resetVerification() {
+            currentStep = 1;
+            selectedRegType = null;
+            uploadedFile = null;
+            document.querySelectorAll('.checklist-item').forEach(el => el.classList.remove('done'));
+            document.querySelectorAll('.reg-type').forEach(r => r.classList.remove('selected'));
+            document.getElementById('fileUpload').classList.remove('has-file');
+            document.getElementById('fileStatus').textContent = '';
+            showStep(1);
+        }
+    </script>
+</body>
+</html>

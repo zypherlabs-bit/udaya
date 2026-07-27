@@ -1,0 +1,214 @@
+# ============================================================
+# Udaya - Prometheus Alerting Rules
+# ============================================================
+
+groups:
+  - name: Udaya-node
+    interval: 30s
+    rules:
+      # Node health alerts
+      - alert: NodeDown
+        expr: udaya_node_status != 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Udaya node is down or not in running state"
+          description: "Node {{ $labels.instance }} has been in non-running state for more than 1 minute."
+
+      - alert: NodeUptimeLow
+        expr: udaya_node_uptime_seconds < 60
+        for: 30s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Node has low uptime (recently restarted)"
+          description: "Node {{ $labels.instance }} uptime is {{ $value }} seconds."
+
+      # Block production alerts
+      - alert: BlockProductionStopped
+        expr: udaya_block_interval_seconds > 3600
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No new blocks for over 1 hour"
+          description: "Last block was {{ $value | humanizeDuration }} ago on {{ $labels.instance }}."
+
+      - alert: BlockProductionSlow
+        expr: udaya_block_interval_seconds > 1800
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Block production is slow"
+          description: "Time since last block: {{ $value | humanizeDuration }}."
+
+      - alert: BlockHeightStalled
+        expr: udaya_block_height < 1
+        for: 30m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Block height is zero - chain not progressing"
+          description: "Block height has been zero for over 30 minutes on {{ $labels.instance }}."
+
+      # Peer connectivity alerts
+      - alert: NoPeersConnected
+        expr: udaya_peer_count == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No peers connected"
+          description: "Node {{ $labels.instance }} has 0 connected peers for over 5 minutes."
+
+      - alert: LowPeerCount
+        expr: udaya_peer_count < 8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low peer count"
+          description: "Node {{ $labels.instance }} has fewer than 8 peers (currently {{ $value }})."
+
+      - alert: HighNumberOfBannedPeers
+        expr: udaya_banned_peers > 50
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High number of banned peers"
+          description: "Node {{ $labels.instance }} has {{ $value }} banned peers."
+
+      # Mempool alerts
+      - alert: MempoolSizeHigh
+        expr: udaya_mempool_size_bytes > 200_000_000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mempool size is very high"
+          description: "Mempool is {{ $value | humanizeBytes }} on {{ $labels.instance }}."
+
+      - alert: MempoolMaxCapacity
+        expr: udaya_mempool_size_bytes > 280_000_000
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Mempool near maximum capacity"
+          description: "Mempool is {{ $value | humanizeBytes }} on {{ $labels.instance }}."
+
+      - alert: MempoolTransactionSurge
+        expr: rate(udaya_mempool_tx_count[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transaction surge detected"
+          description: "High rate of new transactions: {{ $value }} tx/s."
+
+      # Mining alerts
+      - alert: MiningStopped
+        expr: udaya_mining_status == 0 and on(instance) udaya_node_status == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mining has stopped"
+          description: "Mining is disabled on {{ $labels.instance }} but node is running."
+
+      - alert: HashrateDrop
+        expr: udaya_hashrate_estimate_hps < 100_000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Hashrate dropped significantly"
+          description: "Hashrate is {{ $value }} H/s on {{ $labels.instance }}."
+
+      # Chain quality alerts
+      - alert: ChainSplitDetected
+        expr: rate(udaya_chain_splits_detected_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Chain split detected"
+          description: "Chain split detected on {{ $labels.instance }}."
+
+      - alert: ChainReorgDetected
+        expr: rate(udaya_reorgs_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Chain reorganization detected"
+          description: "Reorganization detected on {{ $labels.instance }}."
+
+      - alert: HighOrphanRate
+        expr: rate(udaya_orphan_blocks_total[5m]) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High orphan block rate"
+          description: "Orphan rate: {{ $value }} blocks/min."
+
+      # System resource alerts
+      - alert: HighCPUUsage
+        expr: udaya_cpu_usage_percent > 90
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: udaya_memory_usage_bytes > 8_000_000_000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value | humanize1024 }} on {{ $labels.instance }}."
+
+      # RPC alerts
+      - alert: RPCHighErrorRate
+        expr: rate(udaya_rpc_errors_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High RPC error rate"
+          description: "RPC error rate is {{ $value }} errors/s on {{ $labels.instance }}."
+
+      - alert: RPCSlowResponses
+        expr: histogram_quantile(0.99, rate(udaya_rpc_request_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow RPC responses detected"
+          description: "P99 RPC response time is {{ $value }}s on {{ $labels.instance }}."
+
+      # Flood protection alerts
+      - alert: FloodProtectionTriggered
+        expr: rate(udaya_flood_protection_triggered_total[5m]) > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flood protection triggered"
+          description: "Flood protection activated {{ $value }} times/s on {{ $labels.instance }}."
+
+      - alert: RateLimitHigh
+        expr: rate(udaya_rate_limited_requests_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High rate limiting activity"
+          description: "{{ $value }} requests/s being rate limited on {{ $labels.instance }}."

@@ -1,0 +1,27 @@
+[package]
+name = "udaya-wallet"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+udaya-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+anyhow.workspace = true
+parking_lot.workspace = true
+secp256k1.workspace = true
+sha2.workspace = true
+ripemd.workspace = true
+hex.workspace = true
+rand.workspace = true
+hmac = "0.12"
+pbkdf2 = "0.12"
+num-bigint.workspace = true
+num-traits.workspace = true
+base64 = "0.21"
+uuid.workspace = true
+bincode.workspace = true
+zeroize.workspace = true
+chrono.workspace = true
+log.workspace = true

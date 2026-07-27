@@ -1,0 +1,46 @@
+<html><head><title>Udaya Documentation</title><style>
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2035;--txt:#f0f4ff;--txt2:#8899bb;--muted:#556688;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--border:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt)}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}.hdr a{color:var(--txt);text-decoration:none;font-weight:700}
+.m{max-width:1200px;margin:0 auto;padding:2rem}
+h1{font-size:2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--txt2);margin-bottom:2rem}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-decoration:none;color:var(--txt);display:block;transition:all .2s}
+.card:hover{border-color:var(--cyan);transform:translateY(-2px)}
+.card .ic{font-size:1.5rem;margin-bottom:.5rem}.card h3{font-size:.95rem;margin-bottom:.4rem}.card p{font-size:.8rem;color:var(--txt2)}.card .tag{display:inline-block;font-size:.65rem;padding:2px 8px;border-radius:100px;margin-top:.5rem;font-weight:600}.tag.md{background:rgba(59,130,246,.1);color:var(--blue);border:1px solid rgba(59,130,246,.2)}.tag.pdf{background:rgba(239,68,68,.1);color:#ef4444;border:1px solid rgba(239,68,68,.2)}h2{font-size:1.5rem;margin:2rem 0 1rem}@media(max-width:1024px){.g{grid-template-columns:repeat(2,1fr)}}@media(max-width:640px){.g{grid-template-columns:1fr}}
+</style></head><body>
+<div class="hdr"><a href="/">⚡ Udaya Docs</a><span style="color:var(--txt2);font-size:.85rem;margin-left:auto">📚 Documentation & Resources</span></div>
+<div class="m">
+<h1>📚 Documentation</h1>
+<p class="sub">Comprehensive documentation for the Udaya blockchain protocol, APIs, mining, governance, and ecosystem.</p>
+<h2>📖 Protocol</h2>
+<div class="g">
+<a href="/docs/whitepaper" class="card"><div class="ic">📜</div><h3>Whitepaper</h3><p>Udaya technical whitepaper — consensus, architecture, tokenomics, and roadmap.</p><span class="tag md">PDF</span></a>
+<a href="/docs/api" class="card"><div class="ic">🔌</div><h3>API Reference</h3><p>JSON-RPC and REST API documentation with examples in multiple languages.</p><span class="tag md">Docs</span></a>
+<a href="/docs/architecture" class="card"><div class="ic">🏗️</div><h3>Architecture</h3><p>System architecture, component design, and data flow documentation.</p><span class="tag md">Docs</span></a>
+</div>
+<h2>⛏️ Mining</h2>
+<div class="g">
+<a href="/docs/mining" class="card"><div class="ic">⚡</div><h3>Stratum V2 Guide</h3><p>Mining setup guide with Stratum V2 protocol configuration for ASICs.</p><span class="tag md">Guide</span></a>
+<a href="/docs/mining" class="card"><div class="ic">📊</div><h3>ASIC Compatibility</h3><p>Certified ASIC models and optimization profiles for Udaya mining.</p><span class="tag md">Reference</span></a>
+<a href="/mining" class="card"><div class="ic">💰</div><h3>Profitability Calculator</h3><p>Interactive mining profitability calculator with real-time network data.</p><span class="tag md">Tool</span></a>
+</div>
+<h2>🏛️ Governance</h2>
+<div class="g">
+<a href="/governance" class="card"><div class="ic">📋</div><h3>Governance Portal</h3><p>Active proposals, voting, treasury transparency, and constitution.</p><span class="tag md">Portal</span></a>
+<a href="/docs/foundation" class="card"><div class="ic">📜</div><h3>Foundation Charter</h3><p>Udaya Foundation charter, constitution, and operational structure.</p><span class="tag md">Docs</span></a>
+<a href="/docs/foundation" class="card"><div class="ic">💎</div><h3>Treasury Framework</h3><p>Treasury governance, grant programs, and fund allocation policies.</p><span class="tag md">Docs</span></a>
+</div>
+<h2>🔒 Security</h2>
+<div class="g">
+<a href="/docs/security" class="card"><div class="ic">🛡️</div><h3>Security Audit Guide</h3><p>Fuzzing, adversarial simulations, and security audit procedures.</p><span class="tag md">Guide</span></a>
+<a href="/docs/security" class="card"><div class="ic">📡</div><h3>Monitoring & Alerting</h3><p>Prometheus metrics, Grafana dashboards, and incident response.</p><span class="tag md">Ops</span></a>
+<a href="/bug-bounty" class="card"><div class="ic">🐛</div><h3>Bug Bounty Program</h3><p>Responsible disclosure program with rewards up to $50,000 UDYA.</p><span class="tag md">Program</span></a>
+</div>
+<h2>🤝 Exchange Integration</h2>
+<div class="g">
+<a href="/docs/api/exchange-integration" class="card"><div class="ic">🏦</div><h3>Exchange Guide</h3><p>Complete exchange integration guide with wallet setup, RPC, and reorg handling.</p><span class="tag md">Guide</span></a>
+<a href="/docs/api" class="card"><div class="ic">📡</div><h3>RPC Documentation</h3><p>Full JSON-RPC method reference for wallet, blockchain, and mining operations.</p><span class="tag md">Reference</span></a>
+</div>
+</div></body></html>

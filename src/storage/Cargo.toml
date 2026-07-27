@@ -1,0 +1,22 @@
+[package]
+name = "udaya-storage"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Udaya blockchain storage engine using RocksDB"
+
+[dependencies]
+udaya-core = { path = "../core" }
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+rocksdb.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+log.workspace = true
+tokio.workspace = true
+parking_lot.workspace = true
+dashmap.workspace = true
+sled.workspace = true
+chrono.workspace = true
+tempfile.workspace = true

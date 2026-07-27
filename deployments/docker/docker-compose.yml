@@ -1,0 +1,301 @@
+version: '3.8'
+
+services:
+  # ============================================================
+  # Seed Node - US East
+  # ============================================================
+  seed-node-us:
+    image: Udaya/node:latest
+    container_name: Udaya-seed-us
+    restart: unless-stopped
+    ports:
+      - "9798:9798"
+      - "8332:8332"
+    volumes:
+      - Udaya-data-us:/data
+      - ./config/mainnet/udaya.conf:/etc/Udaya/udaya.conf:ro
+    environment:
+      - udaya_NETWORK=mainnet
+      - udaya_LISTEN_PORT=9798
+      - udaya_rpc_PORT=8332
+      - udaya_DATA_DIR=/data
+      - udaya_MAX_PEERS=125
+      - udaya_NODE_TYPE=seed
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8332/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # ============================================================
+  # Seed Node - EU West
+  # ============================================================
+  seed-node-eu:
+    image: Udaya/node:latest
+    container_name: Udaya-seed-eu
+    restart: unless-stopped
+    ports:
+      - "9798:9798"
+      - "8332:8332"
+    volumes:
+      - Udaya-data-eu:/data
+      - ./config/mainnet/udaya.conf:/etc/Udaya/udaya.conf:ro
+    environment:
+      - udaya_NETWORK=mainnet
+      - udaya_LISTEN_PORT=9798
+      - udaya_rpc_PORT=8332
+      - udaya_DATA_DIR=/data
+      - udaya_MAX_PEERS=125
+      - udaya_NODE_TYPE=seed
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8332/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # ============================================================
+  # Seed Node - APAC
+  # ============================================================
+  seed-node-apac:
+    image: Udaya/node:latest
+    container_name: Udaya-seed-apac
+    restart: unless-stopped
+    ports:
+      - "9798:9798"
+      - "8332:8332"
+    volumes:
+      - Udaya-data-apac:/data
+      - ./config/mainnet/udaya.conf:/etc/Udaya/udaya.conf:ro
+    environment:
+      - udaya_NETWORK=mainnet
+      - udaya_LISTEN_PORT=9798
+      - udaya_rpc_PORT=8332
+      - udaya_DATA_DIR=/data
+      - udaya_MAX_PEERS=125
+      - udaya_NODE_TYPE=seed
+      - RUST_LOG=info
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8332/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
+        reservations:
+          cpus: '1'
+          memory: 2G
+
+  # ============================================================
+  # Explorer + API
+  # ============================================================
+  explorer-api:
+    image: Udaya/explorer:latest
+    container_name: udaya-explorer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - udaya-explorer-data:/data
+    environment:
+      - udaya_explorer_PORT=8080
+      - udaya_rpc_URL=http://seed-node-us:8332
+      - RUST_LOG=info
+    depends_on:
+      - seed-node-us
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 1G
+
+  # ============================================================
+  # Prometheus Monitoring
+  # ============================================================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: Udaya-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost:9090/-/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+
+  # ============================================================
+  # Grafana Dashboards
+  # ============================================================
+  grafana:
+    image: grafana/grafana:latest
+    container_name: Udaya-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/dashboards:ro
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./monitoring/grafana/dashboard-providers:/etc/grafana/provisioning/dashboards:ro
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=udaya_admin
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+  # ============================================================
+  # Alertmanager
+  # ============================================================
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: Udaya-alertmanager
+    restart: unless-stopped
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./monitoring/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager-data:/data
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/data'
+    healthcheck:
+      test: ["CMD", "wget", "-q", "http://localhost:9093/-/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # ============================================================
+  # Node Exporter (per-node monitoring agent)
+  # ============================================================
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: Udaya-node-exporter
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--path.rootfs=/rootfs'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    deploy:
+      resources:
+        limits:
+          cpus: '0.2'
+          memory: 256M
+
+  # ============================================================
+  # Backup Service
+  # ============================================================
+  backup:
+    image: alpine:latest
+    container_name: Udaya-backup
+    restart: unless-stopped
+    volumes:
+      - Udaya-data-us:/data/us:ro
+      - Udaya-data-eu:/data/eu:ro
+      - Udaya-data-apac:/data/apac:ro
+      - ./backups:/backups
+    entrypoint: |
+      sh -c "
+        apk add --no-cache aws-cli
+        while true; do
+          echo 'Running scheduled backup...'
+          mkdir -p /backups/$$(date +%Y-%m-%d)
+          tar czf /backups/$$(date +%Y-%m-%d)/Udaya-data-us.tar.gz -C /data/us . 2>/dev/null || true
+          tar czf /backups/$$(date +%Y-%m-%d)/Udaya-data-eu.tar.gz -C /data/eu . 2>/dev/null || true
+          tar czf /backups/$$(date +%Y-%m-%d)/Udaya-data-apac.tar.gz -C /data/apac . 2>/dev/null || true
+          # Remove backups older than 30 days
+          find /backups -type d -mtime +30 -exec rm -rf {} + 2>/dev/null || true
+          echo 'Backup complete. Sleeping 24h...'
+          sleep 86400
+        done
+      "
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+
+volumes:
+  Udaya-data-us:
+    driver: local
+  Udaya-data-eu:
+    driver: local
+  Udaya-data-apac:
+    driver: local
+  udaya-explorer-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  alertmanager-data:
+    driver: local
+
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16

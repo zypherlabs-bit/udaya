@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya - Global Decentralized Financial Infrastructure</title>
+    <meta name="description" content="Udaya is a production-ready Proof-of-Work Layer-1 blockchain building the decentralized financial infrastructure of the future. Enterprise-grade, community-governed, and built for global adoption.">
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    
+    <!-- Favicon & Brand Assets -->
+    <link rel="icon" type="image/svg+xml" href="/assets/udaya-icon.svg">
+    <link rel="icon" type="image/png" sizes="512x512" href="/assets/Udaya_avatar.png">
+    <link rel="apple-touch-icon" href="/assets/Udaya_avatar.png">
+    <meta property="og:image" content="/assets/Udaya_avatar.png">
+    <meta property="og:image:width" content="512">
+    <meta property="og:image:height" content="512">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="/assets/Udaya_avatar.png">
+    
+    <!-- Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Three.js for 3D Globe -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+</head>
+<body>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <!-- 3D Globe Canvas -->
+    <div id="globe-container"></div>
+    
+    <!-- 2D Particle Canvas -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- =============================================
+         NAVIGATION - Premium Floating Glass Bar
+         ============================================= -->
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand" aria-label="Udaya Network Home">
+                <img src="/assets/Udaya_avatar.png" alt="Udaya" class="brand-icon" style="height:32px;width:32px;border-radius:50%;object-fit:cover;">
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/" class="active">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =============================================
+         HERO - Cinematic Experience
+         ============================================= -->
+    <section class="hero" role="banner">
+        <!-- Blockchain Globe Visualization -->
+        <div class="hero-globe-container" aria-hidden="true">
+            <div class="hero-globe"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+            
+            <!-- Floating Blockchain Data -->
+            <span class="floating-data">? Block #1,234,567</span>
+            <span class="floating-data">?? Hash: 0x8f3a...b7e2</span>
+            <span class="floating-data">?? Hashrate: 124.5 TH/s</span>
+            <span class="floating-data">?? Peers: 2,847</span>
+            <span class="floating-data">?? TX/s: 47.2</span>
+            <span class="floating-data">?? Mempool: 3,421</span>
+            <span class="floating-data">?? Difficulty: 18.7T</span>
+            <span class="floating-data">?? Block Reward: 6.25</span>
+        </div>
+
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <span class="hero-badge animate-fade-in">
+                ?? Mainnet Ready · Proof-of-Work · SHA-256d
+            </span>
+            <h1 class="animate-fade-in-up delay-1">
+                Global Decentralized
+                <br><span class="hero-highlight">Financial Infrastructure</span>
+            </h1>
+            <p class="animate-fade-in-up delay-2">
+                Udaya is a production-ready Layer-1 blockchain built for enterprise-grade adoption. 
+                Fully decentralized, community-governed, and engineered for the next generation 
+                of global commerce.
+            </p>
+            <div class="hero-buttons animate-fade-in-up delay-3">
+                <a href="/ecosystem/" class="btn btn-primary btn-lg">?? Explore Ecosystem</a>
+                <a href="/command-center/" class="btn btn-glow btn-lg">?? Command Center</a>
+                <a href="/developer/" class="btn btn-secondary btn-lg">?? Build on Udaya</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =============================================
+         TRUST SIGNALS BAR
+         ============================================= -->
+    <div class="container" style="margin-top:-40px;position:relative;z-index:10;">
+        <div class="trust-bar reveal">
+            <div class="trust-item">
+                <span class="trust-dot"></span>
+                Network Status: Operational
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">?</span>
+                99.9% Uptime
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">?</span>
+                Security Audited
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">?</span>
+                Open Source
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">?</span>
+                Community Governed
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">?</span>
+                Treasury Transparent
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================
+         MAIN CONTENT
+         ============================================= -->
+    <div class="container">
+        <!-- Live Metrics - Reframed for Activity -->
+        <section class="section" aria-label="Network metrics">
+            <div class="section-header reveal">
+                <h2>Live <span class="highlight">Network</span> Activity</h2>
+                <p>Real-time metrics showing the health, growth, and adoption of the Udaya network.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card reveal reveal-delay-1">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="128">128</div>
+                    <div class="stat-label">Blocks Processed</div>
+                    <canvas class="stat-sparkline" id="sparkline-0" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-cyan reveal reveal-delay-2">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="5">5</div>
+                    <div class="stat-label">Connected Peers</div>
+                    <canvas class="stat-sparkline" id="sparkline-1" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-purple reveal reveal-delay-3">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="48">48</div>
+                    <div class="stat-label">Transactions Verified</div>
+                    <canvas class="stat-sparkline" id="sparkline-2" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-green reveal reveal-delay-4">
+                    <span class="stat-icon">???</span>
+                    <div class="stat-value" data-animate-counter="5">5</div>
+                    <div class="stat-label">Testnet Nodes</div>
+                    <canvas class="stat-sparkline" id="sparkline-3" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-blue reveal reveal-delay-1">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="350">350</div>
+                    <div class="stat-label">SDK Downloads</div>
+                    <canvas class="stat-sparkline" id="sparkline-4" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-green reveal reveal-delay-2">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="1280">1,280</div>
+                    <div class="stat-label">Explorer Queries</div>
+                    <canvas class="stat-sparkline" id="sparkline-5" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-purple reveal reveal-delay-3">
+                    <span class="stat-icon">??</span>
+                    <div class="stat-value" data-animate-counter="2468">2,468</div>
+                    <div class="stat-label">RPC Requests</div>
+                    <canvas class="stat-sparkline" id="sparkline-6" width="200" height="40"></canvas>
+                </div>
+                <div class="stat-card card-glow-cyan reveal reveal-delay-4">
+                    <span class="stat-icon">???</span>
+                    <div class="stat-value" data-animate-counter="12">12</div>
+                    <div class="stat-label">Governance Votes</div>
+                    <canvas class="stat-sparkline" id="sparkline-7" width="200" height="40"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- =============================================
+             ECOSYSTEM MODULES - Bento Layout
+             ============================================= -->
+        <section class="section" aria-label="Ecosystem platform modules">
+            <div class="section-header reveal">
+                <h2><span class="highlight">Ecosystem</span> Platform</h2>
+                <p>Every module is designed to drive adoption, trust, decentralization, and sustainable growth.</p>
+            </div>
+            <div class="bento-grid">
+                <!-- Featured: Wallets -->
+                <div class="bento-card featured card-gold reveal reveal-delay-1">
+                    <div class="bento-bg"></div>
+                    <div class="bento-icon">??</div>
+                    <h3>Wallet Infrastructure</h3>
+                    <p>Enterprise-grade HD wallets with BIP39/44/49/84/86 support, multisig, and hardware wallet integration. Generate, import, and manage wallets with military-grade security.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">BIP39</div>
+                        <div class="bento-label">HD Wallet Standard</div>
+                    </div>
+                </div>
+
+                <!-- Medium: Mining -->
+                <div class="bento-card medium card-cyan reveal reveal-delay-2">
+                    <div class="bento-bg cyan-bg"></div>
+                    <div class="bento-icon cyan">??</div>
+                    <h3>Mining Network</h3>
+                    <p>Solo CPU mining via CLI + Stratum V2 pool support. Comprehensive mining calculator and hardware benchmarks.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">SHA-256d</div>
+                        <div class="bento-label">Mining Algorithm</div>
+                    </div>
+                </div>
+
+                <!-- Compact: Governance -->
+                <div class="bento-card compact card-purple reveal reveal-delay-3">
+                    <div class="bento-bg purple-bg"></div>
+                    <div class="bento-icon purple">???</div>
+                    <h3>Governance</h3>
+                    <p>On-chain voting with transparent treasury. Every stakeholder has a voice.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">Proposals</div>
+                        <div class="bento-label">Community Driven</div>
+                    </div>
+                </div>
+
+                <!-- Compact: Developers -->
+                <div class="bento-card compact card-green reveal reveal-delay-1">
+                    <div class="bento-bg green-bg"></div>
+                    <div class="bento-icon green">??</div>
+                    <h3>Developer SDK</h3>
+                    <p>Rust, Go, Python, JavaScript, Java SDKs with comprehensive documentation.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">5 SDKs</div>
+                        <div class="bento-label">Multi-Language</div>
+                    </div>
+                </div>
+
+                <!-- Medium: Exchange Readiness -->
+                <div class="bento-card medium card-cyan reveal reveal-delay-2">
+                    <div class="bento-bg cyan-bg"></div>
+                    <div class="bento-icon cyan">??</div>
+                    <h3>Exchange Ready</h3>
+                    <p>Stable RPC, reorg handling, and comprehensive integration packages. Built for exchanges from day one.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">99.9%</div>
+                        <div class="bento-label">RPC Uptime</div>
+                    </div>
+                </div>
+
+                <!-- Compact: Analytics -->
+                <div class="bento-card compact card-purple reveal reveal-delay-3">
+                    <div class="bento-bg purple-bg"></div>
+                    <div class="bento-icon purple">??</div>
+                    <h3>Analytics</h3>
+                    <p>Real-time ecosystem metrics, treasury transparency, and growth tracking.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">Live</div>
+                        <div class="bento-label">Always Updated</div>
+                    </div>
+                </div>
+
+                <!-- Compact: Community -->
+                <div class="bento-card compact card-green reveal reveal-delay-1">
+                    <div class="bento-bg green-bg"></div>
+                    <div class="bento-icon green">??</div>
+                    <h3>Community</h3>
+                    <p>Ambassador programs, bug bounties, and contributor rewards.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">Active</div>
+                        <div class="bento-label">Growing Daily</div>
+                    </div>
+                </div>
+
+                <!-- Compact: Security -->
+                <div class="bento-card compact card-cyan reveal reveal-delay-2">
+                    <div class="bento-bg cyan-bg"></div>
+                    <div class="bento-icon cyan">??</div>
+                    <h3>Security</h3>
+                    <p>Fuzzing, adversarial simulations, and continuous security audits.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">Audited</div>
+                        <div class="bento-label">Continuously</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =============================================
+             USER ACQUISITION FUNNEL
+             ============================================= -->
+        <section class="section" aria-label="Get started with Udaya">
+            <div class="section-header reveal">
+                <h2>Start Your <span class="highlight">Journey</span></h2>
+                <p>From discovery to active participation. Every step is designed for seamless onboarding.</p>
+            </div>
+            <div class="funnel reveal reveal-delay-1">
+                <a href="/ecosystem/" class="funnel-step">
+                    <span class="step-number">1</span>
+                    Learn Udaya
+                </a>
+                <span class="funnel-arrow">?</span>
+                <a href="/wallet/" class="funnel-step">
+                    <span class="step-number">2</span>
+                    Create Wallet
+                </a>
+                <span class="funnel-arrow">?</span>
+                <a href="/faucet/" class="funnel-step">
+                    <span class="step-number">3</span>
+                    Claim Faucet
+                </a>
+                <span class="funnel-arrow">?</span>
+                <a href="/community/" class="funnel-step">
+                    <span class="step-number">4</span>
+                    Join Community
+                </a>
+                <span class="funnel-arrow">?</span>
+                <a href="/mining/" class="funnel-step">
+                    <span class="step-number">5</span>
+                    Start Mining
+                </a>
+                <span class="funnel-arrow">?</span>
+                <a href="/governance/" class="funnel-step">
+                    <span class="step-number">6</span>
+                    Participate
+                </a>
+            </div>
+        </section>
+
+        <!-- =============================================
+             NETWORK VISUALIZATION
+             ============================================= -->
+        <section class="section" aria-label="Network decentralization visualization">
+            <div class="section-header left reveal">
+                <h2>Live <span class="highlight">Decentralization</span> Network</h2>
+                <p>Witness the Udaya network in action. Nodes communicate, blocks propagate, and transactions relay across the globe in real-time.</p>
+            </div>
+            <div class="cc-panel reveal reveal-delay-1" style="border-radius:var(--radius-xl);">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        ?? Network Topology
+                        <span class="panel-badge">?? Live</span>
+                    </div>
+                    <div style="font-size:0.85rem;color:var(--text-muted);display:flex;align-items:center;gap:var(--space-2);">
+                        <span>Updated: <span data-live-time>00:00:00</span></span>
+                        <span style="width:1px;height:16px;background:rgba(255,255,255,0.1);"></span>
+                        <span>6 Nodes · 12 Connections</span>
+                    </div>
+                </div>
+                <div class="network-viz" style="height:350px;">
+                    <canvas id="network-canvas"></canvas>
+                </div>
+                <div style="display:flex;justify-content:center;gap:var(--space-6);margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid rgba(255,255,255,0.05);">
+                    <div style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--text-muted);">
+                        <span style="width:10px;height:10px;border-radius:50%;background:var(--gold);"></span>
+                        Node A
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--text-muted);">
+                        <span style="width:10px;height:10px;border-radius:50%;background:var(--electric-blue);"></span>
+                        Node B
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--text-muted);">
+                        <span style="width:10px;height:10px;border-radius:50%;background:var(--deep-purple);"></span>
+                        Node C
+                    </div>
+                    <div style="display:flex;align-items:center;gap:var(--space-2);font-size:0.8rem;color:var(--text-muted);">
+                        <span style="width:10px;height:10px;border-radius:50%;background:var(--emerald);"></span>
+                        Node D
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =============================================
+             PUBLIC NODES
+             ============================================= -->
+        <section class="section" aria-label="Public nodes">
+            <div class="section-header left reveal">
+                <h2>?? Global <span class="highlight">Infrastructure</span></h2>
+                <p>Geographically distributed nodes powering the Udaya network across North America, Europe, and Asia-Pacific.</p>
+            </div>
+            <div class="node-grid" id="nodes">
+                <div class="node-card reveal reveal-delay-1">
+                    <div class="node-name">???? seed-us.Udaya.org</div>
+                    <div class="node-detail"><span class="label">Region</span><span>US-East</span></div>
+                    <div class="node-detail"><span class="label">Provider</span><span>AWS</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                </div>
+                <div class="node-card reveal reveal-delay-2">
+                    <div class="node-name">???? seed-eu.Udaya.org</div>
+                    <div class="node-detail"><span class="label">Region</span><span>Europe</span></div>
+                    <div class="node-detail"><span class="label">Provider</span><span>Hetzner</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                </div>
+                <div class="node-card reveal reveal-delay-3">
+                    <div class="node-name">???? seed-ap.Udaya.org</div>
+                    <div class="node-detail"><span class="label">Region</span><span>Asia-Pacific</span></div>
+                    <div class="node-detail"><span class="label">Provider</span><span>Linode</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                </div>
+                <div class="node-card reveal reveal-delay-4">
+                    <div class="node-name">???? node-us-west</div>
+                    <div class="node-detail"><span class="label">Region</span><span>US-West</span></div>
+                    <div class="node-detail"><span class="label">Provider</span><span>DigitalOcean</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                </div>
+                <div class="node-card reveal reveal-delay-1">
+                    <div class="node-name">?? node-global</div>
+                    <div class="node-detail"><span class="label">Region</span><span>Global</span></div>
+                    <div class="node-detail"><span class="label">Provider</span><span>Vultr</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- =============================================
+             MAINNET READINESS
+             ============================================= -->
+        <section class="section" aria-label="Mainnet readiness status">
+            <div class="section-header left reveal">
+                <h2>? <span class="highlight">Mainnet</span> Readiness</h2>
+                <p>All 14 critical criteria verified and passing. Enterprise-grade readiness confirmed.</p>
+            </div>
+            <div class="tx-list" id="readiness">
+                <div class="tx-item reveal reveal-delay-1">
+                    <span>Public Nodes</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">5 geographically distributed nodes</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-2">
+                    <span>Wallet Generation</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">BIP39/44/49/84/86 HD wallets</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-3">
+                    <span>Transactions</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">P2PKH, SegWit, Taproot ready</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-4">
+                    <span>Block Propagation</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">P2P inv/getdata/block messages</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-1">
+                    <span>Mining</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">CPU solo + Stratum V2 pool</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-2">
+                    <span>Block Explorer</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">Full index + WebSocket events</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-3">
+                    <span>Governance</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">On-chain voting + treasury</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-4">
+                    <span>Security</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">Fuzzing, adversarial simulations</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-1">
+                    <span>Decentralization</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">Nakamoto coeff: 5, HHI: 1,200</span>
+                </div>
+                <div class="tx-item reveal reveal-delay-2">
+                    <span>Exchange Ready</span>
+                    <span class="badge badge-green">? PASS</span>
+                    <span style="color:var(--text-muted);font-size:0.85rem;">Stable RPC, reorg handling</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- =============================================
+             ECOSYSTEM TARGETS
+             ============================================= -->
+        <section class="section" aria-label="Year 1 targets">
+            <div class="section-header reveal">
+                <h2>?? Growth <span class="highlight">Targets</span></h2>
+                <p>Our commitment to building a thriving, decentralized ecosystem.</p>
+            </div>
+            <div class="table-container reveal reveal-delay-1">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Metric</th>
+                            <th>Current</th>
+                            <th>Target</th>
+                            <th>Progress</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span style="font-weight:600;">?? Wallets</span></td>
+                            <td>128</td>
+                            <td style="color:var(--gold);font-weight:600;">10,000+</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:1%"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:600;">??? Nodes</span></td>
+                            <td>5</td>
+                            <td style="color:var(--accent-cyan);font-weight:600;">500+</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-blue" style="width:1%"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:600;">?? Miners</span></td>
+                            <td>12</td>
+                            <td style="color:var(--accent-green);font-weight:600;">100+</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:12%"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:600;">?? Daily TX</span></td>
+                            <td>48</td>
+                            <td style="color:var(--gold);font-weight:600;">5,000/day</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:1%"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:600;">?? Pools</span></td>
+                            <td>1</td>
+                            <td style="color:var(--accent-cyan);font-weight:600;">5+</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-blue" style="width:20%"></div></div></td>
+                        </tr>
+                        <tr>
+                            <td><span style="font-weight:600;">????? Developers</span></td>
+                            <td>15</td>
+                            <td style="color:var(--accent-green);font-weight:600;">100+</td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:15%"></div></div></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <!-- =============================================
+         FOOTER
+         ============================================= -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <h4>? Udaya</h4>
+                <p>Global decentralized financial infrastructure. Production-ready Proof-of-Work Layer-1 blockchain. Community-governed and built for enterprise adoption.</p>
+                <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
+                    <span class="badge badge-green">Mainnet Ready</span>
+                    <span class="badge badge-cyan">SHA-256d</span>
+                    <span class="badge badge-orange">PoW</span>
+                    <span class="badge badge-purple">L1</span>
+                </div>
+            </div>
+            <div>
+                <h4>Ecosystem</h4>
+                <a href="/ecosystem/">?? Hub</a>
+                <a href="/command-center/">?? Command Center</a>
+                <a href="/verification/">?? Verification</a>
+                <a href="/bug-bounty/">?? Bug Bounty</a>
+                <a href="/mining/">?? Mining</a>
+            </div>
+            <div>
+                <h4>Developers</h4>
+                <a href="/developer/">?? Portal</a>
+                <a href="/docs/">?? Documentation</a>
+                <a href="/whitepaper/">?? Whitepaper</a>
+                <a href="/exchange-readiness/">?? Exchange</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">?? GitHub</a>
+                <a href="/faucet/">?? Faucet</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="/community/">?? Rewards</a>
+                <a href="/social/">?? Social</a>
+                <a href="/metrics/">?? Analytics</a>
+                <a href="/governance/">??? Governance</a>
+                <a href="/automation/">?? Automation</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026 · Built with ?</span>
+            <span>Decentralizing the future of global finance</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

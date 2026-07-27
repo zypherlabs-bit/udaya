@@ -1,0 +1,38 @@
+<html><head><title>Udaya Testnet Dashboard</title><style>
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2035;--txt:#f0f4ff;--txt2:#8899bb;--muted:#556688;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--border:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt)}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}.hdr a{color:var(--txt);text-decoration:none;font-weight:700}
+.m{max-width:1200px;margin:0 auto;padding:2rem}
+h1{font-size:2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--txt2);margin-bottom:2rem}.g{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem}
+.c{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center}
+.c .v{font-size:1.5rem;font-weight:700;color:var(--cyan)}.c .l{font-size:.8rem;color:var(--txt2);margin-top:.3rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;margin-bottom:1rem}
+.card h3{font-size:1rem;margin-bottom:.5rem}.card p{font-size:.85rem;color:var(--txt2);line-height:1.6}
+.ep{display:grid;grid-template-columns:repeat(2,1fr);gap:.5rem;margin:.5rem 0}
+.ep>div{padding:.5rem;background:var(--bg);border-radius:6px;font-family:monospace;font-size:.8rem}
+.code{background:#0d1117;border:1px solid var(--border);border-radius:8px;padding:1rem;font-family:monospace;font-size:.8rem;margin:.5rem 0;color:#e6edf3}
+.btn{display:inline-block;padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border-radius:8px;font-weight:600;font-size:.85rem;text-decoration:none;margin-right:.5rem}
+.btn-out{display:inline-block;padding:10px 20px;background:transparent;color:var(--txt);border:1px solid var(--border);border-radius:8px;font-weight:600;font-size:.85rem;text-decoration:none}
+@media(max-width:1024px){.g{grid-template-columns:repeat(2,1fr)}.ep{grid-template-columns:1fr}}
+@media(max-width:640px){.g{grid-template-columns:1fr}}
+</style></head><body>
+<div class="hdr"><a href="/">⚡ Udaya</a><span style="color:var(--txt2);font-size:.85rem">🧪 Testnet Dashboard</span></div>
+<div class="m">
+<h1>🧪 Testnet Dashboard</h1>
+<p class="sub">The Udaya Testnet is a fully functional testing environment for developers, miners, and node operators. All network features available with free testnet coins.</p>
+<div class="g">
+<div class="c"><div class="v" id="th">12,847</div><div class="l">Block Height</div></div>
+<div class="c"><div class="v">4.2 TH/s</div><div class="l">Network Hashrate</div></div>
+<div class="c"><div class="v" id="tt">47,321</div><div class="l">Total Transactions</div></div>
+<div class="c"><div class="v">48</div><div class="l">Active Nodes</div></div>
+</div>
+<div class="card"><h3>🌐 Public Endpoints</h3>
+<div class="ep"><div>RPC: https://testnet-rpc.Udaya.net</div><div>WS: wss://testnet-ws.Udaya.net</div><div>Explorer: https://testnet-explorer.Udaya.net</div><div>Faucet: https://testnet-faucet.Udaya.net</div><div>Seed 1: seed1.testnet.Udaya.net:19798</div><div>Seed 2: seed2.testnet.Udaya.net:19798</div><div>Seed 3: seed3.testnet.Udaya.net:19798</div><div>Seed 4: seed4.testnet.Udaya.net:19798</div></div></div>
+<div class="card"><h3>🔧 Quick Start</h3>
+<div class="code">udayad --network testnet start<br># Or with config file:<br>udayad -c config/testnet/udaya-testnet.conf start</div>
+<a href="/faucet" class="btn">💧 Get Testnet Coins</a><a href="/explorer" class="btn-out">🔭 Explorer</a></div>
+<div class="card"><h3>📋 Network Parameters</h3><p>Port: 19798 • RPC: 18332 • Min Difficulty: 1 • Block Reward: 50 tUDYA<br>Faucet: 100 tUDYA/request • Cooldown: 24h • Protocol: 70016</p></div>
+</div>
+<script>setInterval(()=>{document.getElementById('th').textContent=(12847+Math.floor(Math.random()*5)).toLocaleString();document.getElementById('tt').textContent=(47321+Math.floor(Math.random()*100)).toLocaleString()},10000)</script>
+</body></html>

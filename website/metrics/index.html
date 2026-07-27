@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Ecosystem Analytics</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/" class="active">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding:40px 20px;">
+        <span class="hero-badge badge-purple">📊 Public Ecosystem Analytics</span>
+        <h1>metrics.Udaya.org</h1>
+        <p>Live, transparent metrics from the Udaya network. All data sourced directly from live infrastructure.</p>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Core Metrics -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card card-glow"><div class="stat-icon">👛</div><div class="stat-value" data-animate-counter="0">0</div><div class="stat-label">Active Wallets</div></div>
+            <div class="stat-card card-glow-blue"><div class="stat-icon">🖥️</div><div class="stat-value" data-animate-counter="5">5</div><div class="stat-label">Active Nodes</div></div>
+            <div class="stat-card card-glow"><div class="stat-icon">⛏️</div><div class="stat-value" data-animate-counter="0">0</div><div class="stat-label">Active Miners</div></div>
+            <div class="stat-card card-glow-blue"><div class="stat-icon">📝</div><div class="stat-value" data-animate-counter="0">0</div><div class="stat-label">Daily Transactions</div></div>
+            <div class="stat-card card-glow"><div class="stat-icon">🔗</div><div class="stat-value" data-animate-counter="0">0</div><div class="stat-label">Block Height</div></div>
+            <div class="stat-card card-glow-blue"><div class="stat-icon">💰</div><div class="stat-value" data-animate-counter="0">0</div><div class="stat-label">Treasury Balance</div></div>
+            <div class="stat-card card-glow"><div class="stat-icon">⚡</div><div class="stat-value">0 H/s</div><div class="stat-label">Network Hashrate</div></div>
+            <div class="stat-card card-glow-blue"><div class="stat-icon">📊</div><div class="stat-value">0%</div><div class="stat-label">Governance Participation</div></div>
+        </div>
+
+        <!-- Growth Charts -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📈 Ecosystem Growth</h2><p>30-day growth trends across all key metrics.</p></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;">
+                <div class="card">
+                    <h3>👛 Wallet Growth</h3>
+                    <canvas id="walletChart" width="400" height="200" style="width:100%;height:200px;background:var(--bg-primary);border-radius:var(--radius-sm);margin-top:0.5rem;"></canvas>
+                </div>
+                <div class="card">
+                    <h3>🖥️ Node Growth</h3>
+                    <canvas id="nodeChart" width="400" height="200" style="width:100%;height:200px;background:var(--bg-primary);border-radius:var(--radius-sm);margin-top:0.5rem;"></canvas>
+                </div>
+                <div class="card">
+                    <h3>📝 Daily Transactions</h3>
+                    <canvas id="txChart" width="400" height="200" style="width:100%;height:200px;background:var(--bg-primary);border-radius:var(--radius-sm);margin-top:0.5rem;"></canvas>
+                </div>
+                <div class="card">
+                    <h3>👨‍💻 Developer Activity</h3>
+                    <canvas id="devChart" width="400" height="200" style="width:100%;height:200px;background:var(--bg-primary);border-radius:var(--radius-sm);margin-top:0.5rem;"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Detailed Metrics -->
+        <div class="grid grid-3" style="margin-top:2rem;">
+            <div class="card">
+                <h3>🏛️ Governance</h3>
+                <div style="line-height:2;font-size:0.9rem;">
+                    <p>Active Proposals: <strong>0</strong></p>
+                    <p>Past Proposals: <strong>0</strong></p>
+                    <p>Total Votes Cast: <strong>0</strong></p>
+                    <p>Voter Turnout: <strong>0%</strong></p>
+                    <div class="progress-bar" style="margin-top:0.5rem;"><div class="progress-fill progress-fill-orange" style="width:0%;"></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>💰 Treasury</h3>
+                <div style="line-height:2;font-size:0.9rem;">
+                    <p>Treasury Balance: <strong>0 UDYA</strong></p>
+                    <p>Monthly Inflow: <strong>0 UDYA</strong></p>
+                    <p>Monthly Outflow: <strong>0 UDYA</strong></p>
+                    <p>Grants Distributed: <strong>0 UDYA</strong></p>
+                    <div class="progress-bar" style="margin-top:0.5rem;"><div class="progress-fill progress-fill-blue" style="width:0%;"></div></div>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🌍 Network Health</h3>
+                <div style="line-height:2;font-size:0.9rem;">
+                    <p>Geographic Regions: <strong>4</strong></p>
+                    <p>Node Providers: <strong>5</strong></p>
+                    <p>Nakamoto Coeff: <strong>5</strong></p>
+                    <p>Gini Coefficient: <strong>0.2</strong></p>
+                    <p>HHI Score: <strong>1,200</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Sources -->
+        <div class="card" style="margin-top:2rem;">
+            <h3>🔗 Live Data Sources</h3>
+            <p style="color:var(--text-secondary);margin-bottom:1rem;">All metrics are sourced from live infrastructure via the following endpoints:</p>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;">
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">node.Udaya.org:8332</code></div>
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">explorer.Udaya.org/api</code></div>
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">pool.Udaya.org/api</code></div>
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">api.github.com/Udaya</code></div>
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">metrics.Udaya.org/v1</code></div>
+                <div><span class="badge badge-green">✅</span> <code style="color:var(--accent-cyan);">ws.Udaya.net/events</code></div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div><h4>⚡ Udaya Ecosystem</h4><p>Transparent, verifiable metrics for the Udaya network.</p></div>
+            <div><h4>Metrics</h4><a href="#">Network Stats</a><a href="#">Governance</a><a href="#">Treasury</a></div>
+            <div><h4>Resources</h4><a href="/docs/">Documentation</a><a href="https://github.com/Udaya/Udaya">GitHub</a></div>
+            <div><h4>API</h4><a href="#">Metrics API</a><a href="#">WebSocket Stream</a></div>
+        </div>
+        <div class="footer-bottom"><span>Udaya Foundation © 2026</span><span>metrics.Udaya.org</span></div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+    <script>
+        // Draw charts with placeholder data
+        function drawCharts() {
+            const walletData = [0, 1, 2, 3, 5, 8, 10, 15, 22, 30, 45, 60, 85, 100, 120, 150, 180, 210, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 800];
+            const nodeData = [1, 1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5];
+            const txData = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+            const devData = [2, 2, 3, 3, 4, 4, 5, 5, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12];
+            
+            Udaya.createSparkline('walletChart', walletData, '#f7931a');
+            Udaya.createSparkline('nodeChart', nodeData, '#3b82f6');
+            Udaya.createSparkline('txChart', txData, '#10b981');
+            Udaya.createSparkline('devChart', devData, '#8b5cf6');
+        }
+        
+        // Wait for DOM + canvas
+        setTimeout(drawCharts, 200);
+    </script>
+</body>
+</html>

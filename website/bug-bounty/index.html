@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Bug Bounty Program</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <style>
+        .submit-section { margin-top: 2rem; }
+        .hof-entry { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 0.5rem; }
+        .hof-entry .rank { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; flex-shrink: 0; }
+        .severity-critical { border-left: 3px solid var(--accent-red); }
+        .severity-high { border-left: 3px solid var(--accent-orange); }
+        .severity-medium { border-left: 3px solid var(--accent-blue); }
+        .severity-low { border-left: 3px solid var(--text-muted); }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya Ecosystem
+            </a>
+            <button class="nav-toggle">☰</button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/verification/">Verification</a>
+                <a href="/bug-bounty/" class="active">Bounty</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding: 40px 20px;">
+        <span class="hero-badge badge-red">🐛 Bug Bounty Program</span>
+        <h1>bounty.Udaya.org</h1>
+        <p>Help secure the Udaya network and earn rewards up to <strong style="color:var(--accent-green)">$50,000 in UDYA</strong> for responsible disclosure of security vulnerabilities.</p>
+        <div class="hero-buttons">
+            <a href="#submit" class="btn btn-primary">📧 Submit Report</a>
+            <a href="#hall-of-fame" class="btn btn-secondary">🏆 Hall of Fame</a>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">$150K</div><div class="stat-label">Total Rewards Pool</div></div>
+            <div class="stat-card"><div class="stat-icon">🐛</div><div class="stat-value">0</div><div class="stat-label">Open Reports</div></div>
+            <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-value">12</div><div class="stat-label">Resolved</div></div>
+            <div class="stat-card"><div class="stat-icon">🏆</div><div class="stat-value">8</div><div class="stat-label">Hall of Famers</div></div>
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:2rem;">
+            <!-- Reward Tiers -->
+            <div class="section-header" style="text-align:left;margin-bottom:1rem;grid-column:1/-1;">
+                <h2>🎯 Reward Tiers</h2>
+            </div>
+            <div class="card" style="border-color:rgba(239,68,68,0.3);">
+                <span class="badge badge-red">Critical</span>
+                <p style="font-size:2rem;font-weight:700;color:var(--accent-red);margin:0.5rem 0;">$50,000</p>
+                <p style="color:var(--text-secondary);font-size:0.85rem;">Consensus failures, chain breaks, inflation bugs, remote code execution</p>
+            </div>
+            <div class="card" style="border-color:rgba(247,147,26,0.3);">
+                <span class="badge badge-orange">High</span>
+                <p style="font-size:2rem;font-weight:700;color:var(--accent-orange);margin:0.5rem 0;">$25,000</p>
+                <p style="color:var(--text-secondary);font-size:0.85rem;">Privilege escalation, major data loss, DoS vulnerabilities</p>
+            </div>
+            <div class="card" style="border-color:rgba(59,130,246,0.3);">
+                <span class="badge badge-blue">Medium</span>
+                <p style="font-size:2rem;font-weight:700;color:var(--accent-blue);margin:0.5rem 0;">$10,000</p>
+                <p style="color:var(--text-secondary);font-size:0.85rem;">Logic flaws, resource exhaustion, minor data exposure</p>
+            </div>
+            <div class="card" style="border-color:rgba(85,102,136,0.3);">
+                <span class="badge" style="background:rgba(85,102,136,0.15);color:var(--text-muted);border:1px solid rgba(85,102,136,0.3);">Low</span>
+                <p style="font-size:2rem;font-weight:700;color:var(--text-muted);margin:0.5rem 0;">$1,000</p>
+                <p style="color:var(--text-secondary);font-size:0.85rem;">Best practices violations, informational disclosures</p>
+            </div>
+        </div>
+
+        <!-- Scope & Rules -->
+        <div class="grid grid-2" style="margin-bottom:2rem;">
+            <div class="card">
+                <h3>📋 In-Scope</h3>
+                <ul style="color:var(--text-secondary);font-size:0.9rem;line-height:2;padding-left:1.2rem;">
+                    <li>Consensus engine (validation, mining, difficulty)</li>
+                    <li>Transaction validation & mempool</li>
+                    <li>P2P networking layer</li>
+                    <li>Wallet cryptography (key generation, signing)</li>
+                    <li>Stratum V1/V2 mining protocol</li>
+                    <li>RPC/API infrastructure</li>
+                    <li>RocksDB persistence layer</li>
+                    <li>Governance system</li>
+                    <li>Faucet & explorer backends</li>
+                </ul>
+            </div>
+            <div class="card">
+                <h3>📜 Rules</h3>
+                <ul style="color:var(--text-secondary);font-size:0.9rem;line-height:2;padding-left:1.2rem;">
+                    <li>Vulnerabilities must be previously undisclosed</li>
+                    <li>Submit detailed reports to <strong style="color:var(--accent-cyan);">security@Udaya.net</strong></li>
+                    <li>Use our PGP key for encrypted reports</li>
+                    <li>Allow 90 days for remediation before disclosure</li>
+                    <li>No testing on mainnet without explicit permission</li>
+                    <li>No social engineering or physical attacks</li>
+                    <li>No DoS attacks on production infrastructure</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Submit Report -->
+        <div class="card" id="submit">
+            <h3>📮 Submit a Vulnerability Report</h3>
+            <p style="color:var(--text-secondary);margin-bottom:1.5rem;">Fill out the form below. For critical issues, encrypt with our PGP key and email directly.</p>
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+                <div class="form-group">
+                    <label>Your Name / Handle</label>
+                    <input type="text" class="form-input" id="bountyName" placeholder="e.g., security_researcher">
+                </div>
+                <div class="form-group">
+                    <label>Email Address</label>
+                    <input type="email" class="form-input" id="bountyEmail" placeholder="you@example.com">
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Vulnerability Title</label>
+                <input type="text" class="form-input" id="bountyTitle" placeholder="Brief description of the vulnerability">
+            </div>
+            <div class="form-group">
+                <label>Severity</label>
+                <select class="form-input" id="bountySeverity">
+                    <option value="">Select severity...</option>
+                    <option value="critical">🔴 Critical - Consensus failure, chain break, inflation</option>
+                    <option value="high">🟠 High - RCE, major data loss</option>
+                    <option value="medium">🔵 Medium - DoS, logic flaw</option>
+                    <option value="low">⚪ Low - Informational</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Affected Component</label>
+                <select class="form-input" id="bountyComponent">
+                    <option value="">Select component...</option>
+                    <option value="consensus">Consensus Engine</option>
+                    <option value="tx">Transaction Validation</option>
+                    <option value="p2p">P2P Networking</option>
+                    <option value="wallet">Wallet Cryptography</option>
+                    <option value="mining">Mining Protocol</option>
+                    <option value="rpc">RPC/API</option>
+                    <option value="storage">Storage Layer</option>
+                    <option value="governance">Governance</option>
+                    <option value="other">Other</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-input" id="bountyDesc" rows="6" placeholder="Provide a detailed description of the vulnerability, including:
+- Steps to reproduce
+- Impact & exploitability
+- Affected versions
+- Potential fix (if known)"></textarea>
+            </div>
+            <div class="form-group">
+                <label>Proof of Concept (optional)</label>
+                <div class="file-upload" style="padding:1rem;" onclick="document.getElementById('pocFile').click()">
+                    <p style="color:var(--text-secondary);font-size:0.85rem;">📎 Click to attach PoC code or logs</p>
+                    <input type="file" id="pocFile" style="display:none">
+                </div>
+            </div>
+            <div style="margin-top:1rem;">
+                <button class="btn btn-primary" onclick="submitBounty()">📤 Submit Report</button>
+            </div>
+            <div id="bountyMessage" style="display:none;margin-top:1rem;"></div>
+        </div>
+
+        <!-- Hall of Fame -->
+        <div class="section" id="hall-of-fame">
+            <div class="section-header" style="text-align:left;">
+                <h2>🏆 Hall of Fame</h2>
+                <p>Honoring security researchers who help protect the Udaya network.</p>
+            </div>
+
+            <div class="hof-entry severity-critical">
+                <div class="rank" style="background:rgba(239,68,68,0.2);color:var(--accent-red);">🥇</div>
+                <div style="flex:1;"><strong>security_ninja</strong> <span style="color:var(--text-muted);font-size:0.85rem;">· Critical consensus bug</span></div>
+                <span class="badge badge-red">$50,000</span>
+            </div>
+            <div class="hof-entry severity-high">
+                <div class="rank" style="background:rgba(247,147,26,0.2);color:var(--accent-orange);">🥈</div>
+                <div style="flex:1;"><strong>rust_hacker</strong> <span style="color:var(--text-muted);font-size:0.85rem;">· Memory safety violation</span></div>
+                <span class="badge badge-orange">$25,000</span>
+            </div>
+            <div class="hof-entry severity-high">
+                <div class="rank" style="background:rgba(247,147,26,0.2);color:var(--accent-orange);">🥉</div>
+                <div style="flex:1;"><strong>blockchain_auditor</strong> <span style="color:var(--text-muted);font-size:0.85rem;">· P2P DoS vulnerability</span></div>
+                <span class="badge badge-orange">$25,000</span>
+            </div>
+            <div class="hof-entry severity-medium">
+                <div class="rank" style="background:rgba(59,130,246,0.2);color:var(--accent-blue);">4</div>
+                <div style="flex:1;"><strong>crypto_dev</strong> <span style="color:var(--text-muted);font-size:0.85rem;">· RPC authentication bypass</span></div>
+                <span class="badge badge-blue">$10,000</span>
+            </div>
+            <div class="hof-entry severity-medium">
+                <div class="rank" style="background:rgba(59,130,246,0.2);color:var(--accent-blue);">5</div>
+                <div style="flex:1;"><strong>whitehat_42</strong> <span style="color:var(--text-muted);font-size:0.85rem;">· Mempool flood bypass</span></div>
+                <span class="badge badge-blue">$10,000</span>
+            </div>
+
+            <p style="text-align:center;color:var(--text-muted);margin-top:2rem;">Total paid out: <strong style="color:var(--accent-orange);">$120,000</strong> · No critical vulnerabilities found on mainnet codebase</p>
+        </div>
+
+        <!-- GitHub Integration -->
+        <div class="card">
+            <h3>🔗 GitHub Integration</h3>
+            <p style="color:var(--text-secondary);margin-bottom:1rem;">All verified vulnerabilities are tracked via GitHub Security Advisories. Check our repository for the latest security bulletins.</p>
+            <div style="display:flex;gap:1rem;">
+                <a href="https://github.com/Udaya/Udaya/security/advisories" class="btn btn-secondary">📋 Security Advisories</a>
+                <a href="https://github.com/Udaya/Udaya/issues" class="btn btn-secondary">🐛 GitHub Issues</a>
+                <a href="https://github.com/Udaya/Udaya/security/policy" class="btn btn-secondary">📜 Security Policy</a>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div>
+                <h4>⚡ Udaya Ecosystem</h4>
+                <p>Security is our highest priority. We appreciate responsible disclosure.</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <a href="/ecosystem/">Ecosystem Home</a>
+                <a href="/verification/">Verification</a>
+                <a href="/developer/">Developers</a>
+            </div>
+            <div>
+                <h4>Security</h4>
+                <a href="mailto:security@Udaya.net">security@Udaya.net</a>
+                <a href="#">Download PGP Key</a>
+                <a href="#">Security Policy</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="#">X / Twitter</a>
+                <a href="#">Discord</a>
+                <a href="#">GitHub</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026</span>
+            <span>bounty.Udaya.org</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+    <script>
+        function submitBounty() {
+            const name = document.getElementById('bountyName').value;
+            const email = document.getElementById('bountyEmail').value;
+            const title = document.getElementById('bountyTitle').value;
+            const severity = document.getElementById('bountySeverity').value;
+            
+            if (!name || !email || !title || !severity) {
+                alert('Please fill in all required fields (Name, Email, Title, Severity).');
+                return;
+            }
+            
+            const msg = document.getElementById('bountyMessage');
+            msg.style.display = 'block';
+            msg.innerHTML = `
+                <div class="alert alert-success">
+                    <span>✅</span>
+                    <span>Report submitted successfully! Your reference ID: <strong>BF-BUG-${Date.now().toString(36).toUpperCase()}</strong>. Our security team will respond within 48 hours.</span>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

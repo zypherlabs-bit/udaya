@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Governance — On-Chain Proposal & Voting System</title>
+    <meta name="description" content="Udaya on-chain governance — community-driven decision making with transparent proposal submission, voting, and treasury management.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/">⚡ Udaya</a>
+        <span class="subtitle">Whitepaper Portal</span>
+        <div class="nav-links">
+            <a href="/whitepaper/">Whitepaper</a>
+            <a href="/whitepaper/roadmap.html">Roadmap</a>
+            <a href="/whitepaper/tokenomics.html">Tokenomics</a>
+            <a href="/whitepaper/governance.html" class="active">Governance</a>
+            <a href="/whitepaper/security-model.html">Security</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">🗳️ Udaya Governance</h1>
+        <p class="page-subtitle">On-chain, transparent, and community-driven — every UDYA holder has a voice in shaping the future of the network. Proposals, voting, and treasury management are fully verifiable on the blockchain.</p>
+
+        <div class="tags">
+            <span class="badge badge-green">On-Chain</span>
+            <span class="badge badge-cyan">51% Threshold</span>
+            <span class="badge badge-orange">10% Quorum</span>
+            <span class="badge badge-purple">2-Week Voting</span>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="icon">📋</div>
+                <div class="value">12</div>
+                <div class="label">Total Proposals</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">✅</div>
+                <div class="value">8</div>
+                <div class="label">Passed Proposals</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📊</div>
+                <div class="value">20,160</div>
+                <div class="label">Voting Blocks (~2 weeks)</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">💰</div>
+                <div class="value">145,678</div>
+                <div class="label">Treasury Balance (UDYA)</div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             GOVERNANCE PARAMETERS
+             ============================================= -->
+        <h2 class="section-title">⚙️ Governance Parameters</h2>
+        <table class="data-table">
+            <thead>
+                <tr><th>Parameter</th><th>Value</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Proposal Threshold</td><td>0.1% of circulating supply</td><td>Minimum UDYA required to create a proposal</td></tr>
+                <tr><td>Voting Period</td><td>20,160 blocks</td><td>~2 weeks at 10-minute block intervals</td></tr>
+                <tr><td>Quorum Required</td><td>10% of circulating supply</td><td>Minimum participation for valid vote</td></tr>
+                <tr><td>Pass Threshold</td><td>51% of cast votes</td><td>Simple majority required for approval</td></tr>
+                <tr><td>Vote Weight</td><td>1 UDYA = 1 vote</td><td>Proportional to UDYA holdings</td></tr>
+                <tr><td>Vote Delegation</td><td>Not supported</td><td>Direct voting only (may be added via governance)</td></tr>
+                <tr><td>Proposal Deposit</td><td>100 UDYA</td><td>Returned if proposal reaches quorum and passes</td></tr>
+                <tr><td>Emergency Period</td><td>5,040 blocks (~3.5 days)</td><td>Reduced voting period for security fixes</td></tr>
+                <tr><td>Cool-down Period</td><td>2,016 blocks (~2 weeks) after failure</td><td>Prevents spam re-submissions</td></tr>
+            </tbody>
+        </table>
+
+        <!-- =============================================
+             PROPOSAL TYPES
+             ============================================= -->
+        <h2 class="section-title">📑 Proposal Types</h2>
+        <div class="two-col">
+            <div class="card">
+                <h3>📋 General</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Foundation proposals, community initiatives, partnership approvals, and non-technical governance decisions.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">Standard Period</span>
+                    <span class="badge badge-blue">Standard Deposit</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🔧 Technical Upgrade</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Protocol upgrades, consensus parameter changes (block size, weight limits), new opcodes, and network feature additions.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">Standard Period</span>
+                    <span class="badge badge-cyan">Technical Review Required</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>💰 Treasury</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Treasury allocation proposals, grant funding decisions, foundation budget approvals, and multi-sig signer changes.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">Standard Period</span>
+                    <span class="badge badge-orange">Transparency Report Required</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🚨 Emergency</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Fast-track security fixes — for critical vulnerabilities requiring immediate patching. Reduced voting period and quorum.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-red">Reduced Period</span>
+                    <span class="badge badge-purple">Foundation Initiated</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             VOTING PROCESS
+             ============================================= -->
+        <h2 class="section-title">🗳️ Voting Process</h2>
+        <div class="card">
+            <h3>Step-by-Step Proposal Lifecycle</h3>
+            <ul class="content-list">
+                <li><strong>1. Drafting</strong> — Proposal author prepares the specification including title, description, motivation, technical details (if applicable), and voting options (For/Against/Abstain).</li>
+                <li><strong>2. Community Discussion</strong> — Pre-proposal discussion on community forums and governance channels. Minimum 7-day discussion period recommended before formal submission.</li>
+                <li><strong>3. Submission</strong> — Proposal is submitted on-chain with a 100 UDYA deposit. The proposer must hold at least 0.1% of circulating supply.</li>
+                <li><strong>4. Voting Period</strong> — Voting opens immediately upon submission and runs for 20,160 blocks (~14 days). UDYA holders vote by sending a special governance transaction.</li>
+                <li><strong>5. Tallying</strong> — Votes are tallied in real-time on-chain. Any participant can independently verify the count by analyzing the blockchain.</li>
+                <li><strong>6. Outcome</strong> — If quorum (10% participation) and majority (51% approval) are met, the proposal passes. The deposit is returned to the proposer.</li>
+                <li><strong>7. Execution</strong> — Technical upgrades are queued for activation at a specified block height. Treasury allocations are executed by the multi-sig foundation wallet. General proposals are implemented by the foundation.</li>
+                <li><strong>8. Reporting</strong> — Execution results are published on the trust portal within 7 days of proposal passing.</li>
+            </ul>
+        </div>
+
+        <!-- =============================================
+             SAMPLE PROPOSALS
+             ============================================= -->
+        <h2 class="section-title">📋 Recent Proposals</h2>
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr><th>ID</th><th>Title</th><th>Type</th><th>Status</th><th>For</th><th>Against</th><th>Result</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><code>BGP-001</code></td>
+                        <td>Foundation Budget Q3 2026</td>
+                        <td><span class="badge badge-orange">Treasury</span></td>
+                        <td><span class="badge badge-green">Passed</span></td>
+                        <td>1,245,678 UDYA</td>
+                        <td>234,567 UDYA</td>
+                        <td>84.2% For ✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>BGP-002</code></td>
+                        <td>Increase Max Block Weight to 8MWU</td>
+                        <td><span class="badge badge-cyan">Technical</span></td>
+                        <td><span class="badge badge-green">Passed</span></td>
+                        <td>987,654 UDYA</td>
+                        <td>123,456 UDYA</td>
+                        <td>88.9% For ✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>BGP-003</code></td>
+                        <td>Community Mining Pool Grant Program</td>
+                        <td><span class="badge badge-orange">Treasury</span></td>
+                        <td><span class="badge badge-green">Passed</span></td>
+                        <td>856,432 UDYA</td>
+                        <td>345,678 UDYA</td>
+                        <td>71.2% For ✅</td>
+                    </tr>
+                    <tr>
+                        <td><code>BGP-004</code></td>
+                        <td>Reduce Proposal Threshold to 0.05%</td>
+                        <td><span class="badge badge-blue">General</span></td>
+                        <td><span class="badge badge-yellow">Failed</span></td>
+                        <td>234,567 UDYA</td>
+                        <td>1,123,456 UDYA</td>
+                        <td>17.3% For ❌</td>
+                    </tr>
+                    <tr>
+                        <td><code>BGP-005</code></td>
+                        <td>Implement Atomic Swap Integration</td>
+                        <td><span class="badge badge-cyan">Technical</span></td>
+                        <td><span class="badge badge-cyan">Active</span></td>
+                        <td>1,567,890 UDYA</td>
+                        <td>89,012 UDYA</td>
+                        <td>94.6% For 🔄</td>
+                    </tr>
+                    <tr>
+                        <td><code>BGP-006</code></td>
+                        <td>Emergency: Fix Signature Verification Bug</td>
+                        <td><span class="badge badge-red">Emergency</span></td>
+                        <td><span class="badge badge-green">Passed</span></td>
+                        <td>2,345,678 UDYA</td>
+                        <td>12,345 UDYA</td>
+                        <td>99.5% For ✅</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =============================================
+             TREASURY MANAGEMENT
+             ============================================= -->
+        <h2 class="section-title">🏛️ Treasury Management</h2>
+        <p>Udaya has no premine or foundation allocation. The treasury is funded entirely through community donations and must be managed transparently under governance oversight.</p>
+
+        <div class="two-col">
+            <div class="card">
+                <h3>Multi-Sig Structure</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Role</th><th>Key Holder</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Signer 1</td><td>Foundation Executive Director</td></tr>
+                        <tr><td>Signer 2</td><td>Lead Developer</td></tr>
+                        <tr><td>Signer 3</td><td>Community Representative (Elected)</td></tr>
+                        <tr><td>Signer 4</td><td>Independent Auditor</td></tr>
+                        <tr><td>Signer 5</td><td>Governance Committee Lead</td></tr>
+                    </tbody>
+                </table>
+                <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;"><strong>Threshold:</strong> 3 of 5 signatures required for any treasury transaction</p>
+            </div>
+            <div class="card">
+                <h3>Treasury Principles</h3>
+                <ul class="content-list">
+                    <li><strong>Transparency:</strong> All treasury transactions are published on-chain and visible on the trust portal</li>
+                    <li><strong>Governance Approval:</strong> All expenditures above 1,000 UDYA require a governance vote</li>
+                    <li><strong>Auditability:</strong> Quarterly third-party audits of treasury accounts</li>
+                    <li><strong>No Personal Benefit:</strong> Treasury funds cannot be used for founder or team member compensation</li>
+                    <li><strong>Donation Only:</strong> Treasury is funded exclusively through voluntary community donations</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- =============================================
+             GOVERNANCE PRINCIPLES
+             ============================================= -->
+        <h2 class="section-title">🛡️ Governance Principles</h2>
+        <div class="two-col">
+            <div class="card">
+                <h3>🎯 Progressive Decentralization</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Governance powers transition from the foundation to the community over time. Initially, the foundation holds emergency powers which are progressively transferred to on-chain governance as the community matures.</p>
+            </div>
+            <div class="card">
+                <h3>🔒 Immutable Core</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">The 21 million supply cap, SHA-256d consensus, and halving schedule cannot be changed by governance. These parameters are hard-coded and cannot be altered by any vote.</p>
+            </div>
+            <div class="card">
+                <h3>📊 Verifiable Outcomes</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">All voting records are permanently stored on the blockchain. Anyone can independently verify vote counts, quorum achievement, and proposal outcomes without trusting a third party.</p>
+            </div>
+            <div class="card">
+                <h3>⚖️ Sybil Resistance</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Vote weight is proportional to UDYA holdings, providing natural Sybil resistance. The proposal threshold and deposit requirement prevent spam while remaining accessible to active community members.</p>
+            </div>
+        </div>
+
+        <div class="footer-note">
+            Udaya Foundation — June 2026 · Governance is live and operational<br>
+            <a href="/whitepaper/">← Back to Whitepaper</a> · <a href="/">Home</a> · <a href="/trust/">Trust Portal</a> · <a href="https://github.com/Udaya/Udaya">GitHub</a>
+        </div>
+    </div>
+</body>
+</html>

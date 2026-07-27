@@ -1,0 +1,46 @@
+{
+  "allocation": {
+    "total": 500000,
+    "unit": "UDYA",
+    "percentage": 2.38,
+    "max_supply": 21000000
+  },
+  "vesting": {
+    "type": "linear",
+    "cliff_months": 12,
+    "total_duration_years": 6,
+    "cliff_amount": 0,
+    "annual_release": 83333.33
+  },
+  "schedule": [
+    { "year": 1, "released": 83333, "cumulative": 83333, "remaining": 416667 },
+    { "year": 2, "released": 83333, "cumulative": 166666, "remaining": 333334 },
+    { "year": 3, "released": 83333, "cumulative": 250000, "remaining": 250000 },
+    { "year": 4, "released": 83333, "cumulative": 333333, "remaining": 166667 },
+    { "year": 5, "released": 83334, "cumulative": 416667, "remaining": 83333 },
+    { "year": 6, "released": 83333, "cumulative": 500000, "remaining": 0 }
+  ],
+  "wallets": {
+    "cold_storage": {
+      "address": "UDYA1qfoundercold000000000000000000000000000",
+      "balance": 475000,
+      "percentage": 95,
+      "security": "3-of-5 multisig, geographically distributed hardware wallets",
+      "status": "Genesis deposit pending"
+    },
+    "operations": {
+      "address": "UDYA1qfounderops00000000000000000000000000000",
+      "balance": 20000,
+      "percentage": 4,
+      "security": "2-of-3 multisig, PSBT workflow",
+      "status": "Genesis deposit pending"
+    },
+    "daily": {
+      "address": "UDYA1qfounderdaily000000000000000000000000000",
+      "balance": 5000,
+      "percentage": 1,
+      "security": "1-of-2 multisig, automated top-up",
+      "status": "Genesis deposit pending"
+    }
+  }
+}

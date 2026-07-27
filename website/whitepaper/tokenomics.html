@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Tokenomics — Supply Schedule & Distribution Model</title>
+    <meta name="description" content="Complete tokenomics of Udaya — 21 million UDYA max supply, halving schedule, zero premine, zero ICO, zero founder allocation. Transparent and verifiable.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/">⚡ Udaya</a>
+        <span class="subtitle">Whitepaper Portal</span>
+        <div class="nav-links">
+            <a href="/whitepaper/">Whitepaper</a>
+            <a href="/whitepaper/roadmap.html">Roadmap</a>
+            <a href="/whitepaper/tokenomics.html" class="active">Tokenomics</a>
+            <a href="/whitepaper/governance.html">Governance</a>
+            <a href="/whitepaper/security-model.html">Security</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">💰 Udaya Tokenomics</h1>
+        <p class="page-subtitle">Transparent, predictable, and fair — the Udaya economic model ensures long-term sustainability with zero premine, zero ICO, and zero founder allocation.</p>
+
+        <div class="tags">
+            <span class="badge badge-green">Fair Launch</span>
+            <span class="badge badge-cyan">Deflationary</span>
+            <span class="badge badge-orange">21M Supply</span>
+            <span class="badge badge-purple">SHA-256d Mining</span>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="icon">🏆</div>
+                <div class="value">21,000,000</div>
+                <div class="label">Maximum Supply (UDYA)</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">⛏️</div>
+                <div class="value">100%</div>
+                <div class="label">Mined by Proof-of-Work</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🚫</div>
+                <div class="value">0%</div>
+                <div class="label">Premine / ICO / Founder</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📅</div>
+                <div class="value">~2140</div>
+                <div class="label">Final Block Mined</div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             SUPPLY SCHEDULE
+             ============================================= -->
+        <h2 class="section-title">📊 Supply Schedule</h2>
+        <p>Udaya follows Bitcoin's halving schedule exactly: block rewards are cut in half every 210,000 blocks (~4 years). The initial block reward is 50 UDYA, and after 64 halvings, the total supply reaches its hard cap of 21,000,000 UDYA.</p>
+
+        <div class="card">
+            <h3>Complete Halving Schedule</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Halving</th><th>Epoch</th><th>Block Range</th><th>Reward (UDYA)</th><th>UDYA Minted</th><th>Total Supply</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>0</td><td>1</td><td>0 — 209,999</td><td>50.00000000</td><td>10,500,000.00</td><td>10,500,000.00</td></tr>
+                    <tr><td>1</td><td>2</td><td>210,000 — 419,999</td><td>25.00000000</td><td>5,250,000.00</td><td>15,750,000.00</td></tr>
+                    <tr><td>2</td><td>3</td><td>420,000 — 629,999</td><td>12.50000000</td><td>2,625,000.00</td><td>18,375,000.00</td></tr>
+                    <tr><td>3</td><td>4</td><td>630,000 — 839,999</td><td>6.25000000</td><td>1,312,500.00</td><td>19,687,500.00</td></tr>
+                    <tr><td>4</td><td>5</td><td>840,000 — 1,049,999</td><td>3.12500000</td><td>656,250.00</td><td>20,343,750.00</td></tr>
+                    <tr><td>5</td><td>6</td><td>1,050,000 — 1,259,999</td><td>1.56250000</td><td>328,125.00</td><td>20,671,875.00</td></tr>
+                    <tr><td>6</td><td>7</td><td>1,260,000 — 1,469,999</td><td>0.78125000</td><td>164,062.50</td><td>20,835,937.50</td></tr>
+                    <tr><td>7</td><td>8</td><td>1,470,000 — 1,679,999</td><td>0.39062500</td><td>82,031.25</td><td>20,917,968.75</td></tr>
+                    <tr><td>8</td><td>9</td><td>1,680,000 — 1,889,999</td><td>0.19531250</td><td>41,015.63</td><td>20,958,984.38</td></tr>
+                    <tr><td>9</td><td>10</td><td>1,890,000 — 2,099,999</td><td>0.09765625</td><td>20,507.81</td><td>20,979,492.19</td></tr>
+                    <tr><td>10</td><td>11</td><td>2,100,000 — 2,309,999</td><td>0.04882813</td><td>10,253.91</td><td>20,989,746.09</td></tr>
+                    <tr><td>11</td><td>12</td><td>2,310,000 — 2,519,999</td><td>0.02441406</td><td>5,126.95</td><td>20,994,873.05</td></tr>
+                    <tr><td>12</td><td>13</td><td>2,520,000 — 2,729,999</td><td>0.01220703</td><td>2,563.48</td><td>20,997,436.52</td></tr>
+                    <tr><td colspan="4"><strong>... (continues through 64 halvings)</strong></td><td></td><td></td></tr>
+                    <tr><td>64</td><td>65</td><td>6,720,000 — 6,929,999</td><td>< 1 satoshi</td><td>~0</td><td><strong>21,000,000.00</strong></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =============================================
+             DISTRIBUTION
+             ============================================= -->
+        <h2 class="section-title">🎯 Distribution Model</h2>
+        <p>Udaya is one of the most fairly distributed cryptocurrencies in existence. There is no premine, no ICO, no private sale, and no founder allocation. Every single UDYA in circulation is mined through Proof-of-Work.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Category</th><th>Allocation</th><th>Details</th></tr>
+            </thead>
+            <tbody>
+                <tr><td><strong>Mining Rewards</strong></td><td>100%</td><td>All 21,000,000 UDYA are distributed to miners as block rewards</td></tr>
+                <tr><td>Premine</td><td>0%</td><td>No tokens were created before the genesis block</td></tr>
+                <tr><td>ICO / Private Sale</td><td>0%</td><td>No initial coin offering or private token sale conducted</td></tr>
+                <tr><td>Founder Allocation</td><td>0%</td><td>No tokens reserved for founders or team members</td></tr>
+                <tr><td>Foundation Treasury</td><td>0%</td><td>No treasury allocation from block rewards; funded by donations only</td></tr>
+                <tr><td>Investor Allocation</td><td>0%</td><td>No venture capital or strategic investor allocation</td></tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Fair Launch Principle</strong>
+            <p style="margin-top: 0.5rem;">Udaya was launched with the same fairness principles as Bitcoin. Every participant — from the first miner to the last — has equal opportunity to earn UDYA through mining. There are no privileged allocations, no pre-sale discounts, and no insider advantages.</p>
+        </div>
+
+        <!-- =============================================
+             INFLATION RATE
+             ============================================= -->
+        <h2 class="section-title">📈 Inflation Rate Over Time</h2>
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                    <tr><th>Year Range</th><th>Annual Inflation</th><th>Circulating Supply (Start)</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Year 1</td><td>~3.81%</td><td>2,628,000 (approx. annual minted)</td></tr>
+                    <tr><td>Year 5 (Post-Halving 1)</td><td>~1.90%</td><td>~13,122,000</td></tr>
+                    <tr><td>Year 9 (Post-Halving 2)</td><td>~0.95%</td><td>~16,380,000</td></tr>
+                    <tr><td>Year 13 (Post-Halving 3)</td><td>~0.48%</td><td>~18,711,000</td></tr>
+                    <tr><td>Year 17 (Post-Halving 4)</td><td>~0.24%</td><td>~19,992,000</td></tr>
+                    <tr><td>Year 21 (Post-Halving 5)</td><td>~0.12%</td><td>~20,655,000</td></tr>
+                    <tr><td>Year 25 (Post-Halving 6)</td><td>~0.06%</td><td>~20,827,000</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =============================================
+             UNIT CONVERSION
+             ============================================= -->
+        <h2 class="section-title">🔢 Unit Conversion</h2>
+        <div class="two-col">
+            <div class="card">
+                <h3>UDYA Units</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Unit</th><th>UDYA</th><th>Satoshis</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>1 UDYA</td><td>1</td><td>100,000,000</td></tr>
+                        <tr><td>1 cUDYA</td><td>0.01</td><td>1,000,000</td></tr>
+                        <tr><td>1 mUDYA</td><td>0.001</td><td>100,000</td></tr>
+                        <tr><td>1 µUDYA</td><td>0.000001</td><td>100</td></tr>
+                        <tr><td>1 Satoshi</td><td>0.00000001</td><td>1</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="card">
+                <h3>Key Metrics</h3>
+                <table class="data-table">
+                    <thead>
+                        <tr><th>Metric</th><th>Value</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>Smallest Unit</td><td>1 satoshi (0.00000001 UDYA)</td></tr>
+                        <tr><td>Max Supply</td><td>21,000,000 UDYA</td></tr>
+                        <tr><td>Max Satoshis</td><td>2,100,000,000,000,000</td></tr>
+                        <tr><td>Initial Reward</td><td>50 UDYA (5B satoshis)</td></tr>
+                        <tr><td>Halving Interval</td><td>210,000 blocks</td></tr>
+                        <tr><td>Block Time Target</td><td>600 seconds (10 min)</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- =============================================
+             ECONOMIC PRINCIPLES
+             ============================================= -->
+        <h2 class="section-title">🏛️ Economic Principles</h2>
+        <div class="two-col">
+            <div class="card">
+                <h3>🔒 Predictable Supply</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">The entire emission schedule is deterministic and verifiable. Anyone can independently calculate the supply at any future block height. There is no monetary policy discretion — the code enforces the rules.</p>
+            </div>
+            <div class="card">
+                <h3>⚖️ Fair Distribution</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Without premine, ICO, or founder allocation, every participant enters on equal footing. Early miners are rewarded for securing the network, not for privileged access.</p>
+            </div>
+            <div class="card">
+                <h3>📉 Decreasing Inflation</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Inflation decreases by 50% every 4 years, asymptotically approaching zero. This creates a predictable transition from issuance-based security to fee-based security over the long term.</p>
+            </div>
+            <div class="card">
+                <h3>🛡️ No Governance Over Inflation</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Unlike proof-of-stake systems where validators can vote to change inflation parameters, Udaya's monetary policy is immutable and hard-coded. Participants know exactly what the supply will be decades in advance.</p>
+            </div>
+        </div>
+
+        <!-- =============================================
+             COMPARISON
+             ============================================= -->
+        <h2 class="section-title">📊 Comparison with Other Networks</h2>
+        <table class="data-table">
+            <thead>
+                <tr><th>Feature</th><th>Udaya</th><th>Bitcoin</th><th>Ethereum</th><th>Monero</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Max Supply</td><td>21,000,000</td><td>21,000,000</td><td>Unlimited</td><td>Unlimited (tail emission)</td></tr>
+                <tr><td>Initial Distribution</td><td>100% mined</td><td>100% mined</td><td>Premine (72M ETH)</td><td>100% mined</td></tr>
+                <tr><td>Founder Allocation</td><td>0%</td><td>0%</td><td>~9.9M ETH (dev fund)</td><td>0%</td></tr>
+                <tr><td>Consensus</td><td>PoW (SHA-256d)</td><td>PoW (SHA-256d)</td><td>PoS (Casper)</td><td>PoW (RandomX)</td></tr>
+                <tr><td>Block Time</td><td>10 minutes</td><td>10 minutes</td><td>12 seconds</td><td>2 minutes</td></tr>
+                <tr><td>Halving Schedule</td><td>Every 210K blocks</td><td>Every 210K blocks</td><td>N/A (supply cap)</td><td>N/A (tail emission)</td></tr>
+                <tr><td>Wallet Standards</td><td>BIP-39/44/49/84/86</td><td>BIP-39/44/49/84/86</td><td>EIPs (account-based)</td><td>CryptoNote</td></tr>
+                <tr><td>Governance</td><td>On-chain</td><td>Off-chain (BIPs)</td><td>Off-chain (EIPs)</td><td>Off-chain (MRL)</td></tr>
+            </tbody>
+        </table>
+
+        <div class="footer-note">
+            Udaya Foundation — June 2026 · Tokenomics data is verifiable on-chain<br>
+            <a href="/whitepaper/">← Back to Whitepaper</a> · <a href="/">Home</a> · <a href="/trust/">Trust Portal</a> · <a href="https://github.com/Udaya/Udaya">GitHub</a>
+        </div>
+    </div>
+</body>
+</html>

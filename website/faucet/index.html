@@ -1,0 +1,58 @@
+<html>
+<head>
+<title>Udaya Testnet Faucet — Free UDYA</title>
+<style>
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2035;--txt:#f0f4ff;--txt2:#8899bb;--muted:#556688;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--red:#ef4444;--border:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.hdr{width:100%;background:var(--bg2);padding:1rem 2rem;border-bottom:1px solid var(--border)}
+.hdr a{color:var(--txt);text-decoration:none;font-weight:700;font-size:1.1rem}
+.main{max-width:600px;width:100%;margin:3rem 2rem;text-align:center}
+h1{font-size:2.5rem;margin-bottom:.5rem;background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+p{color:var(--txt2);margin-bottom:2rem;line-height:1.6}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem}
+.inp{width:100%;padding:14px;background:var(--bg);border:1px solid var(--border);border-radius:10px;color:var(--txt);font-family:monospace;font-size:1rem;outline:none;margin-bottom:1rem}
+.inp:focus{border-color:var(--cyan)}
+.btn{width:100%;padding:14px;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer}
+.btn:hover{opacity:.9}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-top:2rem}
+.info>div{padding:1rem;background:var(--bg);border-radius:10px}
+.info .lbl{font-size:.7rem;color:var(--muted);margin-bottom:4px}
+.info .val{font-weight:600}.bal{font-size:1.2rem;color:var(--cyan);margin:1rem 0}
+.msg{padding:12px;border-radius:8px;margin-top:1rem;display:none}
+.msg.ok{display:block;background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.msg.err{display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2)}
+.links{display:flex;gap:1rem;flex-wrap:wrap;justify-content:center;margin-top:2rem}
+.links a{color:var(--cyan);font-size:.85rem;text-decoration:none}
+.links a:hover{text-decoration:underline}
+@media(max-width:640px){.info{grid-template-columns:1fr}h1{font-size:1.8rem}}
+</style>
+</head>
+<body>
+<div class="hdr"><a href="/">⚡ Udaya</a></div>
+<div class="main">
+<h1>💧 Testnet Faucet</h1>
+<p>Get free testnet UDYA to build and test applications on the Udaya Testnet. Each request sends 100 tUDYA, limited to one request per 24 hours per address.</p>
+<div class="card">
+<div class="bal" id="bal">Faucet Balance: 1,245,678 tUDYA</div>
+<input class="inp" id="addr" placeholder="Enter your testnet address (UDYA1q...)" autocomplete="off">
+<button class="btn" id="btn" onclick="requestFaucet()">💧 Request 100 tUDYA</button>
+<div class="msg" id="msg"></div>
+</div>
+<div class="info">
+<div><div class="lbl">Amount per request</div><div class="val">100 tUDYA</div></div>
+<div><div class="lbl">Cooldown period</div><div class="val">24 hours</div></div>
+<div><div class="lbl">Requests today</div><div class="val">847</div></div>
+</div>
+<div class="links">
+<a href="/testnet">Testnet Overview →</a>
+<a href="https://docs.Udaya.net">Documentation →</a>
+<a href="/explorer">Explorer →</a>
+</div>
+</div>
+<script>
+function requestFaucet(){const addr=document.getElementById('addr').value.trim(),btn=document.getElementById('btn'),msg=document.getElementById('msg');if(!addr.startsWith('UDYA1q')){msg.className='msg err';msg.textContent='Please enter a valid testnet address (starts with UDYA1q)';return}if(addr.length<42||addr.length>62){msg.className='msg err';msg.textContent='Invalid address length';return}btn.disabled=true;btn.textContent='⏳ Processing...';setTimeout(()=>{msg.className='msg ok';msg.textContent='✅ Successfully sent 100 tUDYA to '+addr.slice(0,10)+'...'+addr.slice(-4);btn.disabled=false;btn.textContent='💧 Request 100 tUDYA';document.getElementById('bal').textContent='Faucet Balance: '+(1245678-100).toLocaleString()+' tUDYA'},2000)}
+</script>
+</body>
+</html>

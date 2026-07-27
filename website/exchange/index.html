@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Exchange Integration</title>
+    <meta name="description" content="Udaya exchange integration portal. Real-time RPC status, chain health, wallet status, and operational metrics for exchange partners.">
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <style>
+        .page-hero { padding-top:120px; }
+    </style>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    All Systems Go
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/exchange-readiness/" class="active">Exchange</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container page-hero">
+        <div class="reveal" style="text-align:center;padding:var(--space-10) 0;">
+            <span class="hero-badge badge-gold animate-fade-in" style="background:var(--gold-subtle);border-color:rgba(245,158,11,0.15);color:var(--gold);">🏦 Exchange Integration Portal</span>
+            <h1 style="font-family:var(--font-heading);font-size:2.5rem;font-weight:700;margin-top:var(--space-6);background:linear-gradient(135deg,#F0F4FF 60%,var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Exchange <span style="background:linear-gradient(135deg,var(--gold),var(--electric-blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Integration</span></h1>
+            <p style="color:var(--text-secondary);max-width:600px;margin:var(--space-4) auto 0;">All the tools, documentation, and operational metrics needed to list UDYA on your exchange.</p>
+        </div>
+
+        <!-- Quick Metrics -->
+        <div class="exchange-metrics">
+            <div class="em-card reveal reveal-delay-1">
+                <div class="em-value" style="background:var(--gradient-gold);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" data-animate-counter="99.9">99.9</div>
+                <div class="em-label">RPC Uptime</div>
+                <span class="em-status passing">✅ Operational</span>
+            </div>
+            <div class="em-card reveal reveal-delay-2">
+                <div class="em-value" style="background:var(--gradient-cyan);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" data-animate-counter="45">45</div>
+                <div class="em-label">Response (ms)</div>
+                <span class="em-status passing">✅ Fast</span>
+            </div>
+            <div class="em-card reveal reveal-delay-3">
+                <div class="em-value" style="background:var(--gradient-green);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" data-animate-counter="24">24</div>
+                <div class="em-label">RPC Methods</div>
+                <span class="em-status passing">✅ Complete</span>
+            </div>
+            <div class="em-card reveal reveal-delay-4">
+                <div class="em-value" style="background:var(--gradient-purple);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">0</div>
+                <div class="em-label">Reorgs (30d)</div>
+                <span class="em-status passing">✅ Stable</span>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <div class="section">
+            <div class="section-header reveal">
+                <h2>Why List <span class="highlight">Udaya</span></h2>
+                <p>Enterprise-grade blockchain infrastructure built for exchange integration from day one.</p>
+            </div>
+            <div class="grid grid-auto">
+                <div class="card card-gold reveal reveal-delay-1">
+                    <div class="card-icon">🔒</div>
+                    <h3>Battle-Tested Security</h3>
+                    <p>SHA-256d proof-of-work with extensive adversarial testing, fuzzing, and bug bounty program.</p>
+                </div>
+                <div class="card card-cyan reveal reveal-delay-2">
+                    <div class="card-icon cyan">⚡</div>
+                    <h3>Low Latency</h3>
+                    <p>45ms average RPC response time. Fully indexed blockchain with WebSocket event streaming.</p>
+                </div>
+                <div class="card card-purple reveal reveal-delay-3">
+                    <div class="card-icon purple">📋</div>
+                    <h3>Full Documentation</h3>
+                    <p>Complete API docs, integration guides, sample code in multiple languages, and operational runbooks.</p>
+                </div>
+                <div class="card card-green reveal reveal-delay-1">
+                    <div class="card-icon green">🌐</div>
+                    <h3>Global Infrastructure</h3>
+                    <p>5 geographically distributed nodes across North America, Europe, and Asia-Pacific with 99.9% uptime.</p>
+                </div>
+                <div class="card card-gold reveal reveal-delay-2">
+                    <div class="card-icon">👛</div>
+                    <h3>Full Wallet Support</h3>
+                    <p>P2PKH, P2SH, SegWit, Taproot. BIP32/39/44/49/84/86 HD wallets. Multisig ready.</p>
+                </div>
+                <div class="card card-cyan reveal reveal-delay-3">
+                    <div class="card-icon cyan">🤝</div>
+                    <h3>Dedicated Support</h3>
+                    <p>24/7 technical support for exchange partners. Node setup assistance and real-time monitoring.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Explore Link -->
+        <div style="text-align:center;padding:var(--space-12) 0;">
+            <a href="/exchange-readiness/" class="btn btn-primary btn-lg">📊 Open Exchange Readiness Center →</a>
+        </div>
+
+        <!-- Trust Bar -->
+        <div class="trust-bar reveal" style="margin-bottom:var(--space-12);">
+            <div class="trust-item"><span class="trust-dot"></span>Network: Operational</div>
+            <div class="trust-item"><span style="color:var(--emerald);">✓</span>99.9% Uptime</div>
+            <div class="trust-item"><span style="color:var(--emerald);">✓</span>Security Audited</div>
+            <div class="trust-item"><span style="color:var(--emerald);">✓</span>Open Source</div>
+            <div class="trust-item"><span style="color:var(--emerald);">✓</span>Community Governed</div>
+        </div>
+    </div>
+
+    <footer class="footer" role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <h4>⚡ Udaya</h4>
+                <p>Global decentralized financial infrastructure. Production-ready Proof-of-Work Layer-1 blockchain.</p>
+                <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
+                    <span class="badge badge-green">Mainnet Ready</span>
+                    <span class="badge badge-cyan">SHA-256d</span>
+                    <span class="badge badge-orange">PoW</span>
+                    <span class="badge badge-purple">L1</span>
+                </div>
+            </div>
+            <div>
+                <h4>Ecosystem</h4>
+                <a href="/ecosystem/">🌍 Hub</a>
+                <a href="/command-center/">📊 Command Center</a>
+                <a href="/verification/">🔍 Verification</a>
+                <a href="/exchange-readiness/">🏦 Exchange</a>
+                <a href="/mining/">⛏️ Mining</a>
+            </div>
+            <div>
+                <h4>Developers</h4>
+                <a href="/developer/">💻 Portal</a>
+                <a href="/docs/">📚 Documentation</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">📂 GitHub</a>
+                <a href="/faucet/">💧 Faucet</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="/community/">🎁 Rewards</a>
+                <a href="/social/">📱 Social</a>
+                <a href="/metrics/">📊 Analytics</a>
+                <a href="/governance/">🗳️ Governance</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026 · Built with ⚡</span>
+            <span>Decentralizing the future of global finance</span>
+        </div>
+    </footer>
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

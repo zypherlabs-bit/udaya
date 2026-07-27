@@ -1,0 +1,76 @@
+<html>
+<head>
+<title>Udaya Explorer — UDYA</title>
+<style>
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2035;--txt:#f0f4ff;--txt2:#8899bb;--muted:#556688;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--border:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt)}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.hdr a{color:var(--txt);text-decoration:none;font-weight:700;font-size:1.1rem}
+.srch{flex:1;min-width:200px}
+.srch input{width:100%;padding:10px;background:var(--card);border:1px solid var(--border);border-radius:8px;color:var(--txt);font-family:monospace;font-size:.85rem;outline:none}
+.nav{display:flex;gap:1.5rem;list-style:none}
+.nav a{color:var(--txt2);font-size:.85rem;text-decoration:none}
+.nav a.act{color:var(--txt)}
+.st{display:grid;grid-template-columns:repeat(6,1fr);border-bottom:1px solid var(--border)}
+.st>div{background:var(--bg2);padding:1rem;text-align:center;border-right:1px solid var(--border)}
+.st .v{font-size:1.2rem;font-weight:700;color:var(--cyan)}
+.st .l{font-size:.75rem;color:var(--muted)}
+.cont{max-width:1400px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:2fr 1fr;gap:2rem}
+.p{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.p h3{padding:1rem 1.5rem;border-bottom:1px solid var(--border);font-size:.95rem;display:flex;justify-content:space-between;align-items:center}
+.bdg{font-size:.7rem;padding:3px 10px;border-radius:100px;background:rgba(6,182,212,.1);color:var(--cyan);border:1px solid rgba(6,182,212,.2)}
+.r{display:grid;gap:1rem;align-items:center;padding:.75rem 1.5rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem}
+.r:hover{background:rgba(255,255,255,.02)}
+.r:last-child{border-bottom:none}
+.br{grid-template-columns:100px 1fr 120px 100px}
+.tr{grid-template-columns:1fr 100px 80px}
+.m{font-family:monospace;font-size:.8rem}
+.f{color:var(--txt2)}
+.cy{color:var(--cyan)}
+.bars{display:flex;align-items:flex-end;gap:3px;height:100px;padding:1rem 1.5rem}
+.bars>div{flex:1;background:linear-gradient(135deg,#3b82f6,#06b6d4);border-radius:2px 2px 0 0;transition:height .5s}
+.nn{display:flex;justify-content:space-between;padding:8px 1.5rem;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem}
+.nn:last-child{border-bottom:none}
+@media(max-width:1024px){.cont{grid-template-columns:1fr}.st{grid-template-columns:repeat(3,1fr)}.hdr{flex-direction:column;gap:.5rem}.nav{display:none}}
+@media(max-width:640px){.st{grid-template-columns:repeat(2,1fr)}.br{grid-template-columns:80px 1fr}.br .txs,.br .time{display:none}}
+</style>
+</head>
+<body>
+<div class="hdr">
+<a href="/">⚡ Udaya Explorer</a>
+<div class="srch"><input placeholder="Search block, tx, or address..."></div>
+<ul class="nav"><li><a href="#" class="act">Blocks</a></li><li><a href="#">Transactions</a></li><li><a href="#">Mempool</a></li><li><a href="/">← Home</a></li></ul>
+</div>
+<div class="st">
+<div><div class="v" id="h">789,412</div><div class="l">Best Block</div></div>
+<div><div class="v">124.7 EH/s</div><div class="l">Hashrate</div></div>
+<div><div class="v">89.23M</div><div class="l">Difficulty</div></div>
+<div><div class="v">2.84M</div><div class="l">Total Txs</div></div>
+<div><div class="v" id="mp">14.2K</div><div class="l">Mempool</div></div>
+<div><div class="v">$0.42</div><div class="l">UDYA Price</div></div>
+</div>
+<div class="cont" id="cont"></div>
+<script>
+const blocks=[
+  {h:789412,tx:'1,842 txs',tm:'2 min ago',ha:'0000000000000000000123abc...def456'},
+  {h:789411,tx:'1,567 txs',tm:'12 min ago',ha:'0000000000000000000789xyz...abc123'},
+  {h:789410,tx:'2,103 txs',tm:'22 min ago',ha:'0000000000000000000456def...789ghi'},
+  {h:789409,tx:'1,234 txs',tm:'32 min ago',ha:'0000000000000000000321ghi...012jkl'},
+  {h:789408,tx:'1,890 txs',tm:'42 min ago',ha:'0000000000000000000654jkl...345mno'},
+  {h:789407,tx:'1,456 txs',tm:'52 min ago',ha:'0000000000000000000987mno...678pqr'}
+];
+const txs=[
+  {id:'abc123def456...7890',a:'+15.42 UDYA',f:'0.0012'},
+  {id:'def456789abc...1230',a:'+2.18 UDYA',f:'0.0008'},
+  {id:'789abc012def...4560',a:'+100.00 UDYA',f:'0.0050'},
+  {id:'012def345678...abc0',a:'+0.75 UDYA',f:'0.0005'},
+  {id:'345678901abc...def0',a:'+50.00 UDYA',f:'0.0030'}
+];
+const stats=[['Block Time','598 sec'],['Difficulty','89,234,567'],['Active Nodes','2,847'],['Circulating','12,456,789 UDYA'],['Nakamoto Coeff.','3.2'],['Avg Block Size','1.24 MB']];
+const c=document.getElementById('cont');
+c.innerHTML=`<div><div class="p"><h3>🔗 Latest Blocks <span class="bdg">Live</span></h3>${blocks.map(b=>'<div class="r br"><span style="font-weight:600">#'+b.h.toLocaleString()+'</span><span class="m f">'+b.ha+'</span><span style="text-align:center">'+b.tx+'</span><span class="f" style="text-align:right">'+b.tm+'</span></div>').join('')}</div><div class="p" style="margin-top:1rem"><h3>💱 Latest Transactions <span class="bdg">Live</span></h3>${txs.map(t=>'<div class="r tr"><span class="m cy">'+t.id+'</span><span>'+t.a+'</span><span class="f" style="text-align:right">'+t.f+'</span></div>').join('')}</div></div><div><div class="p"><h3>📊 Mempool Visualizer<span class="bdg">14,238 pending</span></h3><div class="bars" id="bars">${Array.from({length:20},()=>'<div style="height:'+(20+Math.random()*80)+'%"></div>').join('')}</div></div><div class="p" style="margin-top:1rem"><h3>🌐 Network Stats</h3>${stats.map(([k,v])=>'<div class="nn"><span class="f">'+k+'</span><span style="font-weight:500">'+v+'</span></div>').join('')}</div></div>`;
+setInterval(()=>{document.querySelectorAll('#bars div').forEach(b=>{b.style.height=(20+Math.random()*80)+'%'});const n=789412+Math.floor(Math.random()*3);document.getElementById('h').textContent=n.toLocaleString()},5000);
+</script>
+</body>
+</html>

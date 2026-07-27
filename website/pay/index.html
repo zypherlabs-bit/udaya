@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Merchant Adoption - Accept UDYA Payments</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand"><span class="brand-icon">⚡</span> Udaya Ecosystem</a>
+            <button class="nav-toggle">☰</button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a><a href="/ecosystem/">Ecosystem</a><a href="/verification/">Verification</a>
+                <a href="/bug-bounty/">Bounty</a><a href="/mining/">Mining</a><a href="/developer/">Developers</a>
+                <a href="/pay/" class="active">Merchants</a><a href="/metrics/">Metrics</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding:40px 20px;">
+        <span class="hero-badge badge-orange">🏪 Merchant Adoption Platform</span>
+        <h1>pay.Udaya.org</h1>
+        <p>Accept UDYA payments with zero transaction fees. Plug-and-play integration for WooCommerce, Shopify, and custom platforms.</p>
+        <div class="hero-buttons">
+            <a href="#get-started" class="btn btn-primary">🚀 Start Accepting UDYA</a>
+            <a href="#plugins" class="btn btn-secondary">🔌 View Plugins</a>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-value">0</div><div class="stat-label">Active Merchants</div></div>
+            <div class="stat-card"><div class="stat-icon">💳</div><div class="stat-value">0</div><div class="stat-label">Total Volume</div></div>
+            <div class="stat-card"><div class="stat-icon">🔄</div><div class="stat-value">0</div><div class="stat-label">Transactions</div></div>
+            <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-value">0%</div><div class="stat-label">Processing Fee</div></div>
+        </div>
+
+        <!-- Features -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>💳 Payment Gateway Features</h2></div>
+            <div class="grid grid-3">
+                <div class="card card-glow"><h3>⚡ Instant Settlement</h3><p style="font-size:0.85rem;">Transactions settle in 10 minutes (1 block confirmation). No chargebacks, no reversals.</p></div>
+                <div class="card card-glow-blue"><h3>💰 Zero Fees</h3><p style="font-size:0.85rem;">No processing fees, no monthly charges. The only cost is the network transaction fee (~0.0001 UDYA).</p></div>
+                <div class="card card-glow"><h3>🔒 Non-Custodial</h3><p style="font-size:0.85rem;">Payments go directly to your wallet. We never hold your funds. Full control, always.</p></div>
+                <div class="card card-glow-blue"><h3>🔄 Auto-Conversion</h3><p style="font-size:0.85rem;">Optional real-time USD conversion via integrated DEX. Receive fiat-equivalent value instantly.</p></div>
+                <div class="card card-glow"><h3>📊 Dashboard</h3><p style="font-size:0.85rem;">Real-time analytics, transaction history, payment notifications, and exportable reports.</p></div>
+                <div class="card card-glow-blue"><h3>🌍 Global</h3><p style="font-size:0.85rem;">Accept payments from anywhere in the world. No borders, no restrictions, no KYC for customers.</p></div>
+            </div>
+        </div>
+
+        <!-- Plugins -->
+        <div class="section" id="plugins">
+            <div class="section-header" style="text-align:left;"><h2>🔌 E-Commerce Plugins</h2><p>One-click integration for popular platforms.</p></div>
+            <div class="grid grid-3">
+                <div class="card" style="text-align:center;padding:2rem;">
+                    <div style="font-size:3rem;font-weight:700;color:var(--accent-purple);margin-bottom:0.5rem;">W</div>
+                    <h3>WooCommerce Plugin</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">WordPress plugin for WooCommerce stores. One-click install, automatic payment detection.</p>
+                    <span class="badge badge-green" style="margin:0.5rem 0;">v1.0.0</span>
+                    <div><a href="#" class="btn btn-ghost btn-sm">⬇️ Download Plugin</a></div>
+                </div>
+                <div class="card" style="text-align:center;padding:2rem;">
+                    <div style="font-size:3rem;font-weight:700;color:var(--accent-green);margin-bottom:0.5rem;">S</div>
+                    <h3>Shopify Plugin</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Shopify app for accepting UDYA at checkout. Custom payment gateway integration.</p>
+                    <span class="badge badge-blue" style="margin:0.5rem 0;">v0.9.0</span>
+                    <div><a href="#" class="btn btn-ghost btn-sm">⬇️ Install App</a></div>
+                </div>
+                <div class="card" style="text-align:center;padding:2rem;">
+                    <div style="font-size:3rem;font-weight:700;color:var(--accent-orange);margin-bottom:0.5rem;">⚙️</div>
+                    <h3>Custom Integration</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">REST API and webhooks for custom payment integration. SDKs available in 5 languages.</p>
+                    <span class="badge badge-orange" style="margin:0.5rem 0;">REST API</span>
+                    <div><a href="#api" class="btn btn-ghost btn-sm">📖 API Docs</a></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Merchant Dashboard -->
+        <div class="section" id="get-started">
+            <div class="section-header" style="text-align:left;"><h2>📊 Merchant Dashboard</h2><p>Track payments, manage orders, and view analytics.</p></div>
+            <div class="card">
+                <div style="display:grid;grid-template-columns:1fr 2fr;gap:2rem;">
+                    <div>
+                        <h3>Quick Summary</h3>
+                        <div style="margin-top:1rem;">
+                            <div class="form-group"><label>Merchant ID</label><input type="text" class="form-input" value="BF-MER-XXXX" readonly></div>
+                            <div class="form-group"><label>Your UDYA Wallet</label><input type="text" class="form-input" placeholder="UDYA1..."></div>
+                            <div class="form-group"><label>Store Name</label><input type="text" class="form-input" placeholder="My Store"></div>
+                            <button class="btn btn-primary btn-sm">Save Settings</button>
+                        </div>
+                    </div>
+                    <div>
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+                            <div class="card" style="text-align:center;padding:1rem;"><div style="font-size:1.5rem;font-weight:700;color:var(--accent-green);">$0.00</div><div style="font-size:0.8rem;color:var(--text-muted);">Today's Revenue</div></div>
+                            <div class="card" style="text-align:center;padding:1rem;"><div style="font-size:1.5rem;font-weight:700;color:var(--accent-blue);">0</div><div style="font-size:0.8rem;color:var(--text-muted);">Pending Orders</div></div>
+                            <div class="card" style="text-align:center;padding:1rem;"><div style="font-size:1.5rem;font-weight:700;color:var(--accent-orange);">0</div><div style="font-size:0.8rem;color:var(--text-muted);">Total Orders</div></div>
+                            <div class="card" style="text-align:center;padding:1rem;"><div style="font-size:1.5rem;font-weight:700;color:var(--accent-purple);">0%</div><div style="font-size:0.8rem;color:var(--text-muted);">Conversion Rate</div></div>
+                        </div>
+                        <div class="table-container">
+                            <table>
+                                <thead><tr><th>Date</th><th>Order</th><th>Amount</th><th>Status</th></tr></thead>
+                                <tbody><tr><td colspan="4" style="text-align:center;color:var(--text-muted);">No transactions yet. Start accepting UDYA today!</td></tr></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Integration API -->
+        <div class="section" id="api">
+            <div class="section-header" style="text-align:left;"><h2>🔌 Payment API</h2><p>Simple REST API for custom payment integration.</p></div>
+            <div class="card">
+                <div class="code-block" style="font-size:0.85rem;">
+<span class="comment"># Create a payment request</span>
+POST /api/v1/payments
+{
+  <span class="string">"amount"</span>: 25.00,
+  <span class="string">"currency"</span>: <span class="string">"UDYA"</span>,
+  <span class="string">"order_id"</span>: <span class="string">"order_123"</span>,
+  <span class="string">"callback_url"</span>: <span class="string">"https://mystore.com/Udaya-callback"</span>,
+  <span class="string">"customer_email"</span>: <span class="string">"customer@example.com"</span>
+}
+
+<span class="comment"># Response</span>
+{
+  <span class="string">"payment_id"</span>: <span class="string">"pay_abc123"</span>,
+  <span class="string">"UDYA_address"</span>: <span class="string">"UDYA1..."</span>,
+  <span class="string">"UDYA_amount"</span>: 16.67,
+  <span class="string">"exchange_rate"</span>: 1.50,
+  <span class="string">"expires_at"</span>: <span class="string">"2026-05-30T19:00:00Z"</span>,
+  <span class="string">"status"</span>: <span class="string">"pending"</span>,
+  <span class="string">"qr_code"</span>: <span class="string">"Udaya:UDYA1...?amount=16.67"</span>
+}</div>
+                <p style="margin-top:1rem;"><a href="/docs/api/" class="btn btn-secondary btn-sm">📖 Full API Documentation</a></p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div><h4>⚡ Udaya Ecosystem</h4><p>Accept UDYA payments globally. Zero fees, instant settlement, complete control.</p></div>
+            <div><h4>Plugins</h4><a href="#">WooCommerce</a><a href="#">Shopify</a><a href="#">Custom API</a></div>
+            <div><h4>Resources</h4><a href="/docs/api/">API Docs</a><a href="https://github.com/Udaya/Udaya">GitHub</a></div>
+            <div><h4>Support</h4><a href="mailto:merchants@Udaya.net">merchants@Udaya.net</a><a href="#">Telegram</a></div>
+        </div>
+        <div class="footer-bottom"><span>Udaya Foundation © 2026</span><span>pay.Udaya.org</span></div>
+    </footer>
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Ecosystem - Growth Platform</title>
+    <meta name="description" content="Udaya Ecosystem Platform - Mining, Development, Governance, Exchange Readiness, Merchant Adoption, and Community Growth.">
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/" class="active">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <section class="hero" style="min-height:60vh;padding:120px 20px 60px;">
+        <div class="hero-globe-container" aria-hidden="true">
+            <div class="hero-globe"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+            <div class="orbital-ring"></div>
+        </div>
+        <div class="hero-content">
+            <span class="hero-badge badge-gold animate-fade-in">🌍 Udaya Ecosystem Platform</span>
+            <h1 class="animate-fade-in-up delay-1">Global Decentralized<br><span class="hero-highlight">Ecosystem</span></h1>
+            <p class="animate-fade-in-up delay-2">A complete platform connecting miners, developers, merchants, exchanges, and the community to drive sustainable growth and global adoption of decentralized financial infrastructure.</p>
+            <div class="hero-buttons animate-fade-in-up delay-3">
+                <a href="/command-center/" class="btn btn-primary btn-lg">📊 Command Center</a>
+                <a href="/developer/" class="btn btn-cyan btn-lg">💻 Build on Udaya</a>
+                <a href="/mining/" class="btn btn-glow btn-lg">⛏️ Start Mining</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Bar -->
+    <div class="container" style="margin-top:-60px;position:relative;z-index:10;">
+        <div class="trust-bar reveal">
+            <div class="trust-item">
+                <span class="trust-dot"></span>
+                Network Operational
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                99.9% Uptime
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Security Audited
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Open Source
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                5 SDK Languages
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Ecosystem Stats - Reframed -->
+        <section class="section">
+            <div class="section-header reveal">
+                <h2>Ecosystem <span class="highlight">Activity</span></h2>
+                <p>Real-time metrics showing network health, developer engagement, and community growth.</p>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-card reveal reveal-delay-1">
+                    <span class="stat-icon">🖥️</span>
+                    <div class="stat-value" data-animate-counter="5">5</div>
+                    <div class="stat-label">Testnet Nodes</div>
+                </div>
+                <div class="stat-card card-glow-cyan reveal reveal-delay-2">
+                    <span class="stat-icon">📦</span>
+                    <div class="stat-value" data-animate-counter="48">48</div>
+                    <div class="stat-label">Blocks Mined</div>
+                </div>
+                <div class="stat-card card-glow-purple reveal reveal-delay-3">
+                    <span class="stat-icon">📥</span>
+                    <div class="stat-value" data-animate-counter="350">350</div>
+                    <div class="stat-label">SDK Downloads</div>
+                </div>
+                <div class="stat-card card-glow-green reveal reveal-delay-4">
+                    <span class="stat-icon">🔎</span>
+                    <div class="stat-value" data-animate-counter="1280">1,280</div>
+                    <div class="stat-label">Explorer Queries</div>
+                </div>
+                <div class="stat-card card-glow-blue reveal reveal-delay-1">
+                    <span class="stat-icon">📡</span>
+                    <div class="stat-value" data-animate-counter="2468">2,468</div>
+                    <div class="stat-label">RPC Requests</div>
+                </div>
+                <div class="stat-card card-glow-green reveal reveal-delay-2">
+                    <span class="stat-icon">🗳️</span>
+                    <div class="stat-value" data-animate-counter="12">12</div>
+                    <div class="stat-label">Governance Votes</div>
+                </div>
+                <div class="stat-card card-glow-purple reveal reveal-delay-3">
+                    <span class="stat-icon">👨‍💻</span>
+                    <div class="stat-value" data-animate-counter="12">12</div>
+                    <div class="stat-label">Contributors</div>
+                </div>
+                <div class="stat-card card-glow-cyan reveal reveal-delay-4">
+                    <span class="stat-icon">🤝</span>
+                    <div class="stat-value" data-animate-counter="45">45</div>
+                    <div class="stat-label">Ambassadors</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Ecosystem Modules - Bento Layout -->
+        <section class="section">
+            <div class="section-header reveal">
+                <h2>Ecosystem <span class="highlight">Modules</span></h2>
+                <p>Every component designed to drive adoption, trust, decentralization, and sustainable growth.</p>
+            </div>
+            <div class="bento-grid">
+                <!-- Featured: Verification -->
+                <div class="bento-card featured card-green reveal reveal-delay-1">
+                    <div class="bento-bg green-bg"></div>
+                    <div class="bento-icon green">🔍</div>
+                    <h3>Independent Verification</h3>
+                    <p>Register, run validation suites, and earn public verification badges for nodes, mining, wallets, and security testing. Build trust through transparency.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">128</div>
+                        <div class="bento-label">Verified Entities</div>
+                    </div>
+                    <a href="/verification/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-4);">Visit Portal →</a>
+                </div>
+
+                <!-- Medium: Mining -->
+                <div class="bento-card medium card-gold reveal reveal-delay-2">
+                    <div class="bento-bg"></div>
+                    <div class="bento-icon">⛏️</div>
+                    <h3>Mining Network</h3>
+                    <p>Mining calculator, hardware benchmarks, profitability estimation, and step-by-step tutorials for solo and pool mining.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">SHA-256d</div>
+                        <div class="bento-label">Algorithm</div>
+                    </div>
+                    <a href="/mining/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-4);">Start Mining →</a>
+                </div>
+
+                <!-- Medium: Developers -->
+                <div class="bento-card medium card-purple reveal reveal-delay-3">
+                    <div class="bento-bg purple-bg"></div>
+                    <div class="bento-icon purple">💻</div>
+                    <h3>Developer Portal</h3>
+                    <p>SDKs in Rust, Go, Python, JavaScript, Java. Full API docs, faucet access, code samples, and interactive API playground.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value">5</div>
+                        <div class="bento-label">SDK Languages</div>
+                    </div>
+                    <a href="/developer/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-4);">Build Now →</a>
+                </div>
+
+                <!-- Compact: Bug Bounty -->
+                <div class="bento-card compact card-cyan reveal reveal-delay-1">
+                    <div class="bento-bg cyan-bg"></div>
+                    <div class="bento-icon cyan">🐛</div>
+                    <h3>Bug Bounty</h3>
+                    <p>$150K rewards pool. Hall of Fame recognition.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">$150K</div>
+                        <div class="bento-label">Rewards Pool</div>
+                    </div>
+                    <a href="/bug-bounty/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">View →</a>
+                </div>
+
+                <!-- Compact: Exchange -->
+                <div class="bento-card compact card-gold reveal reveal-delay-2">
+                    <div class="bento-bg"></div>
+                    <div class="bento-icon">🏦</div>
+                    <h3>Exchange Ready</h3>
+                    <p>Stable RPC with 99.9% uptime.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">Ready</div>
+                        <div class="bento-label">For Integration</div>
+                    </div>
+                    <a href="/exchange-readiness/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">View →</a>
+                </div>
+
+                <!-- Compact: Merchants -->
+                <div class="bento-card compact card-green reveal reveal-delay-3">
+                    <div class="bento-bg green-bg"></div>
+                    <div class="bento-icon green">🏪</div>
+                    <h3>Merchant Tools</h3>
+                    <p>Payment gateway & plugins ready.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">Prepared</div>
+                        <div class="bento-label">For Adoption</div>
+                    </div>
+                    <a href="/pay/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">View →</a>
+                </div>
+
+                <!-- Compact: Community -->
+                <div class="bento-card compact card-purple reveal reveal-delay-1">
+                    <div class="bento-bg purple-bg"></div>
+                    <div class="bento-icon purple">🤝</div>
+                    <h3>Community</h3>
+                    <p>45 ambassadors & growing.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">Active</div>
+                        <div class="bento-label">Global Community</div>
+                    </div>
+                    <a href="/community/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">Join →</a>
+                </div>
+
+                <!-- Compact: Analytics -->
+                <div class="bento-card compact card-cyan reveal reveal-delay-2">
+                    <div class="bento-bg cyan-bg"></div>
+                    <div class="bento-icon cyan">📊</div>
+                    <h3>Analytics</h3>
+                    <p>Live metrics & treasury tracking.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">Live</div>
+                        <div class="bento-label">Real-Time Data</div>
+                    </div>
+                    <a href="/metrics/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">View →</a>
+                </div>
+
+                <!-- Compact: Automation -->
+                <div class="bento-card compact card-gold reveal reveal-delay-3">
+                    <div class="bento-bg"></div>
+                    <div class="bento-icon">🤖</div>
+                    <h3>Automation</h3>
+                    <p>AI-powered content & moderation.</p>
+                    <div class="bento-metric">
+                        <div class="bento-value" style="font-size:1.2rem;">24/7</div>
+                        <div class="bento-label">Automated</div>
+                    </div>
+                    <a href="/automation/" class="btn btn-ghost btn-sm" style="margin-top:var(--space-3);">Learn →</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Onboarding Funnel -->
+        <section class="section">
+            <div class="section-header reveal">
+                <h2>Start Your <span class="highlight">Journey</span></h2>
+                <p>From learning to active participation in the decentralized economy.</p>
+            </div>
+            <div class="funnel reveal reveal-delay-1">
+                <a href="/wallet/" class="funnel-step">
+                    <span class="step-number">1</span>
+                    Create Wallet
+                </a>
+                <span class="funnel-arrow">→</span>
+                <a href="/faucet/" class="funnel-step">
+                    <span class="step-number">2</span>
+                    Claim Faucet
+                </a>
+                <span class="funnel-arrow">→</span>
+                <a href="/community/" class="funnel-step">
+                    <span class="step-number">3</span>
+                    Join Community
+                </a>
+                <span class="funnel-arrow">→</span>
+                <a href="/mining/" class="funnel-step">
+                    <span class="step-number">4</span>
+                    Start Mining
+                </a>
+                <span class="funnel-arrow">→</span>
+                <a href="/governance/" class="funnel-step">
+                    <span class="step-number">5</span>
+                    Participate
+                </a>
+            </div>
+        </section>
+
+        <!-- Growth Targets -->
+        <section class="section">
+            <div class="section-header reveal">
+                <h2>📈 Growth <span class="highlight">Targets</span></h2>
+                <p>Our commitment to building a thriving, decentralized ecosystem.</p>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.25rem;">
+                <div class="card reveal reveal-delay-1">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>⌛ Wallets</h3>
+                        <span class="badge badge-orange">Target: 10,000+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-orange" style="width:1%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">128 / 10,000</p>
+                </div>
+                <div class="card reveal reveal-delay-2">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>🖥️ Nodes</h3>
+                        <span class="badge badge-blue">Target: 500+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-blue" style="width:1%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">5 / 500</p>
+                </div>
+                <div class="card reveal reveal-delay-3">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>⛏️ Miners</h3>
+                        <span class="badge badge-green">Target: 100+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-green" style="width:12%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">12 / 100</p>
+                </div>
+                <div class="card reveal reveal-delay-4">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>📝 Daily TX</h3>
+                        <span class="badge badge-orange">Target: 5,000/day</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-orange" style="width:1%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">48 / 5,000</p>
+                </div>
+                <div class="card reveal reveal-delay-1">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>🏊 Pools</h3>
+                        <span class="badge badge-blue">Target: 5+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-blue" style="width:20%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">1 / 5</p>
+                </div>
+                <div class="card reveal reveal-delay-2">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>👨‍💻 Developers</h3>
+                        <span class="badge badge-green">Target: 100+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-green" style="width:15%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">15 / 100</p>
+                </div>
+                <div class="card reveal reveal-delay-3">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>🏪 Merchants</h3>
+                        <span class="badge badge-orange">Target: 50+</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-orange" style="width:2%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">1 / 50</p>
+                </div>
+                <div class="card reveal reveal-delay-4">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+                        <h3>🏦 Exchanges</h3>
+                        <span class="badge badge-blue">Target: 3–10</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill progress-fill-blue" style="width:10%;"></div>
+                    </div>
+                    <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-muted);">In Progress</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Community -->
+        <section class="section">
+            <div class="section-header reveal">
+                <h2>🤝 Join the <span class="highlight">Community</span></h2>
+                <p>Connect with the Udaya community across all platforms.</p>
+            </div>
+            <div class="grid grid-auto">
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">𝕏</span>
+                    <div>
+                        <h3 style="margin:0;">X / Twitter</h3>
+                        <p style="margin:0;color:var(--text-muted);">@UdayaChain · 2.5K followers</p>
+                    </div>
+                </a>
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">✈️</span>
+                    <div>
+                        <h3 style="margin:0;">Telegram</h3>
+                        <p style="margin:0;color:var(--text-muted);">t.me/Udaya · 1.8K members</p>
+                    </div>
+                </a>
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">💬</span>
+                    <div>
+                        <h3 style="margin:0;">Discord</h3>
+                        <p style="margin:0;color:var(--text-muted);">discord.gg/Udaya · 850 members</p>
+                    </div>
+                </a>
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">📺</span>
+                    <div>
+                        <h3 style="margin:0;">YouTube</h3>
+                        <p style="margin:0;color:var(--text-muted);">Udaya Channel · 320 subscribers</p>
+                    </div>
+                </a>
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">💼</span>
+                    <div>
+                        <h3 style="margin:0;">LinkedIn</h3>
+                        <p style="margin:0;color:var(--text-muted);">Udaya Foundation · 450 followers</p>
+                    </div>
+                </a>
+                <a href="#" class="card" style="text-decoration:none;display:flex;align-items:center;gap:1rem;flex-direction:row;">
+                    <span style="font-size:2rem;">📂</span>
+                    <div>
+                        <h3 style="margin:0;">GitHub</h3>
+                        <p style="margin:0;color:var(--text-muted);">github.com/Udaya · 75 stars</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <footer class="footer" role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <h4>⚡ Udaya</h4>
+                <p>Global decentralized financial infrastructure. Production-ready Proof-of-Work Layer-1 blockchain. Community-governed and built for enterprise adoption.</p>
+                <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
+                    <span class="badge badge-green">Mainnet Ready</span>
+                    <span class="badge badge-cyan">SHA-256d</span>
+                    <span class="badge badge-orange">PoW</span>
+                    <span class="badge badge-purple">L1</span>
+                </div>
+            </div>
+            <div>
+                <h4>Ecosystem</h4>
+                <a href="/ecosystem/">🌍 Hub</a>
+                <a href="/command-center/">📊 Command Center</a>
+                <a href="/verification/">🔍 Verification</a>
+                <a href="/bug-bounty/">🐛 Bug Bounty</a>
+                <a href="/mining/">⛏️ Mining</a>
+            </div>
+            <div>
+                <h4>Developers</h4>
+                <a href="/developer/">💻 Portal</a>
+                <a href="/docs/">📚 Documentation</a>
+                <a href="/exchange-readiness/">🏦 Exchange</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">📂 GitHub</a>
+                <a href="/faucet/">💧 Faucet</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="/community/">🎁 Rewards</a>
+                <a href="/social/">📱 Social</a>
+                <a href="/metrics/">📊 Analytics</a>
+                <a href="/governance/">🗳️ Governance</a>
+                <a href="/automation/">🤖 Automation</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026 · Built with ⚡</span>
+            <span>Decentralizing the future of global finance</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

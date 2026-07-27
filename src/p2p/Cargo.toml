@@ -1,0 +1,25 @@
+[package]
+name = "udaya-p2p"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Udaya P2P networking layer"
+
+[dependencies]
+udaya-core = { path = "../core" }
+udaya-storage = { path = "../storage" }
+udaya-mempool = { path = "../mempool" }
+tokio.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+bincode.workspace = true
+anyhow.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+dashmap.workspace = true
+futures.workspace = true
+chrono.workspace = true
+rand.workspace = true
+uuid.workspace = true
+byteorder.workspace = true
+sha2.workspace = true

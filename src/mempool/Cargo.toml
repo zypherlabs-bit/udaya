@@ -1,0 +1,17 @@
+[package]
+name = "udaya-mempool"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Udaya mempool engine with policy and anti-spam"
+
+[dependencies]
+udaya-core = { path = "../core" }
+udaya-storage = { path = "../storage" }
+serde.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+log.workspace = true
+parking_lot.workspace = true
+dashmap.workspace = true
+chrono.workspace = true

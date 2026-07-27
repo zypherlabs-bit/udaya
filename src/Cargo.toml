@@ -1,0 +1,37 @@
+[package]
+name = "Udayad"
+version = "1.0.0-alpha.1"
+edition = "2021"
+license = "MIT"
+description = "Udaya daemon - Next-generation Proof-of-Work cryptocurrency node"
+
+[[bin]]
+name = "Udayad"
+path = "main.rs"
+
+[dependencies]
+udaya-core = { path = "core" }
+udaya-storage = { path = "storage" }
+udaya-mempool = { path = "mempool" }
+udaya-p2p = { path = "p2p" }
+udaya-api = { path = "api" }
+udaya-wallet = { path = "wallet" }
+udaya-mining = { path = "mining" }
+udaya-explorer = { path = "explorer" }
+clap.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+hex.workspace = true
+axum.workspace = true
+tower-http.workspace = true
+tower.workspace = true
+futures.workspace = true
+parking_lot.workspace = true
+chrono.workspace = true
+prometheus.workspace = true
+num-bigint.workspace = true
+bincode.workspace = true

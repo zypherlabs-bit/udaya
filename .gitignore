@@ -1,0 +1,68 @@
+# Rust build artifacts
+target/
+**/target/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node modules
+node_modules/
+website/node_modules/
+
+# Data directories
+data/
+*.dat
+*.db
+
+# Generated genesis files
+genesis-*.json
+genesis-*.dat
+
+# Security reports
+*-report.json
+*-audit.json
+
+# Local databases and chain data
+rocksdb/
+chain-data/
+blocks/
+peer-data/
+
+# Wallet files
+wallet.dat
+*.wallet
+wallet-*.json
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Backup files
+*.bak
+*.backup
+
+# Crash dumps
+*.dmp
+core.*
+
+# Logs
+logs/
+*.log
+
+# Build cache
+cache/
+.cache/
+
+# Temporary files
+tmp/
+temp/
+*.tmp

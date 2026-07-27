@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Community Rewards</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <style>
+        .reward-card { text-align: center; padding: 2rem 1.5rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); transition: var(--transition); }
+        .reward-card:hover { transform: translateY(-2px); border-color: var(--border-hover); }
+        .reward-card .reward-icon { font-size: 2.5rem; margin-bottom: 1rem; }
+        .reward-card .reward-amount { font-size: 1.5rem; font-weight: 700; color: var(--accent-orange); margin: 0.5rem 0; }
+        .leaderboard-entry { display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); margin-bottom: 0.5rem; }
+        .leaderboard-entry .lb-rank { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; }
+    </style>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/community/" class="active">Community</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding:40px 20px;">
+        <span class="hero-badge badge-green">🎁 Community Rewards Program</span>
+        <h1>Earn Rewards for Contributing</h1>
+        <p>Udaya rewards community members who contribute to ecosystem growth through ambassadors, content creation, node operation, and development.</p>
+        <div class="hero-buttons">
+            <a href="#programs" class="btn btn-primary">View Programs</a>
+            <a href="#leaderboard" class="btn btn-secondary">🏆 Leaderboard</a>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">🎁</div><div class="stat-value">2,500</div><div class="stat-label">UDYA Rewarded</div></div>
+            <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-value">45</div><div class="stat-label">Ambassadors</div></div>
+            <div class="stat-card"><div class="stat-icon">📝</div><div class="stat-value">18</div><div class="stat-label">Contributors</div></div>
+            <div class="stat-card"><div class="stat-icon">⭐</div><div class="stat-value">92</div><div class="stat-label">Active Members</div></div>
+        </div>
+
+        <!-- Programs -->
+        <div class="section" id="programs">
+            <div class="section-header" style="text-align:left;"><h2>🎯 Reward Programs</h2><p>Multiple ways to earn UDYA by contributing to the ecosystem.</p></div>
+            <div class="grid grid-3">
+                <div class="reward-card card-glow">
+                    <div class="reward-icon">🌍</div>
+                    <h3>Ambassador Program</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Represent Udaya in your region, organize meetups, create content</p>
+                    <div class="reward-amount">Up to 500 UDYA/mo</div>
+                    <span class="badge badge-green">45 Active</span>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="alert('Ambassador application coming soon!')">Apply Now →</button>
+                </div>
+                <div class="reward-card card-glow-blue">
+                    <div class="reward-icon">💻</div>
+                    <h3>Developer Program</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Contribute code, fix bugs, build tools, and submit pull requests</p>
+                    <div class="reward-amount">Up to 1,000 UDYA/mo</div>
+                    <span class="badge badge-blue">18 Active</span>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="alert('Developer program details coming soon!')">View Details →</button>
+                </div>
+                <div class="reward-card card-glow">
+                    <div class="reward-icon">🖥️</div>
+                    <h3>Node Operator Rewards</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Run a full node, maintain uptime, help decentralize the network</p>
+                    <div class="reward-amount">Up to 200 UDYA/mo</div>
+                    <span class="badge badge-orange">12 Active</span>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="alert('Node operator program details coming soon!')">Run a Node →</button>
+                </div>
+                <div class="reward-card card-glow-blue">
+                    <div class="reward-icon">✍️</div>
+                    <h3>Content Creator Program</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Create tutorials, videos, articles, and educational content</p>
+                    <div class="reward-amount">Up to 300 UDYA/mo</div>
+                    <span class="badge badge-purple">9 Active</span>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="alert('Content creator program coming soon!')">Start Creating →</button>
+                </div>
+                <div class="reward-card card-glow">
+                    <div class="reward-icon">🔍</div>
+                    <h3>Bug Hunter Program</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Find and report bugs, submit vulnerability reports</p>
+                    <div class="reward-amount">Up to 10,000 UDYA</div>
+                    <span class="badge badge-red">8 Active</span>
+                    <a href="/bug-bounty/" class="btn btn-ghost btn-sm" style="margin-top:0.75rem;">View Bounties →</a>
+                </div>
+                <div class="reward-card card-glow-blue">
+                    <div class="reward-icon">📢</div>
+                    <h3>Social Media Program</h3>
+                    <p style="font-size:0.85rem;color:var(--text-muted);">Share Udaya on social media, engage with the community</p>
+                    <div class="reward-amount">Up to 100 UDYA/mo</div>
+                    <span class="badge badge-green">24 Active</span>
+                    <button class="btn btn-ghost btn-sm" style="margin-top:0.75rem;" onclick="alert('Social media program coming soon!')">Join Now →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scoring System -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;"><h2>📊 Scoring & Verification</h2><p>Automated scoring and reward distribution based on contributions.</p></div>
+            <div class="card">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem;">
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:var(--accent-orange);">1,450</div><div style="font-size:0.8rem;color:var(--text-muted);">Total Score</div></div>
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:var(--accent-blue);">85%</div><div style="font-size:0.8rem;color:var(--text-muted);">Verification Rate</div></div>
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:var(--accent-green);">48</div><div style="font-size:0.8rem;color:var(--text-muted);">Rewards Distributed</div></div>
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;color:var(--accent-purple);">3.2</div><div style="font-size:0.8rem;color:var(--text-muted);">Avg Score/User</div></div>
+                </div>
+                <div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:75%;"></div></div>
+                <p style="font-size:0.85rem;color:var(--text-muted);margin-top:0.5rem;">Score distribution: Content (35%) · Development (30%) · Community (20%) · Node Ops (15%)</p>
+            </div>
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="section" id="leaderboard">
+            <div class="section-header" style="text-align:left;"><h2>🏆 Community Leaderboard</h2><p>Top contributors ranked by contribution score.</p></div>
+            <div class="leaderboard-entry">
+                <div class="lb-rank" style="background:rgba(247,147,26,0.2);color:var(--accent-orange);">🥇</div>
+                <div style="flex:1;"><strong>udaya_whale</strong> <span style="font-size:0.85rem;color:var(--text-muted);">· Ambassador + Developer</span></div>
+                <span class="badge badge-orange">2,450 pts</span>
+            </div>
+            <div class="leaderboard-entry">
+                <div class="lb-rank" style="background:rgba(59,130,246,0.2);color:var(--accent-blue);">🥈</div>
+                <div style="flex:1;"><strong>node_runner_99</strong> <span style="font-size:0.85rem;color:var(--text-muted);">· Node Operator</span></div>
+                <span class="badge badge-blue">1,890 pts</span>
+            </div>
+            <div class="leaderboard-entry">
+                <div class="lb-rank" style="background:rgba(16,185,129,0.2);color:var(--accent-green);">🥉</div>
+                <div style="flex:1;"><strong>crypto_content</strong> <span style="font-size:0.85rem;color:var(--text-muted);">· Content Creator</span></div>
+                <span class="badge badge-green">1,450 pts</span>
+            </div>
+            <div class="leaderboard-entry">
+                <div class="lb-rank" style="background:rgba(139,92,246,0.2);color:var(--accent-purple);">4</div>
+                <div style="flex:1;"><strong>rustacean_dev</strong> <span style="font-size:0.85rem;color:var(--text-muted);">· Developer</span></div>
+                <span class="badge badge-purple">1,200 pts</span>
+            </div>
+            <div class="leaderboard-entry">
+                <div class="lb-rank" style="background:rgba(239,68,68,0.2);color:var(--accent-red);">5</div>
+                <div style="flex:1;"><strong>security_hawk</strong> <span style="font-size:0.85rem;color:var(--text-muted);">· Bug Hunter</span></div>
+                <span class="badge badge-red">980 pts</span>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div><h4>⚡ Udaya Ecosystem</h4><p>Rewarding the community that builds Udaya.</p></div>
+            <div><h4>Programs</h4><a href="#">Ambassador</a><a href="#">Developer</a><a href="#">Content Creator</a><a href="#">Node Operator</a></div>
+            <div><h4>Resources</h4><a href="/docs/">Documentation</a><a href="https://github.com/Udaya/Udaya">GitHub</a></div>
+            <div><h4>Community</h4><a href="#">Discord</a><a href="#">Telegram</a><a href="#">X / Twitter</a></div>
+        </div>
+        <div class="footer-bottom"><span>Udaya Foundation © 2026</span><span>community.Udaya.org</span></div>
+    </footer>
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

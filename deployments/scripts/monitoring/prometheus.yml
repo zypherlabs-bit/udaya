@@ -1,0 +1,52 @@
+# Udaya Prometheus Configuration
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+
+# Alerting
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rule files
+rule_files:
+  - "alerts/*.yml"
+
+# Scrape targets
+scrape_configs:
+  - job_name: 'Udaya-node'
+    static_configs:
+      - targets:
+        - 'seed-node-us:8332'
+        - 'seed-node-eu:8332'
+        - 'seed-node-apac:8332'
+    metrics_path: '/metrics'
+    scrape_interval: 15s
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: 'node'
+        regex: '([^:]+):.*'
+        replacement: '${1}'
+      - source_labels: [__address__]
+        target_label: 'instance'
+
+  - job_name: 'udaya-explorer'
+    static_configs:
+      - targets:
+        - 'explorer-api:8080'
+    metrics_path: '/metrics'
+    scrape_interval: 30s
+
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets:
+        - 'node-exporter:9100'
+    scrape_interval: 30s
+
+  - job_name: 'prometheus'
+    static_configs:
+      - targets:
+        - 'localhost:9090'

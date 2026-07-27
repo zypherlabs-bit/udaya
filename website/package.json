@@ -1,0 +1,12 @@
+{
+  "name": "Udaya-ecosystem",
+  "version": "1.0.0",
+  "description": "Udaya Ecosystem Growth Platform - verification, mining, developer, merchant, and community tools",
+  "main": "js/server.js",
+  "scripts": {
+    "start": "node js/server.js",
+    "dev": "node js/server.js"
+  },
+  "keywords": ["Udaya", "blockchain", "cryptocurrency", "proof-of-work", "ecosystem"],
+  "license": "MIT"
+}

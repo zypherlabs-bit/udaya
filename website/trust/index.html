@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Trust & Transparency Portal</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/">⚡ Udaya</a>
+        <span class="subtitle">Trust & Transparency Portal</span>
+        <div class="nav-links">
+            <a href="#overview" onclick="switchTab('overview')">Overview</a>
+            <a href="#treasury" onclick="switchTab('treasury')">Treasury</a>
+            <a href="#vesting" onclick="switchTab('vesting')">Vesting</a>
+            <a href="#governance" onclick="switchTab('governance')">Governance</a>
+            <a href="#audits" onclick="switchTab('audits')">Audits</a>
+            <a href="#transactions" onclick="switchTab('transactions')">Transactions</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">🔐 Udaya Trust & Transparency</h1>
+        <p class="page-subtitle">Verifiable, auditable, and transparent operations. All data is publicly verifiable on the Udaya blockchain. This portal provides real-time visibility into treasury balances, founder vesting, governance metrics, and audit reports.</p>
+
+        <!-- Key Metrics -->
+        <div class="summary-grid" id="metricsGrid">
+            <div class="summary-card">
+                <div class="icon">🏛️</div>
+                <div class="value">21,000,000</div>
+                <div class="label">Max Supply (UDYA)</div>
+            </div>
+            <div class="summary-card">
+                <div class="icon">⚖️</div>
+                <div class="value">2.38%</div>
+                <div class="label">Founder Allocation</div>
+            </div>
+            <div class="summary-card">
+                <div class="icon">🔒</div>
+                <div class="value">6 Years</div>
+                <div class="label">Vesting Duration</div>
+            </div>
+            <div class="summary-card">
+                <div class="icon">💰</div>
+                <div class="value balance-display balance-green" id="treasuryBalance">145,678</div>
+                <div class="label">Treasury Balance (UDYA)</div>
+            </div>
+            <div class="summary-card">
+                <div class="icon">🏛️</div>
+                <div class="value" id="totalProposals">12</div>
+                <div class="label">Total Proposals</div>
+            </div>
+            <div class="summary-card">
+                <div class="icon">🛡️</div>
+                <div class="value" id="auditCount">5</div>
+                <div class="label">Completed Audits</div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-bar">
+            <button class="tab-btn active" onclick="switchTab('overview')">📋 Overview</button>
+            <button class="tab-btn" onclick="switchTab('treasury')">💰 Treasury</button>
+            <button class="tab-btn" onclick="switchTab('vesting')">🔒 Vesting</button>
+            <button class="tab-btn" onclick="switchTab('governance')">🏛️ Governance</button>
+            <button class="tab-btn" onclick="switchTab('audits')">📋 Audits</button>
+            <button class="tab-btn" onclick="switchTab('transactions')">📊 Transactions</button>
+        </div>
+
+        <!-- Overview Tab -->
+        <div class="tab-content active" id="tab-overview">
+            <h2 class="section-title"><span class="emoji">🏛️</span> Founding Principles</h2>
+            <div class="card">
+                <ul style="margin-left: 1.5rem; line-height: 2;">
+                    <li><strong>No Premine</strong> — 100% of UDYA is mined through Proof-of-Work. No tokens were created before the genesis block.</li>
+                    <li><strong>No ICO</strong> — No pre-sale, no private allocation, no insider discounts. Everyone has equal access.</li>
+                    <li><strong>No Founder Reward</strong> — Founders mine on equal footing with the community. No special mining rewards.</li>
+                    <li><strong>Fair Launch</strong> — Anyone can mine from block 1. No head start for insiders.</li>
+                    <li><strong>Open Source</strong> — Complete source code publicly available on GitHub. MIT-licensed.</li>
+                </ul>
+            </div>
+
+            <h2 class="section-title"><span class="emoji">🔐</span> Allocation Summary</h2>
+            <div class="two-col">
+                <div class="card">
+                    <div class="card-title">Mining Rewards — 97.62%</div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        20,500,000 UDYA are distributed to miners over ~120 years via the halving schedule. 
+                        This ensures provable scarcity and fair distribution identical to Bitcoin's monetary policy.
+                    </p>
+                </div>
+                <div class="card">
+                    <div class="card-title">Founder Allocation — 2.38%</div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                        500,000 UDYA with a 6-year linear vesting schedule and 1-year cliff. 
+                        This is one of the smallest founder allocations in cryptocurrency, demonstrating commitment to fairness.
+                    </p>
+                </div>
+            </div>
+
+            <h2 class="section-title"><span class="emoji">🌐</span> Governance</h2>
+            <div class="card">
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    Udaya uses transparent, on-chain governance where every UDYA holder can participate.
+                    The Foundation Council consists of 7 elected members serving 2-year terms.
+                </p>
+                <table class="data-table">
+                    <tr><th>Metric</th><th>Value</th></tr>
+                    <tr><td>Proposal Threshold</td><td>0.1% of circulating supply</td></tr>
+                    <tr><td>Voting Period</td><td>20,160 blocks (~2 weeks)</td></tr>
+                    <tr><td>Quorum Required</td><td>10% of circulating supply</td></tr>
+                    <tr><td>Pass Threshold</td><td>51% of votes (simple majority)</td></tr>
+                    <tr><td>Supermajority</td><td>60% for constitutional amendments</td></tr>
+                    <tr><td>Vote Weight</td><td>1 UDYA = 1 vote (capped at 10% per wallet)</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Treasury Tab -->
+        <div class="tab-content" id="tab-treasury">
+            <h2 class="section-title"><span class="emoji">💰</span> Treasury Wallet Inventory</h2>
+            <p class="page-subtitle">All wallets are multi-signature controlled and publicly verifiable on the Udaya blockchain.</p>
+
+            <div id="treasurySummary" class="summary-grid"></div>
+
+            <div class="card">
+                <table class="data-table" id="treasuryTable">
+                    <thead>
+                        <tr><th>Wallet</th><th>Label</th><th>Purpose</th><th>Custodians</th><th>Multisig</th><th>Status</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <h2 class="section-title"><span class="emoji">🏗️</span> Treasury Architecture</h2>
+            <div class="diagram">
+                    ┌─────────────────────────────────────┐
+                    │      BLOCK SUBSIDY (2% / block)      │
+                    │         Protocol-enforced            │
+                    └────────────────┬────────────────────┘
+                                     │
+                                     ▼
+                    ┌─────────────────────────────────────┐
+                    │        FOUNDATION TREASURY           │
+                    │        5-of-7 Council Multisig       │
+                    │        Balance: 145,678 UDYA         │
+                    └──┬──────────┬──────────┬─────────────┘
+                       │          │          │
+          ┌────────────┘          │          └──────────────┐
+          ▼                      ▼                         ▼
+┌──────────────────┐  ┌──────────────────┐  ┌─────────────────────┐
+│  ECOSYSTEM FUND  │  │ COMMUNITY GRANTS │  │    BUG BOUNTY       │
+│  4-of-6 Multisig │  │  3-of-5 Multisig │  │   2-of-3 Multisig   │
+│  50,000 UDYA     │  │  19,678 UDYA     │  │   10,000 UDYA       │
+│  Exchange/Market │  │  Developer SDK   │  │  Security Research  │
+└──────────────────┘  └──────────────────┘  └─────────────────────┘
+            </div>
+
+            <div class="three-col">
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-blue);">🛡️ Tier 1 — Cold Storage</div>
+                    <ul style="margin-left: 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                        <li>3-of-5 geographically distributed multisig</li>
+                        <li>Hardware wallets (Coldcard/Ledger)</li>
+                        <li>Air-gapped signing</li>
+                        <li>48-hour timelock on >10K UDYA</li>
+                        <li>Quarterly third-party audits</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-cyan);">🔐 Tier 2 — Operational</div>
+                    <ul style="margin-left: 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                        <li>2-of-3 to 4-of-6 multisig</li>
+                        <li>PSBT workflow required</li>
+                        <li>Daily transaction limits</li>
+                        <li>Monthly reconciliation</li>
+                        <li>24/7 monitoring & alerting</li>
+                    </ul>
+                </div>
+                <div class="card">
+                    <div class="card-title" style="color: var(--accent-green);">⚡ Tier 3 — Daily</div>
+                    <ul style="margin-left: 1rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
+                        <li>1-of-2 multisig</li>
+                        <li>Automated top-up from parent</li>
+                        <li><100 UDYA per transaction</li>
+                        <li>Real-time balance alerts</li>
+                        <li>Monthly expense reporting</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Vesting Tab -->
+        <div class="tab-content" id="tab-vesting">
+            <h2 class="section-title"><span class="emoji">🔒</span> Founder Vesting Schedule</h2>
+            <p class="page-subtitle">
+                500,000 UDYA (2.38% of supply) — 6-year linear vesting with 1-year cliff. 
+                Enforced via immutable on-chain smart contract.
+            </p>
+
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="icon">📦</div>
+                    <div class="value balance-display balance-orange">500,000</div>
+                    <div class="label">Total Allocation (UDYA)</div>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">⏳</div>
+                    <div class="value">12 Months</div>
+                    <div class="label">Cliff Duration</div>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">📅</div>
+                    <div class="value">6 Years</div>
+                    <div class="label">Vesting Duration</div>
+                </div>
+                <div class="summary-card">
+                    <div class="icon">📊</div>
+                    <div class="value balance-display balance-green">83,333</div>
+                    <div class="label">Annual Release (UDYA)</div>
+                </div>
+            </div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Year-by-Year Vesting</h3>
+            <div class="card">
+                <div class="timeline" id="vestingTimeline"></div>
+            </div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Vesting Schedule Table</h3>
+            <div class="card">
+                <table class="data-table" id="vestingTable">
+                    <thead>
+                        <tr><th>Year</th><th>Released (UDYA)</th><th>Cumulative (UDYA)</th><th>Remaining Locked (UDYA)</th><th>% Vested</th></tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Wallet Architecture</h3>
+            <div class="diagram">
+┌─────────────────────────────────────────────────────────┐
+│                  FOUNDER ALLOCATION                       │
+│              500,000 UDYA (2.38% of supply)               │
+│              6-year linear vesting, 1-yr cliff            │
+└──────────┬───────────────┬────────────────┬───────────────┘
+           │               │                │
+           ▼               ▼                ▼
+┌────────────────────┐ ┌──────────────┐ ┌──────────────┐
+│   COLD STORAGE     │ │  OPERATIONS  │ │    DAILY     │
+│   475,000 UDYA     │ │  20,000 UDYA │ │  5,000 UDYA  │
+│   3-of-5 Multisig  │ │ 2-of-3 Multi │ │ 1-of-2 Multi │
+│   Geographically   │ │ PSBT Workfl. │ │ Auto Top-up  │
+│   Distributed      │ │              │ │              │
+└────────────────────┘ └──────────────┘ └──────────────┘
+            </div>
+
+            <div class="card" id="founderWallets"></div>
+        </div>
+
+        <!-- Governance Tab -->
+        <div class="tab-content" id="tab-governance">
+            <h2 class="section-title"><span class="emoji">🏛️</span> Governance Portal</h2>
+            <p class="page-subtitle">Transparent on-chain governance for protocol upgrades, treasury management, and community proposals.</p>
+
+            <div class="summary-grid" id="govStatsGrid"></div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Active Proposals</h3>
+            <div id="activeProposals"></div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Governance Parameters</h3>
+            <div class="card">
+                <table class="data-table">
+                    <thead><tr><th>Parameter</th><th>Value</th><th>Description</th></tr></thead>
+                    <tbody id="govParamsTable"></tbody>
+                </table>
+            </div>
+
+            <h3 style="color: var(--accent-orange); margin: 1.5rem 0 0.5rem;">Foundation Council</h3>
+            <div class="card" id="councilTable"></div>
+        </div>
+
+        <!-- Audits Tab -->
+        <div class="tab-content" id="tab-audits">
+            <h2 class="section-title"><span class="emoji">📋</span> Audit Reports</h2>
+            <p class="page-subtitle">All audit reports are publicly available and independently verifiable. Udaya maintains a quarterly audit schedule.</p>
+
+            <div class="summary-grid" id="auditStatsGrid"></div>
+
+            <div id="auditReportsList"></div>
+
+            <div class="card">
+                <p style="color: var(--text-secondary);">
+                    <strong>Next Audit:</strong> <span id="nextAuditDate">September 10, 2026</span> | 
+                    <strong>Schedule:</strong> <span id="auditSchedule">Quarterly</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- Transactions Tab -->
+        <div class="tab-content" id="tab-transactions">
+            <h2 class="section-title"><span class="emoji">📊</span> Treasury Transaction Log</h2>
+            <p class="page-subtitle">Complete, verifiable history of all treasury movements. Every transaction is recorded on-chain and signed via multisig.</p>
+
+            <div class="summary-grid" id="txSummaryGrid"></div>
+
+            <div id="txList"></div>
+        </div>
+
+        <div class="disclaimer">
+            <strong>⚠️ Transparency Commitment</strong><br>
+            All wallet addresses, balances, and transactions listed here are publicly verifiable on the Udaya blockchain at any time. 
+            The Udaya Foundation is committed to complete operational transparency. Addresses will be populated with genesis block 
+            transactions at mainnet launch. This portal is updated in real-time from on-chain data.
+            <br><br>
+            <strong>📚 Supporting Documents:</strong>
+            <a href="/docs/foundation/charter.md" target="_blank">Foundation Charter</a> · 
+            <a href="/docs/foundation/tokenomics.md" target="_blank">Tokenomics</a> · 
+            <a href="/docs/foundation/treasury-framework.md" target="_blank">Treasury Framework</a> · 
+            <a href="/docs/operations/founder-treasury-report.md" target="_blank">Founder Treasury Report</a> ·
+            <a href="/docs/foundation/governance-metrics.md" target="_blank">Governance Metrics (JSON)</a>
+        </div>
+    </div>
+
+    <script>
+        // Load all JSON data
+        async function loadData() {
+            try {
+                const [founder, treasury, governance, audits, transactions] = await Promise.all([
+                    fetch('founder-allocation.json').then(r => r.json()),
+                    fetch('treasury-wallets.json').then(r => r.json()),
+                    fetch('governance-metrics.json').then(r => r.json()),
+                    fetch('audit-reports.json').then(r => r.json()),
+                    fetch('treasury-transactions.json').then(r => r.json())
+                ]);
+                return { founder, treasury, governance, audits, transactions };
+            } catch (e) {
+                console.error('Error loading data:', e);
+                return null;
+            }
+        }
+
+        let currentData = null;
+
+        // Tab switching
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            
+            const tab = document.getElementById('tab-' + tabName);
+            if (tab) tab.classList.add('active');
+            
+            const btn = Array.from(document.querySelectorAll('.tab-btn')).find(
+                b => b.textContent.includes(tabName.charAt(0).toUpperCase() + tabName.slice(1)) ||
+                     b.getAttribute('onclick')?.includes(tabName)
+            );
+            if (btn) btn.classList.add('active');
+            
+            // Update nav link active state
+            document.querySelectorAll('.nav-links a').forEach(a => {
+                a.style.color = a.getAttribute('href') === '#' + tabName ? 'var(--accent-orange)' : '';
+            });
+        }
+
+        // Render Treasury Tab
+        function renderTreasury(wallets) {
+            const summaryGrid = document.getElementById('treasurySummary');
+            const entries = Object.entries(wallets);
+            
+            summaryGrid.innerHTML = entries.map(([key, w]) => `
+                <div class="summary-card">
+                    <div class="icon">💰</div>
+                    <div class="value balance-display balance-${['foundation','treasury'].includes(key) ? 'green' : 'blue'}">
+                        ${w.balance.toLocaleString()}
+                    </div>
+                    <div class="label">${w.label}</div>
+                </div>
+            `).join('');
+
+            const tbody = document.querySelector('#treasuryTable tbody');
+            tbody.innerHTML = entries.map(([key, w]) => `
+                <tr>
+                    <td><span class="badge badge-${key === 'foundation' ? 'orange' : key === 'ecosystem' ? 'blue' : key === 'grants' ? 'green' : 'purple'}">${w.label.split(' ')[0]}</span></td>
+                    <td>${w.label}</td>
+                    <td style="font-size: 0.85rem; color: var(--text-secondary)">${w.purpose}</td>
+                    <td style="font-size: 0.85rem;">${w.custodians}</td>
+                    <td><span class="badge badge-blue">${w.multisig}</span></td>
+                    <td><span class="badge badge-${w.status === 'Operational' ? 'green' : 'yellow'}">${w.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Vesting Tab
+        function renderVesting(founder) {
+            const timeline = document.getElementById('vestingTimeline');
+            const total = founder.allocation.total;
+            
+            timeline.innerHTML = founder.schedule.map(s => {
+                const pct = (s.cumulative / total * 100).toFixed(1);
+                return `
+                    <div class="timeline-item">
+                        <span class="timeline-year">Year ${s.year}</span>
+                        <div class="timeline-bar">
+                            <div class="fill" style="width: ${pct}%"></div>
+                        </div>
+                        <span class="timeline-percent">${pct}%</span>
+                    </div>
+                `;
+            }).join('');
+
+            const tbody = document.querySelector('#vestingTable tbody');
+            tbody.innerHTML = founder.schedule.map(s => {
+                const pct = (s.cumulative / total * 100).toFixed(2);
+                return `
+                    <tr>
+                        <td><strong>${s.year === 0 ? '0 (Cliff)' : s.year}</strong></td>
+                        <td>${s.released.toLocaleString()}</td>
+                        <td>${s.cumulative.toLocaleString()}</td>
+                        <td>${s.remaining.toLocaleString()}</td>
+                        <td>${pct}%</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const walletsDiv = document.getElementById('founderWallets');
+            walletsDiv.innerHTML = '<div class="card-title">Founder Wallet Hierarchy</div>' +
+                Object.entries(founder.wallets).map(([key, w]) => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <strong style="text-transform: capitalize;">${key.replace('_', ' ')}</strong>
+                            <div class="address">${w.address}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="balance-display" style="font-size: 1.2rem; color: var(--accent-orange);">
+                                ${w.balance.toLocaleString()} UDYA (${w.percentage}%)
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">${w.security}</div>
+                        </div>
+                    </div>
+                `).join('');
+        }
+
+        // Render Governance Tab
+        function renderGovernance(gov) {
+            const stats = gov.current_stats;
+            document.getElementById('totalProposals').textContent = stats.total_proposals;
+            
+            const grid = document.getElementById('govStatsGrid');
+            grid.innerHTML = `
+                <div class="summary-card"><div class="icon">📋</div><div class="value">${stats.total_proposals}</div><div class="label">Total Proposals</div></div>
+                <div class="summary-card"><div class="icon">🔄</div><div class="value" style="color: var(--accent-cyan)">${stats.active_proposals}</div><div class="label">Active</div></div>
+                <div class="summary-card"><div class="icon">✅</div><div class="value" style="color: var(--accent-green)">${stats.passed_proposals}</div><div class="label">Passed</div></div>
+                <div class="summary-card"><div class="icon">❌</div><div class="value" style="color: var(--accent-red)">${stats.rejected_proposals}</div><div class="label">Rejected</div></div>
+                <div class="summary-card"><div class="icon">🗳️</div><div class="value">${stats.total_votes_cast.toLocaleString()}</div><div class="label">Total Votes Cast</div></div>
+                <div class="summary-card"><div class="icon">📈</div><div class="value">${stats.voter_turnout_percentage}%</div><div class="label">Voter Turnout</div></div>
+            `;
+
+            const proposalsDiv = document.getElementById('activeProposals');
+            proposalsDiv.innerHTML = gov.active_proposals.map(p => `
+                <div class="proposal-card">
+                    <div class="top">
+                        <div>
+                            <h4>${p.id}: ${p.title}</h4>
+                            <div class="meta">
+                                <span>📅 Created: ${p.created_days_ago} days ago</span>
+                                <span>⏰ Ends: ${p.ends_in_days} days</span>
+                                <span>👤 By: ${p.author}</span>
+                            </div>
+                        </div>
+                        <span class="badge badge-${p.status === 'active' ? 'yellow' : p.status === 'passed' ? 'green' : 'red'}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span>
+                    </div>
+                    <div class="progress-bar"><div class="fill" style="width:${p.for_percentage}%"></div></div>
+                    <div class="proposal-stats">
+                        <span style="color: var(--accent-green)">✅ ${p.for_percentage}% For</span>
+                        <span style="color: var(--accent-red)">❌ ${p.against_percentage}% Against</span>
+                        <span style="color: var(--text-muted)">⏳ ${p.abstain_percentage}% Abstain</span>
+                        <span>🗳️ ${p.votes.toLocaleString()} votes</span>
+                    </div>
+                </div>
+            `).join('');
+
+            const paramsBody = document.getElementById('govParamsTable');
+            const params = [
+                { param: 'Proposal Threshold', value: `${gov.proposal_threshold.value}%`, desc: gov.proposal_threshold.description },
+                { param: 'Voting Period', value: `${gov.voting_period.blocks.toLocaleString()} blocks`, desc: `~${gov.voting_period.approx_days} days` },
+                { param: 'Quorum', value: `${gov.quorum.percentage}%`, desc: gov.quorum.description },
+                { param: 'Pass Threshold', value: `${gov.pass_threshold.percentage}%`, desc: gov.pass_threshold.description },
+                { param: 'Supermajority', value: `${gov.supermajority.percentage}%`, desc: gov.supermajority.description },
+                { param: 'Vote Weight', value: gov.vote_weight, desc: gov.max_vote_cap.description }
+            ];
+            paramsBody.innerHTML = params.map(p => `
+                <tr><td>${p.param}</td><td><strong>${p.value}</strong></td><td style="color: var(--text-secondary); font-size: 0.85rem;">${p.desc}</td></tr>
+            `).join('');
+
+            const councilDiv = document.getElementById('councilTable');
+            councilDiv.innerHTML = '<div class="card-title">Foundation Council (7 Members)</div>' +
+                `<table class="data-table">
+                    <thead><tr><th>Role</th><th>Region</th><th>Term End</th></tr></thead>
+                    <tbody>
+                        ${gov.council_members.map(m => `
+                            <tr>
+                                <td><strong>${m.role}</strong></td>
+                                <td>${m.region}</td>
+                                <td>${m.term_end}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>`;
+        }
+
+        // Render Audits Tab
+        function renderAudits(data) {
+            const reports = data.reports;
+            document.getElementById('nextAuditDate').textContent = data.next_audit_date;
+            document.getElementById('auditSchedule').textContent = data.audit_schedule;
+
+            const critical = reports.reduce((s, r) => s + r.findings_critical, 0);
+            const high = reports.reduce((s, r) => s + r.findings_high, 0);
+            const medium = reports.reduce((s, r) => s + r.findings_medium, 0);
+
+            const grid = document.getElementById('auditStatsGrid');
+            grid.innerHTML = `
+                <div class="summary-card"><div class="icon">📋</div><div class="value">${reports.length}</div><div class="label">Completed Audits</div></div>
+                <div class="summary-card"><div class="icon">🔴</div><div class="value" style="color: var(--accent-green)">${critical}</div><div class="label">Critical Findings</div></div>
+                <div class="summary-card"><div class="icon">🟡</div><div class="value" style="color: var(--accent-green)">${high}</div><div class="label">High Findings</div></div>
+                <div class="summary-card"><div class="icon">🟠</div><div class="value" style="color: var(--accent-orange)">${medium}</div><div class="label">Medium Findings</div></div>
+            `;
+
+            const list = document.getElementById('auditReportsList');
+            list.innerHTML = reports.map(r => `
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <div class="card-title" style="margin: 0;">${r.title}</div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">${r.date} | ${r.scope}</div>
+                        </div>
+                        <span class="badge badge-${r.status === 'complete' ? 'green' : 'yellow'}">${r.status.charAt(0).toUpperCase() + r.status.slice(1)}</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.75rem;">${r.summary}</p>
+                    <div style="display: flex; gap: 1rem; font-size: 0.85rem; flex-wrap: wrap;">
+                        <span>🔴 Critical: <strong>${r.findings_critical}</strong></span>
+                        <span>🟡 High: <strong>${r.findings_high}</strong></span>
+                        <span>🟠 Medium: <strong>${r.findings_medium}</strong></span>
+                        <span>🟢 Low: <strong>${r.findings_low}</strong></span>
+                        ${r.url ? `<span><a href="${r.url}" target="_blank">📄 View Full Report →</a></span>` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Render Transactions Tab
+        function renderTransactions(data) {
+            const balance = data.balance_summary;
+            
+            const grid = document.getElementById('txSummaryGrid');
+            grid.innerHTML = `
+                <div class="summary-card"><div class="icon">🏦</div><div class="value balance-display balance-green">${balance.treasury.toLocaleString()}</div><div class="label">Treasury Balance</div></div>
+                <div class="summary-card"><div class="icon">🌿</div><div class="value balance-display balance-blue">${balance.ecosystem.toLocaleString()}</div><div class="label">Ecosystem Fund</div></div>
+                <div class="summary-card"><div class="icon">🎯</div><div class="value balance-display balance-cyan">${balance.grants.toLocaleString()}</div><div class="label">Grants</div></div>
+                <div class="summary-card"><div class="icon">🛡️</div><div class="value balance-display balance-purple">${balance.bug_bounty.toLocaleString()}</div><div class="label">Bug Bounty</div></div>
+            `;
+
+            const list = document.getElementById('txList');
+            const txTypes = {
+                'deposit': { label: 'Deposit', color: 'positive' },
+                'transfer_to_ecosystem': { label: 'Transfer to Ecosystem', color: 'neutral' },
+                'transfer_to_grants': { label: 'Transfer to Grants', color: 'neutral' },
+                'transfer_to_bounty': { label: 'Transfer to Bounty', color: 'neutral' },
+                'grant_disbursement': { label: 'Grant Disbursement', color: 'negative' },
+                'operational_expense': { label: 'Operational Expense', color: 'negative' }
+            };
+
+            list.innerHTML = data.transactions.map(tx => {
+                const typeInfo = txTypes[tx.type] || { label: tx.type, color: 'neutral' };
+                return `
+                    <div class="tx-item">
+                        <div class="tx-header">
+                            <div>
+                                <span class="badge badge-${typeInfo.color === 'positive' ? 'green' : typeInfo.color === 'negative' ? 'red' : 'blue'}">${typeInfo.label}</span>
+                                <span class="tx-id" style="margin-left: 0.5rem;">${tx.id}</span>
+                            </div>
+                            <span class="tx-date">${tx.date}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                            <div class="tx-details">
+                                <span>📦 Amount: <strong class="tx-amount ${typeInfo.color}">${tx.amount.toLocaleString()} UDYA</strong></span>
+                                ${tx.destination ? `<span>📍 To: ${tx.destination}</span>` : ''}
+                                <span>✅ Approval: ${tx.approval}</span>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted);">Balance after: ${tx.balance_after.toLocaleString()} UDYA</div>
+                        </div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">
+                            ${tx.purpose}
+                            ${tx.txid !== 'N/A (genesis block)' && tx.txid !== 'N/A (in-block)' ? 
+                              `<br><span class="address">TXID: ${tx.txid}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Initialize everything
+        async function init() {
+            currentData = await loadData();
+            if (!currentData) {
+                document.querySelector('.container').innerHTML = 
+                    '<div class="card" style="text-align: center; padding: 3rem;"><h2>⚠️ Data Load Error</h2><p style="color: var(--text-secondary);">Unable to load trust data. Please ensure all JSON files are accessible.</p></div>';
+                return;
+            }
+
+            const { founder, treasury, governance, audits, transactions } = currentData;
+            
+            renderTreasury(treasury);
+            renderVesting(founder);
+            renderGovernance(governance);
+            renderAudits(audits);
+            renderTransactions(transactions);
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

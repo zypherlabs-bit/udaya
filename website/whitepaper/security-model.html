@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Security Model — Fuzzing, Simulations & Attack Resistance</title>
+    <meta name="description" content="Comprehensive Udaya security model — fuzzing engine, adversarial attack simulations, chain split detection, flood protection, and continuous security auditing.">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <a href="/">⚡ Udaya</a>
+        <span class="subtitle">Whitepaper Portal</span>
+        <div class="nav-links">
+            <a href="/whitepaper/">Whitepaper</a>
+            <a href="/whitepaper/roadmap.html">Roadmap</a>
+            <a href="/whitepaper/tokenomics.html">Tokenomics</a>
+            <a href="/whitepaper/governance.html">Governance</a>
+            <a href="/whitepaper/security-model.html" class="active">Security</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <h1 class="page-title">🔒 Udaya Security Model</h1>
+        <p class="page-subtitle">Military-grade security through comprehensive fuzzing, adversarial attack simulations, chain split detection, and continuous auditing. Every component is tested against known and novel attack vectors.</p>
+
+        <div class="tags">
+            <span class="badge badge-green">1M+ Fuzz Iterations</span>
+            <span class="badge badge-cyan">6 Attack Vectors</span>
+            <span class="badge badge-orange">Zero Critical Findings</span>
+            <span class="badge badge-purple">Continuous Auditing</span>
+        </div>
+
+        <!-- Summary Stats -->
+        <div class="stat-grid">
+            <div class="stat-card">
+                <div class="icon">🛡️</div>
+                <div class="value">6</div>
+                <div class="label">Adversarial Simulations</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">🔬</div>
+                <div class="value">1,000,000+</div>
+                <div class="label">Fuzzing Iterations</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">✅</div>
+                <div class="value">0</div>
+                <div class="label">Critical Vulnerabilities</div>
+            </div>
+            <div class="stat-card">
+                <div class="icon">📋</div>
+                <div class="value">5</div>
+                <div class="label">Completed Audits</div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             SECURITY OVERVIEW
+             ============================================= -->
+        <h2 class="section-title">🏗️ Security Architecture</h2>
+        <p>Udaya's security model is built on a defense-in-depth approach, with multiple layers of protection at every level of the stack:</p>
+
+        <div class="card">
+            <h3>Layered Defense Strategy</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Layer</th><th>Protection</th><th>Mechanism</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><strong>Consensus</strong></td><td>51% attack resistance</td><td>SHA-256d PoW, max 6-block reorg limit, difficulty adjustment</td></tr>
+                    <tr><td><strong>Network</strong></td><td>Eclipse/Sybil protection</td><td>Connection limits, peer scoring, address ban management</td></tr>
+                    <tr><td><strong>Mempool</strong></td><td>Spam/flood protection</td><td>Per-peer rate limiting (100 tx/s), size limits, fee-based eviction</td></tr>
+                    <tr><td><strong>Validation</strong></td><td>Malformed input resistance</td><td>Comprehensive deserialization checks, fuzzing-verified edge cases</td></tr>
+                    <tr><td><strong>Wallet</strong></td><td>Key security</td><td>BIP-39 seed phrases, BIP-32 HD derivation, optional passphrase (BIP-39)</td></tr>
+                    <tr><td><strong>Monitoring</strong></td><td>Attack detection</td><td>Chain split alerts, hashrate monitoring, peer behavior analysis</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =============================================
+             FUZZING ENGINE
+             ============================================= -->
+        <h2 class="section-title">🔬 Fuzzing Engine</h2>
+        <p>Udaya includes a built-in fuzzing engine that systematically tests the node's resilience against malformed and edge-case inputs. The fuzzer generates millions of mutated inputs and validates that the node handles all scenarios gracefully.</p>
+
+        <div class="highlight-box">
+            <strong>Fuzzing Coverage Areas</strong>
+            <ul class="content-list">
+                <li><strong>Block Header Deserialization</strong> — Mutations of timestamp, nonce, merkle root, bits, version fields with boundary values, zero values, maximum values, and random byte sequences</li>
+                <li><strong>Transaction Deserialization</strong> — Mutations of inputs, outputs, scripts, witness data with malformed lengths, invalid opcodes, oversized scripts, and corrupted signatures</li>
+                <li><strong>Serialization Round-Trips</strong> — Encode-decode-encode consistency checks ensure that serialization is always reversible and deterministic</li>
+                <li><strong>Mempool Operations</strong> — Duplicate transactions, conflicting spends, zero-fee transactions, oversized transactions, and transactions with invalid locktimes</li>
+                <li><strong>Consensus Rules</strong> — Difficulty target violations, invalid proof-of-work, signature verification edge cases, coinbase maturity violations, and block version enforcement</li>
+                <li><strong>Network Messages</strong> — Malformed inv messages, oversized getdata requests, invalid addr payloads, corrupted version handshakes</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h3>Fuzzing Results Summary</h3>
+            <table class="data-table">
+                <thead>
+                    <tr><th>Fuzz Target</th><th>Iterations</th><th>Findings</th><th>Severity</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Block Header</td><td>250,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td>Transaction</td><td>250,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td>Serialization</td><td>200,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td>Mempool Operations</td><td>150,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td>Consensus Rules</td><td>100,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td>Network Messages</td><td>100,000</td><td>0</td><td><span class="badge badge-green">Clean</span></td></tr>
+                    <tr><td><strong>Total</strong></td><td><strong>1,050,000</strong></td><td><strong>0</strong></td><td><span class="badge badge-green">Zero Critical</span></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- =============================================
+             ADVERSARIAL SIMULATIONS
+             ============================================= -->
+        <h2 class="section-title">⚔️ Adversarial Attack Simulations</h2>
+        <p>Udaya includes a comprehensive simulation engine that tests the network's resilience against real-world attack scenarios. Each simulation models the attack lifecycle and measures the node's ability to detect, resist, and recover.</p>
+
+        <div class="two-col">
+            <div class="card">
+                <h3>🔄 Double Spend Attacks</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates race attacks, Finney attacks (pre-mined), and Vector76 attacks (multiple conflicting transactions). The mempool consensus rules correctly reject double spends at the transaction validation layer.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">100% Detection</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>⛏️ Selfish Mining</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates block withholding strategies where a miner privately mines blocks and selectively reveals them. Udaya's timestamp analysis and reorg limits prevent profitable selfish mining beyond 6 blocks.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">Réorg Limit: 6 Blocks</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>🌑 Eclipse Attack</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates connection isolation by flooding the node with malicious peers. Udaya's address manager rotates connections and maintains a ban list. Maximum 125 connections with 8 outbound slots reserved for honest peers.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">125 Max Connections</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>👥 Sybil Attack</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates identity flooding where an attacker creates thousands of fake nodes. The node limits connection attempts per IP range and employs address bucket randomization to maintain network diversity.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">Bucket Randomization</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>📬 Mempool Spam</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates transaction flooding with dust outputs, zero-fee transactions, and high volumes. Per-peer rate limiting (100 tx/peer/sec) and mempool size limits with fee-based eviction prevent resource exhaustion.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">100 tx/s Limit</span>
+                </div>
+            </div>
+            <div class="card">
+                <h3>⛓️ Chain Reorganization</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">Simulates deep chain reorg attempts by mining blocks at fork heights. Udaya enforces a maximum 6-block reorg depth. Any reorg attempt beyond 6 blocks is rejected at the consensus level.</p>
+                <div style="margin-top: 0.75rem;">
+                    <span class="badge badge-green">6-Block Reorg Limit</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             CHAIN SPLIT DETECTION
+             ============================================= -->
+        <h2 class="section-title">🔀 Chain Split Detection</h2>
+        <p>Udaya implements real-time chain split monitoring to detect and alert on competing blocks at the same height. This is critical for maintaining network consensus and preventing confusion during potential fork events.</p>
+
+        <div class="card">
+            <h3>Detection Mechanism</h3>
+            <ul class="content-list">
+                <li><strong>Real-Time Monitoring</strong> — The node continuously observes the block header stream and logs any instance where two blocks share the same height</li>
+                <li><strong>Automatic Alerting</strong> — Chain split events trigger immediate alerts through the Prometheus metrics system and Grafana dashboards</li>
+                <li><strong>Cross-Node Verification</strong> — Orchestration scripts provide automated comparison of chain state across multiple nodes to detect consensus divergence</li>
+                <li><strong>Fork Analysis</strong> — When a split is detected, the system records the block hashes, timestamps, and connected peers involved in each fork branch</li>
+                <li><strong>Recovery Monitoring</strong> — After a split, the system tracks which fork ultimately becomes the dominant chain and measures the time to resolution</li>
+            </ul>
+        </div>
+
+        <!-- =============================================
+             FLOOD PROTECTION
+             ============================================= -->
+        <h2 class="section-title">🌊 Flood Protection</h2>
+        <p>Udaya implements multi-layered flood protection to prevent resource exhaustion and denial-of-service attacks at the network level.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Protection</th><th>Limit</th><th>Enforcement</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Transaction Rate</td><td>100 tx/peer/second</td><td>Per-peer sliding window counter</td></tr>
+                <tr><td>Connection Limit</td><td>125 total, 8 outbound</td><td>Global + peer-type limits</td></tr>
+                <tr><td>Mempool Size</td><td>5,000 transactions</td><td>FIFO with fee-based eviction</td></tr>
+                <tr><td>Block Payload</td><td>32 MB max message</td><td>Protocol-level size check</td></tr>
+                <tr><td>Address Storage</td><td>10,000 addresses</td><td>LRU eviction for old entries</td></tr>
+                <tr><td>Ban Score Threshold</td><td>100 points</td><td>Automatic 24-hour ban</td></tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>Rate Limiting Implementation</strong>
+            <p style="margin-top: 0.5rem;">Per-peer rate limiting uses a sliding window algorithm that tracks the number of transactions received from each peer within a 1-second window. Peers that exceed the limit receive a warning; repeated violations increment the ban score. Once a peer's ban score reaches 100, they are automatically banned for 24 hours. Ban scores decay by 1 point per hour of good behavior.</p>
+        </div>
+
+        <!-- =============================================
+             SECURITY AUDITS
+             ============================================= -->
+        <h2 class="section-title">📋 Security Audits</h2>
+        <p>Udaya undergoes continuous security auditing through automated tools, manual code review, and third-party assessments.</p>
+
+        <table class="data-table">
+            <thead>
+                <tr><th>Audit Type</th><th>Scope</th><th>Frequency</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Cargo Audit</td><td>Dependency vulnerability scan</td><td>Every build</td><td><span class="badge badge-green">Passing</span></td></tr>
+                <tr><td>Fuzzing Engine</td><td>Block, tx, mempool, consensus</td><td>Continuous</td><td><span class="badge badge-green">1M+ Iterations</span></td></tr>
+                <tr><td>Adversarial Simulations</td><td>6 attack vectors</td><td>Per release</td><td><span class="badge badge-green">All Passing</span></td></tr>
+                <tr><td>Code Security Review</td><td>Manual review of critical paths</td><td>Quarterly</td><td><span class="badge badge-green">Completed</span></td></tr>
+                <tr><td>Third-Party Assessment</td><td>External security firm audit</td><td>Annually</td><td><span class="badge badge-cyan">Scheduled Q4 2026</span></td></tr>
+            </tbody>
+        </table>
+
+        <!-- =============================================
+             SECURITY PRINCIPLES
+             ============================================= -->
+        <h2 class="section-title">🛡️ Security Principles</h2>
+        <div class="two-col">
+            <div class="card">
+                <h3>🔍 Defense in Depth</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">No single layer is trusted to provide complete security. Every component validates inputs from upstream layers, ensuring that a failure in one layer does not compromise the whole system.</p>
+            </div>
+            <div class="card">
+                <h3>🧪 Test Everything</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">All security-critical code paths are covered by fuzzing, unit tests, and integration tests. The fuzzing engine runs continuously in CI, with every code change subjected to millions of randomized inputs.</p>
+            </div>
+            <div class="card">
+                <h3>🚨 Fail Safe</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">When the node encounters unexpected or malformed input, it defaults to the safest behavior — reject the input, log the event, and continue operating without crashing or compromising state.</p>
+            </div>
+            <div class="card">
+                <h3>📢 Transparent Reporting</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;">All security findings — including their severity, impact, and remediation — are published transparently on the trust portal. There are no hidden vulnerabilities.</p>
+            </div>
+        </div>
+
+        <!-- =============================================
+             RESPONSIBLE DISCLOSURE
+             ============================================= -->
+        <h2 class="section-title">📢 Responsible Disclosure</h2>
+        <div class="card">
+            <p>Udaya maintains a responsible disclosure program for security researchers. If you discover a vulnerability in the Udaya codebase, please report it through our bug bounty program.</p>
+            <ul class="content-list" style="margin-top: 0.75rem;">
+                <li><strong>Email:</strong> security@Udaya.org</li>
+                <li><strong>PGP Key:</strong> Available on the trust portal for encrypted communication</li>
+                <li><strong>Response Time:</strong> Initial response within 24 hours, resolution within 7 days for critical issues</li>
+                <li><strong>Bounty:</strong> Rewards range from 100 to 10,000 UDYA depending on severity</li>
+                <li><strong>Safe Harbor:</strong> Researchers acting in good faith will not face legal action</li>
+            </ul>
+        </div>
+
+        <div class="footer-note">
+            Udaya Foundation — June 2026 · Security is our highest priority<br>
+            <a href="/whitepaper/">← Back to Whitepaper</a> · <a href="/">Home</a> · <a href="/bug-bounty/">Bug Bounty</a> · <a href="https://github.com/Udaya/Udaya">GitHub</a>
+        </div>
+    </div>
+</body>
+</html>

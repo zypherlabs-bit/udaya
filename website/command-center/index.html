@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Command Center - Network Operations</title>
+    <meta name="description" content="Udaya Ecosystem Command Center. Real-time network health, global node map, mining distribution, hashrate trends, treasury transparency, and governance participation.">
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <style>
+        .command-center { padding-top: 100px; }
+        .status-card { background: var(--gradient-card); border: var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-5); backdrop-filter: var(--glass-blur); }
+        .status-dot-large { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: var(--space-2); }
+        .status-dot-large.green { background: var(--emerald); box-shadow: 0 0 12px var(--emerald-glow); animation: healthPulse 2s ease-in-out infinite; }
+        .status-dot-large.yellow { background: var(--gold); box-shadow: 0 0 12px var(--gold-glow); }
+        .status-dot-large.red { background: var(--accent-red); box-shadow: 0 0 12px rgba(239,68,68,0.5); }
+        .cc-stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--space-4); margin-bottom: var(--space-8); }
+        .cc-stat { background: var(--gradient-card); border: var(--glass-border); border-radius: var(--radius-lg); padding: var(--space-5); text-align: center; position: relative; overflow: hidden; }
+        .cc-stat .cc-value { font-family: var(--font-heading); font-size: 2rem; font-weight: 800; background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .cc-stat .cc-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; margin-top: var(--space-1); }
+        .cc-stat .cc-change { font-size: 0.75rem; margin-top: var(--space-2); padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); display: inline-flex; align-items: center; gap: var(--space-1); }
+        .cc-stat .cc-change.up { color: var(--emerald); background: rgba(16,185,129,0.1); }
+        .cc-stat .cc-change.down { color: var(--accent-red); background: rgba(239,68,68,0.1); }
+        .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-6); margin-bottom: var(--space-8); }
+        .panel-card { background: var(--gradient-card); border: var(--glass-border); border-radius: var(--radius-xl); padding: var(--space-6); }
+        .panel-card .panel-title { font-family: var(--font-heading); font-size: 1.1rem; font-weight: 600; display: flex; align-items: center; gap: var(--space-2); margin-bottom: var(--space-5); padding-bottom: var(--space-4); border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .metric-row { display: flex; justify-content: space-between; align-items: center; padding: var(--space-3) 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .metric-row:last-child { border-bottom: none; }
+        .metric-row .mr-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .metric-row .mr-value { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); font-family: var(--font-mono); }
+        .metric-row .mr-status { font-size: 0.75rem; padding: var(--space-1) var(--space-2); border-radius: var(--radius-sm); }
+        .metric-row .mr-status.passing { color: var(--emerald); background: rgba(16,185,129,0.1); }
+        .metric-row .mr-status.warning { color: var(--gold); background: rgba(245,158,11,0.1); }
+        .mini-chart { height: 4px; background: rgba(255,255,255,0.05); border-radius: 2px; margin-top: var(--space-2); overflow: hidden; }
+        .mini-chart .mc-fill { height: 100%; border-radius: 2px; background: var(--gradient-gold); transition: width 1s ease; }
+        .mini-chart .mc-fill.cyan { background: var(--gradient-cyan); }
+        .mini-chart .mc-fill.green { background: var(--gradient-green); }
+        .mini-chart .mc-fill.purple { background: var(--gradient-purple); }
+    </style>
+</head>
+<body>
+    <!-- Scroll Progress -->
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+    
+    <!-- 3D Globe Background -->
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation -->
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand" aria-label="Udaya Home">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    All Systems Operational
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/" class="active">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- =============================================
+         COMMAND CENTER HEADER
+         ============================================= -->
+    <div class="container command-center">
+        <div class="command-center-header reveal">
+            <div>
+                <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2);">
+                    <span class="status-dot-large green"></span>
+                    <span style="font-size:0.8rem;color:var(--emerald);font-weight:600;letter-spacing:0.5px;text-transform:uppercase;">All Systems Operational</span>
+                </div>
+                <h1 class="cc-title" style="font-size:2.5rem;">Ecosystem Command Center</h1>
+                <p style="color:var(--text-secondary);font-size:1rem;margin-top:var(--space-2);">Real-time network health, mining distribution, treasury transparency, and ecosystem growth metrics.</p>
+            </div>
+            <div class="cc-updated">
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--emerald);box-shadow:0 0 8px var(--emerald-glow);animation:healthPulse 2s ease-in-out infinite;display:inline-block;"></span>
+                Live Data · Updated: <span data-live-time>00:00:00</span>
+            </div>
+        </div>
+
+        <!-- =============================================
+             NETWORK HEALTH OVERVIEW
+             ============================================= -->
+        <div class="network-health-grid reveal">
+            <div class="health-metric reveal reveal-delay-1">
+                <div class="hm-value" data-animate-counter="99.9">99.9</div>
+                <div class="hm-label">Uptime %</div>
+                <span class="hm-trend up">▲ 0.01%</span>
+            </div>
+            <div class="health-metric reveal reveal-delay-2">
+                <div class="hm-value" data-animate-counter="5">5</div>
+                <div class="hm-label">Active Nodes</div>
+                <span class="hm-trend up">▲ 2 this week</span>
+            </div>
+            <div class="health-metric reveal reveal-delay-3">
+                <div class="hm-value" style="background:var(--gradient-cyan);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" data-animate-counter="124.5">124.5</div>
+                <div class="hm-label">Hashrate TH/s</div>
+                <span class="hm-trend up">▲ 5.2%</span>
+            </div>
+            <div class="health-metric reveal reveal-delay-4">
+                <div class="hm-value" style="background:var(--gradient-green);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;" data-animate-counter="847">847</div>
+                <div class="hm-label">Connected Peers</div>
+                <span class="hm-trend up">▲ 12</span>
+            </div>
+        </div>
+
+        <!-- =============================================
+             MAIN SECTIONS
+             ============================================= -->
+        <div class="section-grid">
+            <!-- Global Node Map -->
+            <div class="panel-card reveal reveal-delay-1">
+                <div class="panel-title">
+                    🌍 Global Node Map
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">🟢 Live</span>
+                </div>
+                <div class="network-viz" style="height:220px;border-radius:var(--radius-md);">
+                    <canvas id="network-canvas"></canvas>
+                </div>
+                <div class="network-summary" style="margin-top:var(--space-4);grid-template-columns:1fr 1fr 1fr;">
+                    <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;">
+                        <span class="si-value" style="font-size:1.1rem;">3</span>
+                        <span class="si-label">Continents</span>
+                    </div>
+                    <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;">
+                        <span class="si-value" style="font-size:1.1rem;">5</span>
+                        <span class="si-label">Providers</span>
+                    </div>
+                    <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;">
+                        <span class="si-value" style="font-size:1.1rem;">99.9%</span>
+                        <span class="si-label">Availability</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Network Health -->
+            <div class="panel-card reveal reveal-delay-2">
+                <div class="panel-title">
+                    🩺 Network Health
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">All Passing</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">Block Propagation</span>
+                        <span class="mr-status passing">✅ 2.1s avg</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Transaction Throughput</span>
+                        <span class="mr-status passing">✅ 47 TPS</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Mempool Size</span>
+                        <span class="mr-status passing">✅ 3,421 pending</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Network Difficulty</span>
+                        <span class="mr-status passing">✅ 18.7T</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Reorg Depth</span>
+                        <span class="mr-status passing">✅ 0 blocks</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Peer Diversity</span>
+                        <span class="mr-status passing">✅ HHI: 1,200</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Nakamoto Coefficient</span>
+                        <span class="mr-status passing">✅ 5</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">RPC Response Time</span>
+                        <span class="mr-status passing">✅ 45ms avg</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mining Distribution -->
+            <div class="panel-card reveal reveal-delay-3">
+                <div class="panel-title">
+                    ⛏️ Mining Distribution
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.15);">Growing</span>
+                </div>
+                <div style="display:grid;gap:var(--space-3);">
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:var(--space-1);">
+                            <span style="color:var(--text-secondary);">Solo CPU Miners</span>
+                            <span style="font-weight:600;">12 active</span>
+                        </div>
+                        <div class="mini-chart"><div class="mc-fill" style="width:40%;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:var(--space-1);">
+                            <span style="color:var(--text-secondary);">Stratum V2 Pool</span>
+                            <span style="font-weight:600;">1 pool</span>
+                        </div>
+                        <div class="mini-chart"><div class="mc-fill cyan" style="width:25%;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:var(--space-1);">
+                            <span style="color:var(--text-secondary);">Total Hashrate</span>
+                            <span style="font-weight:600;">124.5 TH/s</span>
+                        </div>
+                        <div class="mini-chart"><div class="mc-fill green" style="width:60%;"></div></div>
+                    </div>
+                    <div>
+                        <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:var(--space-1);">
+                            <span style="color:var(--text-secondary);">Block Reward</span>
+                            <span style="font-weight:600;">6.25 UDYA</span>
+                        </div>
+                        <div class="mini-chart"><div class="mc-fill purple" style="width:100%;"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treasury Transparency -->
+            <div class="panel-card reveal reveal-delay-4">
+                <div class="panel-title">
+                    💰 Treasury Transparency
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">Auditable</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">Treasury Balance</span>
+                        <span class="mr-value" style="font-size:1rem;">— UDYA</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Allocated</span>
+                        <span class="mr-value">— UDYA</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Circulating Supply</span>
+                        <span class="mr-value">— UDYA</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Governance Proposals</span>
+                        <span class="mr-value">3 active</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Participation Rate</span>
+                        <span class="mr-value">—%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Last Audit</span>
+                        <span class="mr-value">Open Source</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/governance/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">View Treasury →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Developer Activity -->
+            <div class="panel-card reveal reveal-delay-1">
+                <div class="panel-title">
+                    👨‍💻 Developer Activity
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(59,130,246,0.1);color:var(--accent-blue);border:1px solid rgba(59,130,246,0.15);">Active</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">SDK Downloads</span>
+                        <span class="mr-value" data-animate-counter="350">350</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">GitHub Stars</span>
+                        <span class="mr-value" data-animate-counter="75">75</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Contributors</span>
+                        <span class="mr-value" data-animate-counter="12">12</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Open Issues</span>
+                        <span class="mr-value" data-animate-counter="3">3</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Pull Requests</span>
+                        <span class="mr-value" data-animate-counter="8">8</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">API Playground</span>
+                        <span class="mr-status passing">✅ Available</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/developer/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">Developer Portal →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Community Growth -->
+            <div class="panel-card reveal reveal-delay-2">
+                <div class="panel-title">
+                    🤝 Community Growth
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">Growing</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">X / Twitter</span>
+                        <span class="mr-value" data-animate-counter="2500">2,500</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Telegram</span>
+                        <span class="mr-value" data-animate-counter="1800">1,800</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Discord</span>
+                        <span class="mr-value" data-animate-counter="850">850</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">YouTube</span>
+                        <span class="mr-value" data-animate-counter="320">320</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">LinkedIn</span>
+                        <span class="mr-value" data-animate-counter="450">450</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Ambassadors</span>
+                        <span class="mr-value" data-animate-counter="45">45</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/community/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">Join Community →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Governance Participation -->
+            <div class="panel-card reveal reveal-delay-3">
+                <div class="panel-title">
+                    🗳️ Governance Participation
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(124,58,237,0.1);color:var(--deep-purple);border:1px solid rgba(124,58,237,0.15);">Active</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">Total Proposals</span>
+                        <span class="mr-value" data-animate-counter="5">5</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Active Proposals</span>
+                        <span class="mr-value" data-animate-counter="3">3</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Passed</span>
+                        <span class="mr-value" data-animate-counter="2">2</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Voters</span>
+                        <span class="mr-value" data-animate-counter="12">12</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Voting Power</span>
+                        <span class="mr-value">— UDYA</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/governance/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">View Proposals →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exchange Readiness -->
+            <div class="panel-card reveal reveal-delay-4">
+                <div class="panel-title">
+                    🏦 Exchange Readiness
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">Ready</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">RPC Status</span>
+                        <span class="mr-status passing">✅ Operational</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">RPC Uptime</span>
+                        <span class="mr-status passing">✅ 99.9%</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Wallet Status</span>
+                        <span class="mr-status passing">✅ Synced</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Explorer Status</span>
+                        <span class="mr-status passing">✅ Indexed</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Reorg Protection</span>
+                        <span class="mr-status passing">✅ Enabled</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Integration Package</span>
+                        <span class="mr-status passing">✅ Available</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/exchange-readiness/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">View Dashboard →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Merchant Activity -->
+            <div class="panel-card reveal reveal-delay-1">
+                <div class="panel-title">
+                    🏪 Merchant Activity
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(245,158,11,0.1);color:var(--gold);border:1px solid rgba(245,158,11,0.15);">Emerging</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">Active Merchants</span>
+                        <span class="mr-value" data-animate-counter="0">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Payment Volume</span>
+                        <span class="mr-value">— UDYA</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Integrations</span>
+                        <span class="mr-value">WooCommerce · Shopify</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Payment Gateway</span>
+                        <span class="mr-status passing">✅ Ready</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/pay/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">Merchant Center →</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Audits -->
+            <div class="panel-card reveal reveal-delay-2">
+                <div class="panel-title">
+                    🔒 Security Posture
+                    <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">Verified</span>
+                </div>
+                <div style="display:grid;gap:var(--space-2);">
+                    <div class="metric-row">
+                        <span class="mr-label">Fuzzing Coverage</span>
+                        <span class="mr-status passing">✅ Active</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Adversarial Tests</span>
+                        <span class="mr-status passing">✅ Passed</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Bug Bounty</span>
+                        <span class="mr-status passing">✅ $150K Pool</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Dependency Audit</span>
+                        <span class="mr-status passing">✅ Clean</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="mr-label">Open Source</span>
+                        <span class="mr-status passing">✅ Public</span>
+                    </div>
+                    <div style="margin-top:var(--space-3);">
+                        <a href="/bug-bounty/" class="btn btn-ghost btn-sm" style="width:100%;justify-content:center;">Bug Bounty →</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             OPEN SOURCE METRICS
+             ============================================= -->
+        <div class="panel-card reveal" style="margin-bottom:var(--space-8);">
+            <div class="panel-title">
+                📂 Open Source Metrics
+                <span class="panel-badge" style="font-size:0.7rem;padding:var(--space-1) var(--space-2);border-radius:var(--radius-sm);background:rgba(16,185,129,0.1);color:var(--emerald);border:1px solid rgba(16,185,129,0.15);">Public</span>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:var(--space-4);">
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;" data-animate-counter="75">75</span>
+                    <span class="si-label">GitHub Stars</span>
+                </div>
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;" data-animate-counter="12">12</span>
+                    <span class="si-label">Contributors</span>
+                </div>
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;" data-animate-counter="24">24</span>
+                    <span class="si-label">Forks</span>
+                </div>
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;" data-animate-counter="8">8</span>
+                    <span class="si-label">Open PRs</span>
+                </div>
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;background:var(--gradient-gold);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">Rust</span>
+                    <span class="si-label">Primary Language</span>
+                </div>
+                <div class="summary-item" style="flex-direction:column;gap:var(--space-1);text-align:center;padding:var(--space-4);">
+                    <span class="si-value" style="font-size:1.5rem;background:var(--gradient-cyan);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;">MIT</span>
+                    <span class="si-label">License</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- =============================================
+             TRUST SIGNALS
+             ============================================= -->
+        <div class="trust-bar reveal" style="margin-bottom:var(--space-12);">
+            <div class="trust-item">
+                <span class="trust-dot"></span>
+                Network Status: Operational
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                99.9% Uptime
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Security Audited
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Open Source
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Community Governed
+            </div>
+            <div class="trust-item">
+                <span style="color:var(--emerald);">✓</span>
+                Treasury Transparent
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================
+         FOOTER
+         ============================================= -->
+    <footer class="footer" role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <h4>⚡ Udaya</h4>
+                <p>Global decentralized financial infrastructure. Production-ready Proof-of-Work Layer-1 blockchain. Community-governed and built for enterprise adoption.</p>
+                <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
+                    <span class="badge badge-green">Mainnet Ready</span>
+                    <span class="badge badge-cyan">SHA-256d</span>
+                    <span class="badge badge-orange">PoW</span>
+                    <span class="badge badge-purple">L1</span>
+                </div>
+            </div>
+            <div>
+                <h4>Ecosystem</h4>
+                <a href="/ecosystem/">🌍 Hub</a>
+                <a href="/command-center/">📊 Command Center</a>
+                <a href="/verification/">🔍 Verification</a>
+                <a href="/bug-bounty/">🐛 Bug Bounty</a>
+                <a href="/mining/">⛏️ Mining</a>
+            </div>
+            <div>
+                <h4>Developers</h4>
+                <a href="/developer/">💻 Portal</a>
+                <a href="/docs/">📚 Documentation</a>
+                <a href="/exchange-readiness/">🏦 Exchange</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">📂 GitHub</a>
+                <a href="/faucet/">💧 Faucet</a>
+            </div>
+            <div>
+                <h4>Community</h4>
+                <a href="/community/">🎁 Rewards</a>
+                <a href="/social/">📱 Social</a>
+                <a href="/metrics/">📊 Analytics</a>
+                <a href="/governance/">🗳️ Governance</a>
+                <a href="/automation/">🤖 Automation</a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026 · Built with ⚡</span>
+            <span>Decentralizing the future of global finance</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+</body>
+</html>

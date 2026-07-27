@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Udaya Mining - Miner Acquisition Platform</title>
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
+    <style>
+        .calc-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; }
+        .calc-result { text-align: center; padding: 2rem; background: linear-gradient(135deg, rgba(247,147,26,0.1), rgba(247,147,26,0.05)); border-radius: var(--radius-lg); border: 1px solid rgba(247,147,26,0.2); }
+        .calc-result .daily { font-size: 3rem; font-weight: 800; background: var(--gradient-main); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .hw-card { display: flex; gap: 1rem; align-items: center; padding: 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); margin-bottom: 0.75rem; }
+        .hw-card .hw-icon { width: 48px; height: 48px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; }
+        .hw-card .hw-info { flex: 1; }
+        .hw-card .hw-info h4 { font-size: 0.9rem; margin-bottom: 0.2rem; }
+        .hw-card .hw-info p { font-size: 0.8rem; color: var(--text-muted); }
+        .hw-card .hw-stats { text-align: right; }
+        .hw-card .hw-stats .stat { font-size: 1.1rem; font-weight: 700; }
+        .hw-card .hw-stats .label { font-size: 0.7rem; color: var(--text-muted); }
+    </style>
+</head>
+<body>
+    <div id="globe-container"></div>
+    <canvas id="particle-canvas"></canvas>
+    <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
+
+    <nav class="nav" role="navigation" aria-label="Main navigation">
+        <div class="nav-inner">
+            <a href="/" class="nav-brand">
+                <span class="brand-icon">⚡</span>
+                Udaya
+                <span class="nav-health">
+                    <span class="health-dot" aria-hidden="true"></span>
+                    Network Healthy
+                </span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <div class="nav-links">
+                <a href="/">Dashboard</a>
+                <a href="/ecosystem/">Ecosystem</a>
+                <a href="/command-center/">Command Center</a>
+                <a href="/verification/">Verification</a>
+                <a href="/mining/" class="active">Mining</a>
+                <a href="/developer/">Developers</a>
+                <a href="/metrics/">Metrics</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">GitHub</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero" style="padding:40px 20px;">
+        <span class="hero-badge badge-orange">⛏️ Miner Acquisition Platform</span>
+        <h1>miners.Udaya.org</h1>
+        <p>Start mining UDYA with CPU, GPU, or ASIC hardware. Use our profitability calculator and join the network.</p>
+        <div class="hero-buttons">
+            <a href="#calculator" class="btn btn-primary">🧮 Profitability Calculator</a>
+            <a href="#tutorials" class="btn btn-secondary">📖 Mining Tutorials</a>
+        </div>
+    </div>
+
+    <div class="container" style="padding-bottom:60px;">
+        <!-- Stats -->
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:2rem;">
+            <div class="stat-card"><div class="stat-icon">⛏️</div><div class="stat-value">0</div><div class="stat-label">Active Miners</div></div>
+            <div class="stat-card"><div class="stat-icon">⚡</div><div class="stat-value">0</div><div class="stat-label">Network Hashrate</div></div>
+            <div class="stat-card"><div class="stat-icon">🏊</div><div class="stat-value">0</div><div class="stat-label">Active Pools</div></div>
+            <div class="stat-card"><div class="stat-icon">📊</div><div class="stat-value">0.00</div><div class="stat-label">Decentralization</div></div>
+        </div>
+
+        <!-- Mining Calculator -->
+        <div class="section" id="calculator">
+            <div class="section-header" style="text-align:left;">
+                <h2>🧮 Mining Profitability Calculator</h2>
+                <p>Estimate your daily UDYA mining rewards based on your hardware.</p>
+            </div>
+            <div class="calc-grid">
+                <div class="card">
+                    <div class="form-group">
+                        <label>Hashrate</label>
+                        <div style="display:flex;gap:0.5rem;">
+                            <input type="number" class="form-input" id="hashrate" value="100" style="flex:1;">
+                            <select class="form-input" id="hashrateUnit" style="width:120px;">
+                                <option value="1">H/s</option>
+                                <option value="1000">KH/s</option>
+                                <option value="1000000" selected>MH/s</option>
+                                <option value="1000000000">GH/s</option>
+                                <option value="1000000000000">TH/s</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Power Consumption (Watts)</label>
+                        <input type="number" class="form-input" id="power" value="1500" placeholder="e.g., 1500W">
+                    </div>
+                    <div class="form-group">
+                        <label>Electricity Cost (USD/kWh)</label>
+                        <input type="number" class="form-input" id="elecCost" value="0.12" step="0.01" placeholder="e.g., 0.12">
+                    </div>
+                    <div class="form-group">
+                        <label>Pool Fee (%)</label>
+                        <input type="number" class="form-input" id="poolFee" value="1" step="0.1" placeholder="e.g., 1%">
+                    </div>
+                    <button class="btn btn-primary" onclick="calculateProfit()">Calculate Profitability</button>
+                </div>
+
+                <div class="calc-result">
+                    <p style="color:var(--text-muted);font-size:0.85rem;">Estimated Daily Earnings</p>
+                    <div class="daily" id="dailyEarnings">0.0000</div>
+                    <p style="color:var(--text-secondary);">UDYA per day</p>
+                    <hr style="border-color:var(--border-color);margin:1rem 0;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+                        <div><p style="font-size:1.2rem;font-weight:700;" id="dailyUSD">$0.00</p><p style="font-size:0.75rem;color:var(--text-muted);">USD / day</p></div>
+                        <div><p style="font-size:1.2rem;font-weight:700;" id="dailyCost">$0.00</p><p style="font-size:0.75rem;color:var(--text-muted);">Power Cost / day</p></div>
+                    </div>
+                    <hr style="border-color:var(--border-color);margin:1rem 0;">
+                    <div>
+                        <p style="font-size:1.2rem;font-weight:700;" id="monthlyEarnings">0.0000</p>
+                        <p style="font-size:0.75rem;color:var(--text-muted);">UDYA / month</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hardware Benchmarks -->
+        <div class="section" id="hardware">
+            <div class="section-header" style="text-align:left;">
+                <h2>🔧 Hardware Benchmark Database</h2>
+                <p>Compare mining hardware performance for SHA-256d mining.</p>
+            </div>
+            
+            <div class="hw-card">
+                <div class="hw-icon" style="background:rgba(247,147,26,0.1);color:var(--accent-orange);">🖥️</div>
+                <div class="hw-info">
+                    <h4>CPU Mining (Solo)</h4>
+                    <p>Multi-threaded CPU miner - great for testing and small-scale mining</p>
+                </div>
+                <div class="hw-stats">
+                    <div class="stat">10-100</div>
+                    <div class="label">MH/s</div>
+                </div>
+            </div>
+            <div class="hw-card">
+                <div class="hw-icon" style="background:rgba(59,130,246,0.1);color:var(--accent-blue);">🎮</div>
+                <div class="hw-info">
+                    <h4>GPU Mining (OpenCL/CUDA)</h4>
+                    <p>GPU support via stratum - suitable for enthusiast miners</p>
+                </div>
+                <div class="hw-stats">
+                    <div class="stat">100-500</div>
+                    <div class="label">MH/s</div>
+                </div>
+            </div>
+            <div class="hw-card">
+                <div class="hw-icon" style="background:rgba(16,185,129,0.1);color:var(--accent-green);">⚡</div>
+                <div class="hw-info">
+                    <h4>BF-ASIC S1</h4>
+                    <p>Entry-level ASIC, SHA-256d optimized, 3250W power</p>
+                </div>
+                <div class="hw-stats">
+                    <div class="stat">100</div>
+                    <div class="label">GH/s</div>
+                </div>
+            </div>
+            <div class="hw-card">
+                <div class="hw-icon" style="background:rgba(139,92,246,0.1);color:var(--accent-purple);">💎</div>
+                <div class="hw-info">
+                    <h4>BF-ASIC Pro</h4>
+                    <p>Mid-range ASIC, best efficiency, 5000W power</p>
+                </div>
+                <div class="hw-stats">
+                    <div class="stat">200</div>
+                    <div class="label">GH/s</div>
+                </div>
+            </div>
+            <div class="hw-card">
+                <div class="hw-icon" style="background:rgba(239,68,68,0.1);color:var(--accent-red);">🚀</div>
+                <div class="hw-info">
+                    <h4>BF-ASIC Ultra</h4>
+                    <p>High-end ASIC, maximum performance, 10000W power</p>
+                </div>
+                <div class="hw-stats">
+                    <div class="stat">500</div>
+                    <div class="label">GH/s</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mining Tutorials -->
+        <div class="section" id="tutorials">
+            <div class="section-header" style="text-align:left;">
+                <h2>📖 Mining Tutorials</h2>
+                <p>Step-by-step guides for all mining setups.</p>
+            </div>
+            <div class="grid grid-3">
+                <div class="card card-glow">
+                    <span class="badge badge-green" style="margin-bottom:0.5rem;">Beginner</span>
+                    <h3>🖥️ Solo CPU Mining</h3>
+                    <p style="font-size:0.85rem;">Start mining UDYA with your computer's CPU. Perfect for testing and small-scale mining.</p>
+                    <ol style="color:var(--text-secondary);font-size:0.85rem;line-height:1.8;padding-left:1rem;margin-top:0.5rem;">
+                        <li>Build: <code style="color:var(--accent-orange);">cargo build --release</code></li>
+                        <li>Create wallet: <code style="color:var(--accent-orange);">./target/release/udaya-wallet create</code></li>
+                        <li>Start mining: <code style="color:var(--accent-orange);">./target/release/udayad start --mine</code></li>
+                    </ol>
+                </div>
+                <div class="card card-glow-blue">
+                    <span class="badge badge-blue" style="margin-bottom:0.5rem;">Intermediate</span>
+                    <h3>🏊 Pool Mining Setup</h3>
+                    <p style="font-size:0.85rem;">Join a mining pool for consistent payouts via Stratum V2 protocol.</p>
+                    <ol style="color:var(--text-secondary);font-size:0.85rem;line-height:1.8;padding-left:1rem;margin-top:0.5rem;">
+                        <li>Get wallet address</li>
+                        <li>Connect: <code style="color:var(--accent-orange);">pool.Udaya.net:3333</code></li>
+                        <li>Mine: <code style="color:var(--accent-orange);">./target/release/udaya-miner --pool stratum+tcp://pool.Udaya.net:3333 --wallet ADDR</code></li>
+                    </ol>
+                </div>
+                <div class="card card-glow">
+                    <span class="badge badge-orange" style="margin-bottom:0.5rem;">Advanced</span>
+                    <h3>⚡ ASIC Mining</h3>
+                    <p style="font-size:0.85rem;">Configure BF-ASIC or third-party SHA-256 ASIC miners for maximum performance.</p>
+                    <ol style="color:var(--text-secondary);font-size:0.85rem;line-height:1.8;padding-left:1rem;margin-top:0.5rem;">
+                        <li>Configure ASIC to point at any UDYA pool</li>
+                        <li>Use Stratum V2 for best efficiency</li>
+                        <li>Monitor via pool dashboard</li>
+                        <li>Optimize power/frequency for efficiency</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pool Distribution -->
+        <div class="section">
+            <div class="section-header" style="text-align:left;">
+                <h2>🏊 Mining Pool Distribution</h2>
+                <p>Network decentralization metrics: Nakamoto Coefficient, Gini, HHI.</p>
+            </div>
+            <div class="card">
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem;">
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;">5</div><div style="font-size:0.8rem;color:var(--text-muted);">Nakamoto Coefficient</div></div>
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;">0.2</div><div style="font-size:0.8rem;color:var(--text-muted);">Gini Coefficient</div></div>
+                    <div style="text-align:center;"><div style="font-size:1.8rem;font-weight:700;">1,200</div><div style="font-size:0.8rem;color:var(--text-muted);">HHI Score</div></div>
+                </div>
+                <p style="font-size:0.85rem;color:var(--text-muted);">Target: Nakamoto ≥ 3 · Gini < 0.5 · HHI < 2,500 → All metrics healthy ✅</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="footer-inner">
+            <div><h4>⚡ Udaya Ecosystem</h4><p>Decentralized mining for everyone. Start earning UDYA today.</p></div>
+            <div><h4>Quick Links</h4><a href="/ecosystem/">Ecosystem Home</a><a href="/developer/">Developers</a><a href="/verification/">Verification</a></div>
+            <div><h4>Resources</h4><a href="/docs/mining/">Mining Docs</a><a href="https://github.com/Udaya/Udaya">GitHub</a></div>
+            <div><h4>Community</h4><a href="#">X / Twitter</a><a href="#">Discord</a><a href="#">Telegram</a></div>
+        </div>
+        <div class="footer-bottom">
+            <span>Udaya Foundation © 2026</span>
+            <span>miners.Udaya.org</span>
+        </div>
+    </footer>
+
+    <script src="/js/ecosystem.js"></script>
+    <script>
+        function calculateProfit() {
+            const hashrate = parseFloat(document.getElementById('hashrate').value) || 0;
+            const unit = parseFloat(document.getElementById('hashrateUnit').value) || 1;
+            const power = parseFloat(document.getElementById('power').value) || 0;
+            const elecCost = parseFloat(document.getElementById('elecCost').value) || 0;
+            const poolFee = parseFloat(document.getElementById('poolFee').value) || 0;
+            
+            const hashrateHs = hashrate * unit; // Convert to H/s
+            
+            // Network parameters (placeholder values, will be live)
+            const networkHashrate = 500e12; // 500 TH/s placeholder
+            const blockReward = 50; // UDYA
+            const blocksPerDay = 144; // 10 min blocks
+            const UDYAPrice = 1.50; // Placeholder UDYA price
+            
+            // Calculate share of network
+            const share = hashrateHs / networkHashrate;
+            
+            // Daily earnings before pool fee
+            const dailyRawUDYA = share * blocksPerDay * blockReward;
+            const dailyAfterFee = dailyRawUDYA * (1 - poolFee / 100);
+            
+            // Power cost
+            const dailyPowerKwh = (power / 1000) * 24;
+            const dailyPowerCost = dailyPowerKwh * elecCost;
+            
+            // Update UI
+            document.getElementById('dailyEarnings').textContent = dailyAfterFee.toFixed(8);
+            document.getElementById('dailyUSD').textContent = `$${(dailyAfterFee * UDYAPrice).toFixed(2)}`;
+            document.getElementById('dailyCost').textContent = `$${dailyPowerCost.toFixed(2)}`;
+            document.getElementById('monthlyEarnings').textContent = (dailyAfterFee * 30).toFixed(8);
+        }
+
+        // Initial calculation
+        calculateProfit();
+    </script>
+</body>
+</html>

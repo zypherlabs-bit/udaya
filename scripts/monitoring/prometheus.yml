@@ -1,0 +1,93 @@
+# ============================================================
+# Udaya Prometheus Configuration
+# ============================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: 'udaya-mainnet'
+    network: 'mainnet'
+
+# Alerting configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          - alertmanager:9093
+
+# Rule files
+rule_files:
+  - "alerts/*.yml"
+
+# Scrape configuration
+scrape_configs:
+  # Udaya Node Metrics
+  - job_name: 'Udaya-node'
+    scrape_interval: 10s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'seed-node:9100'
+        - 'rpc-node:9100'
+        - 'archive-node:9100'
+      labels:
+        service: 'Udaya-node'
+
+  # Udaya Mempool
+  - job_name: 'Udaya-mempool'
+    scrape_interval: 5s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'mempool:9101'
+      labels:
+        service: 'mempool'
+
+  # Udaya Miner
+  - job_name: 'udaya-miner'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'miner:9102'
+      labels:
+        service: 'mining'
+
+  # Udaya P2P Network
+  - job_name: 'Udaya-p2p'
+    scrape_interval: 15s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'p2p:9103'
+      labels:
+        service: 'p2p'
+
+  # Explorer API
+  - job_name: 'udaya-explorer'
+    scrape_interval: 30s
+    metrics_path: '/metrics'
+    static_configs:
+      - targets:
+        - 'explorer-api:9104'
+      labels:
+        service: 'explorer'
+
+  # Node Exporter (system metrics)
+  - job_name: 'node-exporter'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+        - 'node-exporter:9100'
+      labels:
+        service: 'system'
+
+  # PostgreSQL
+  - job_name: 'postgresql'
+    scrape_interval: 30s
+    static_configs:
+      - targets:
+        - 'postgres-exporter:9187'
+      labels:
+        service: 'database'

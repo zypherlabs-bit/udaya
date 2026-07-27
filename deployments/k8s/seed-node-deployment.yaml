@@ -1,0 +1,201 @@
+# ============================================================
+# Udaya Seed Node - Kubernetes Deployment
+# ============================================================
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: Udaya
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: Udaya-seed-config
+  namespace: Udaya
+data:
+  udaya.conf: |
+    network = "mainnet"
+    [network]
+    listen_port = 9798
+    external_ip = ""
+    max_peers = 125
+    enable_upnp = false
+    preferred_peers = []
+    ban_duration_secs = 86400
+    [storage]
+    data_dir = "/var/lib/Udaya/data"
+    prune_blocks = false
+    db_cache_size_mb = 4096
+    [consensus]
+    network = "mainnet"
+    min_tx_fee = 1000
+    max_block_size = 1000000
+    [mining]
+    enable = false
+    [rpc]
+    enable = true
+    listen_addr = "0.0.0.0"
+    listen_port = 8332
+    username = "${RPC_USER}"
+    password = "${RPC_PASSWORD}"
+    enable_ws = true
+    ws_port = 8333
+    cors_domains = ["*"]
+    [logging]
+    level = "info"
+    enable_json = true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: Udaya-seed-secrets
+  namespace: Udaya
+type: Opaque
+stringData:
+  rpc-password: "REPLACE_WITH_SECURE_PASSWORD"
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: Udaya-seed
+  namespace: Udaya
+  labels:
+    app: Udaya
+    role: seed-node
+spec:
+  serviceName: Udaya-seed
+  replicas: 1
+  selector:
+    matchLabels:
+      app: Udaya
+      role: seed-node
+  template:
+    metadata:
+      labels:
+        app: Udaya
+        role: seed-node
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "9100"
+    spec:
+      containers:
+      - name: udayad
+        image: Udaya/node:latest
+        imagePullPolicy: Always
+        args:
+          - "--config"
+          - "/etc/Udaya/udaya.conf"
+        env:
+        - name: RPC_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: Udaya-seed-secrets
+              key: rpc-password
+        - name: RUST_LOG
+          value: "info"
+        ports:
+        - containerPort: 9798
+          name: p2p
+          protocol: TCP
+        - containerPort: 8332
+          name: rpc
+          protocol: TCP
+        - containerPort: 8333
+          name: ws
+          protocol: TCP
+        - containerPort: 9100
+          name: metrics
+          protocol: TCP
+        volumeMounts:
+        - name: config
+          mountPath: /etc/Udaya
+        - name: data
+          mountPath: /var/lib/Udaya/data
+        - name: logs
+          mountPath: /var/log/Udaya
+        resources:
+          requests:
+            memory: "4Gi"
+            cpu: "2"
+          limits:
+            memory: "16Gi"
+            cpu: "8"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8332
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8332
+          initialDelaySeconds: 30
+          periodSeconds: 10
+      volumes:
+      - name: config
+        configMap:
+          name: Udaya-seed-config
+      - name: logs
+        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: "ssd"
+      resources:
+        requests:
+          storage: 500Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: Udaya-seed
+  namespace: Udaya
+  labels:
+    app: Udaya
+    role: seed-node
+spec:
+  selector:
+    app: Udaya
+    role: seed-node
+  ports:
+  - name: p2p
+    port: 9798
+    targetPort: 9798
+  - name: rpc
+    port: 8332
+    targetPort: 8332
+  - name: ws
+    port: 8333
+    targetPort: 8333
+  - name: metrics
+    port: 9100
+    targetPort: 9100
+  type: LoadBalancer
+---
+apiVersion: autoscaling/v2
+metadata:
+  name: Udaya-seed-hpa
+  namespace: Udaya
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: StatefulSet
+    name: Udaya-seed
+  minReplicas: 1
+  maxReplicas: 3
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80

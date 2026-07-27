@@ -1,0 +1,40 @@
+<html><head><title>Udaya Wallet</title><style>
+:root{--bg:#0a0e17;--bg2:#111827;--card:#1a2035;--txt:#f0f4ff;--txt2:#8899bb;--muted:#556688;--blue:#3b82f6;--cyan:#06b6d4;--green:#10b981;--border:#1e293b}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:Inter,sans-serif;background:var(--bg);color:var(--txt)}
+.hdr{background:var(--bg2);border-bottom:1px solid var(--border);padding:1rem 2rem;display:flex;align-items:center;gap:1rem}
+.hdr a{color:var(--txt);text-decoration:none;font-weight:700}
+.m{max-width:1000px;margin:0 auto;padding:2rem}
+h1{font-size:2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#3b82f6,#06b6d4);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sub{color:var(--txt2);margin-bottom:2rem}
+.g{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-bottom:2rem}
+.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:2rem;text-align:center}
+.card .ic{width:64px;height:64px;margin:0 auto 1rem;background:var(--bg2);border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.card h3{font-size:1.1rem;margin-bottom:.5rem}
+.card p{font-size:.85rem;color:var(--txt2);margin-bottom:1rem}
+.btn{display:inline-block;padding:10px 20px;background:linear-gradient(135deg,#3b82f6,#06b6d4);color:#fff;border-radius:8px;font-weight:600;font-size:.85rem;text-decoration:none;border:none;cursor:pointer}
+.btn-out{display:inline-block;padding:10px 20px;background:transparent;color:var(--txt);border:1px solid var(--border);border-radius:8px;font-weight:600;font-size:.85rem;text-decoration:none;margin-left:.5rem}
+.features{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin:2rem 0}
+.ft{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:1.5rem;text-align:center}
+.ft .ic{font-size:1.5rem;margin-bottom:.5rem}
+.ft h4{font-size:.9rem;margin-bottom:.3rem}
+.ft p{font-size:.8rem;color:var(--txt2)}
+@media(max-width:768px){.g{grid-template-columns:1fr}.features{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:480px){.features{grid-template-columns:1fr}}
+</style></head><body>
+<div class="hdr"><a href="/">⚡ Udaya Wallet</a><span style="color:var(--txt2);font-size:.85rem;margin-left:auto">👛 Desktop · Mobile · Browser</span></div>
+<div class="m">
+<h1>👛 Udaya Wallet</h1>
+<p class="sub">Secure, feature-rich wallets for managing your UDYA. Support for SegWit, Taproot, multisig, and hardware wallets.</p>
+<div class="g">
+<div class="card"><div class="ic">💻</div><h3>Desktop Wallet</h3><p>Full-featured desktop wallet for Windows, macOS, and Linux. Built with Tauri for security and performance.</p><a href="#" class="btn">Download v1.0</a><a href="#" class="btn-out">Source Code</a></div>
+<div class="card"><div class="ic">📱</div><h3>Mobile Wallet</h3><p>Native mobile wallets for iOS and Android. Send and receive UDYA with QR codes and NFC.</p><a href="#" class="btn">iOS App Store</a><a href="#" class="btn-out">Google Play</a></div>
+</div>
+<div class="features">
+<div class="ft"><div class="ic">⚡</div><h4>SegWit & Taproot</h4><p>Native SegWit (bech32) and Taproot (bech32m) address support for lower fees.</p></div>
+<div class="ft"><div class="ic">🔑</div><h4>HD Wallet</h4><p>BIP-32/44/49/84/86 hierarchical deterministic wallet with seed phrase backup.</p></div>
+<div class="ft"><div class="ic">🤝</div><h4>Multisig</h4><p>M-of-N multisignature wallets for shared control and enterprise security.</p></div>
+<div class="ft"><div class="ic">📷</div><h4>QR Payments</h4><p>BIP-21 URI scheme for easy payment requests via QR code scanning.</p></div>
+<div class="ft"><div class="ic">🔒</div><h4>Cold Storage</h4><p>Hardware wallet integration and offline signing for maximum security.</p></div>
+<div class="ft"><div class="ic">🔄</div><h4>Fast Sync</h4><p>Headers-first sync for fast wallet restoration from seed phrase.</p></div>
+</div>
+</div></body></html>

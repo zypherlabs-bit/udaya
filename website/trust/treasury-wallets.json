@@ -1,0 +1,42 @@
+{
+  "foundation": {
+    "address": "UDYA1qtreasury000000000000000000000000000000",
+    "label": "Foundation Treasury",
+    "purpose": "Core development, grants, ecosystem growth",
+    "balance": 145678,
+    "custodians": "7 Foundation Council members",
+    "multisig": "5-of-7",
+    "last_audited": "2026-05-15",
+    "status": "Operational"
+  },
+  "grants": {
+    "address": "UDYA1qgrants000000000000000000000000000000000",
+    "label": "Community Grants",
+    "purpose": "Community grants and bounties",
+    "balance": 25000,
+    "custodians": "Treasury Committee",
+    "multisig": "3-of-5",
+    "last_audited": "2026-05-15",
+    "status": "Operational"
+  },
+  "ecosystem": {
+    "address": "UDYA1qecosystem00000000000000000000000000000",
+    "label": "Ecosystem Fund",
+    "purpose": "Exchange listings, market making, partnerships",
+    "balance": 50000,
+    "custodians": "Foundation Council + Ecosystem Team",
+    "multisig": "4-of-6",
+    "last_audited": "2026-05-15",
+    "status": "Operational"
+  },
+  "bug_bounty": {
+    "address": "UDYA1qbounty000000000000000000000000000000000",
+    "label": "Bug Bounty",
+    "purpose": "Security research rewards",
+    "balance": 10000,
+    "custodians": "Security Team",
+    "multisig": "2-of-3",
+    "last_audited": "2026-05-15",
+    "status": "Operational"
+  }
+}

@@ -1,0 +1,2 @@
+[env]
+ROCKSDB_SYS_USE_BINDGEN = "0"

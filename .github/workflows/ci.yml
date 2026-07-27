@@ -1,0 +1,171 @@
+name: Udaya CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop, 'release/*' ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  # Lint and format check
+  lint:
+    name: Code Quality
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+      - name: Clippy analysis
+        run: cargo clippy --all-targets --all-features -- -D warnings
+
+  # Build on multiple platforms
+  build:
+    name: Build (${{ matrix.os }})
+    needs: lint
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Build
+        run: cargo build --release --all-targets
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Udaya-${{ matrix.os }}
+          path: target/release/udayad*
+
+  # Run test suite
+  test:
+    name: Tests
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Run unit tests
+        run: cargo test --lib --all-features --verbose
+      - name: Run integration tests
+        run: cargo test --test '*' --all-features --verbose
+      - name: Run doc tests
+        run: cargo test --doc --all-features --verbose
+
+  # Security audit
+  security:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install cargo-audit
+        run: cargo install cargo-audit --locked
+      - name: Audit dependencies
+        run: cargo audit
+      - name: Install cargo-deny
+        run: cargo install cargo-deny --locked
+      - name: Check dependency licenses and advisories
+        run: cargo deny check --config deny.toml || true
+      - name: Check for unsafe code patterns
+        run: |
+          echo "Scanning for unsafe blocks..."
+          UNSAFE_COUNT=$(grep -r "unsafe {" src/ --include="*.rs" | wc -l || echo "0")
+          echo "Found $UNSAFE_COUNT unsafe blocks in source code"
+          if [ "$UNSAFE_COUNT" -gt 20 ]; then
+            echo "::warning::High number of unsafe blocks detected ($UNSAFE_COUNT)"
+          fi
+
+  # Fuzz testing
+  fuzz:
+    name: Fuzz Testing
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust nightly
+        uses: dtolnay/rust-toolchain@nightly
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Check for fuzz targets
+        id: check-targets
+        run: |
+          if [ -d "fuzz" ] && [ -n "$(ls fuzz/fuzz_targets/ 2>/dev/null)" ]; then
+            echo "has_targets=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_targets=false" >> $GITHUB_OUTPUT
+            echo "No fuzz targets found, skipping fuzz testing"
+          fi
+      - name: Run fuzz targets
+        if: steps.check-targets.outputs.has_targets == 'true'
+        run: cargo fuzz run --all -- -max_total_time=300
+
+  # Docker build and push
+  docker:
+    name: Docker Build
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Build and push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deployments/docker/Dockerfile
+          push: true
+          tags: |
+            Udaya/node:latest
+            Udaya/node:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Release
+  release:
+    name: Create Release
+    needs: [build, test, security, docker]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Generate changelog
+        id: changelog
+        uses: metcalfc/changelog-generator@v4
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.changelog.outputs.changelog }}
+          files: |
+            target/release/udayad-ubuntu-latest
+            target/release/udayad-windows-latest.exe
+            target/release/udayad-macOS-latest
+          draft: false
+          prerelease: false
+
+  # Deploy to testnet
+  deploy-testnet:
+    name: Deploy Testnet
+    needs: release
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy to testnet
+        run: |
+          docker compose -f deployments/docker/docker-compose.yml up -d udaya-testnet

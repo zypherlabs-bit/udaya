@@ -1,0 +1,546 @@
+{
+  "__inputs": [],
+  "__requires": [],
+  "schemaVersion": 38,
+  "version": 1,
+  "title": "Udaya Node Dashboard",
+  "uid": "Udaya-node",
+  "description": "Comprehensive monitoring dashboard for Udaya blockchain nodes",
+  "tags": ["Udaya", "blockchain", "node"],
+  "timezone": "browser",
+  "editable": true,
+  "panels": [
+    {
+      "title": "Node Status",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 0, "y": 0},
+      "id": 1,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 0},
+              {"color": "green", "value": 1}
+            ]
+          },
+          "mappings": [
+            {"type": "value", "value": "-1", "text": "Error", "color": "red"},
+            {"type": "value", "value": "0", "text": "Starting", "color": "yellow"},
+            {"type": "value", "value": "1", "text": "Running", "color": "green"},
+            {"type": "value", "value": "2", "text": "Syncing", "color": "blue"},
+            {"type": "value", "value": "3", "text": "Stopping", "color": "orange"}
+          ]
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["lastNotNull"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_node_status",
+          "legendFormat": "Status",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Uptime",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 3, "y": 0},
+      "id": 2,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 60}
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_node_uptime_seconds",
+          "legendFormat": "Uptime",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Block Height",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 6, "y": 0},
+      "id": 3,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "green", "value": 0}
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_block_height",
+          "legendFormat": "Height",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Connected Peers",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 9, "y": 0},
+      "id": 4,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "red", "value": null},
+              {"color": "yellow", "value": 1},
+              {"color": "green", "value": 8}
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_peer_count",
+          "legendFormat": "Peers",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Difficulty",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 12, "y": 0},
+      "id": 5,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 2,
+          "unit": "short"
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_difficulty",
+          "legendFormat": "Difficulty",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Mempool Size",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 15, "y": 0},
+      "id": 6,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {"color": "green", "value": null},
+              {"color": "yellow", "value": 100000000},
+              {"color": "red", "value": 200000000}
+            ]
+          }
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_mempool_size_bytes",
+          "legendFormat": "Mempool",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Network Hashrate",
+      "type": "stat",
+      "gridPos": {"h": 4, "w": 3, "x": 18, "y": 0},
+      "id": 7,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "H/s",
+          "decimals": 1
+        }
+      },
+      "options": {
+        "orientation": "horizontal",
+        "reduceOptions": {"calcs": ["last"]}
+      },
+      "targets": [
+        {
+          "expr": "udaya_network_hashrate_hps",
+          "legendFormat": "Hashrate",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Block Height Over Time",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 4},
+      "id": 8,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "unit": "none",
+          "custom": {"lineInterpolation": "stepBefore"}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_block_height",
+          "legendFormat": "Block Height",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(udaya_block_height[5m])",
+          "legendFormat": "Blocks/min",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "Peer Connectivity",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 4},
+      "id": 9,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "custom": {"fillOpacity": 30}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_peer_count",
+          "legendFormat": "Total Peers",
+          "refId": "A"
+        },
+        {
+          "expr": "udaya_peer_count_inbound",
+          "legendFormat": "Inbound",
+          "refId": "B"
+        },
+        {
+          "expr": "udaya_peer_count_outbound",
+          "legendFormat": "Outbound",
+          "refId": "C"
+        },
+        {
+          "expr": "udaya_banned_peers",
+          "legendFormat": "Banned",
+          "refId": "D"
+        }
+      ]
+    },
+    {
+      "title": "Mempool Activity",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "id": 10,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"fillOpacity": 30}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_mempool_tx_count",
+          "legendFormat": "Transactions",
+          "refId": "A"
+        },
+        {
+          "expr": "udaya_mempool_size_bytes",
+          "legendFormat": "Size (bytes)",
+          "refId": "B"
+        },
+        {
+          "expr": "udaya_mempool_orphan_count",
+          "legendFormat": "Orphans",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "Mempool Fee Rates",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "id": 11,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "sat/vB",
+          "custom": {"fillOpacity": 10}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_mempool_min_fee_rate",
+          "legendFormat": "Min Fee Rate",
+          "refId": "A"
+        },
+        {
+          "expr": "udaya_mempool_max_fee_rate",
+          "legendFormat": "Max Fee Rate",
+          "refId": "B"
+        },
+        {
+          "expr": "udaya_mempool_total_fees",
+          "legendFormat": "Total Fees",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "Block Production Interval",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+      "id": 12,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": {"fillOpacity": 20}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_block_interval_seconds",
+          "legendFormat": "Time Since Last Block",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "System Resources",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+      "id": 13,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"fillOpacity": 30}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "udaya_cpu_usage_percent",
+          "legendFormat": "CPU %",
+          "refId": "A"
+        },
+        {
+          "expr": "udaya_memory_usage_bytes",
+          "legendFormat": "Memory",
+          "refId": "B"
+        },
+        {
+          "expr": "udaya_disk_usage_bytes",
+          "legendFormat": "Disk",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "Chain Quality",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+      "id": 14,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"fillOpacity": 20}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "rate(udaya_chain_splits_detected_total[5m])",
+          "legendFormat": "Chain Splits/min",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(udaya_reorgs_total[5m])",
+          "legendFormat": "Reorgs/min",
+          "refId": "B"
+        },
+        {
+          "expr": "rate(udaya_orphan_blocks_total[5m])",
+          "legendFormat": "Orphans/min",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "RPC Performance",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+      "id": 15,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"fillOpacity": 20}
+        }
+      },
+      "options": {
+        "legend": {"show": true, "placement": "right"},
+        "tooltip": {"mode": "multi"}
+      },
+      "targets": [
+        {
+          "expr": "rate(udaya_rpc_requests_total[5m])",
+          "legendFormat": "RPC Requests/min",
+          "refId": "A"
+        },
+        {
+          "expr": "rate(udaya_rpc_errors_total[5m])",
+          "legendFormat": "RPC Errors/min",
+          "refId": "B"
+        },
+        {
+          "expr": "udaya_rpc_active_connections",
+          "legendFormat": "Active Connections",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "Health Check Status",
+      "type": "table",
+      "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+      "id": 16,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {"align": "left"},
+          "mappings": [
+            {"type": "value", "value": "1", "text": "Healthy", "color": "green"},
+            {"type": "value", "value": "0", "text": "Degraded", "color": "yellow"},
+            {"type": "value", "value": "-1", "text": "Unhealthy", "color": "red"}
+          ]
+        }
+      },
+      "options": {
+        "showHeader": true
+      },
+      "transformations": [
+        {"id": "seriesToRows", "options": {}},
+        {"id": "organize", "options": {"excludeByName": {"Time": true, "Value": false, "__name__": true, "instance": true, "job": true}}}
+      ],
+      "targets": [
+        {
+          "expr": "udaya_health_status",
+          "legendFormat": "{{check}}",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "templating": {
+    "list": [
+      {
+        "name": "instance",
+        "type": "query",
+        "query": "label_values(udaya_node_status, instance)",
+        "refresh": 1,
+        "sort": 1
+      }
+    ]
+  },
+  "annotations": {
+    "list": [
+      {
+        "name": "Chain Split",
+        "datasource": "Prometheus",
+        "expr": "rate(udaya_chain_splits_detected_total[1m]) > 0",
+        "iconColor": "red",
+        "enable": true,
+        "type": "tags"
+      },
+      {
+        "name": "Reorg",
+        "datasource": "Prometheus",
+        "expr": "rate(udaya_reorgs_total[1m]) > 0",
+        "iconColor": "yellow",
+        "enable": true,
+        "type": "tags"
+      }
+    ]
+  },
+  "refresh": "30s",
+  "time": {"from": "now-6h", "to": "now"}
+}
