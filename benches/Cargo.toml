@@ -1,0 +1,16 @@
+[package]
+name = "udaya-benchmarks"
+version = "1.0.0-alpha.1"
+edition = "2021"
+
+[dependencies]
+criterion = { version = "0.5", features = ["html_reports"] }
+udaya-core = { path = "../src/core" }
+udaya-storage = { path = "../src/storage" }
+udaya-mempool = { path = "../src/mempool" }
+udaya-wallet = { path = "../src/wallet" }
+tempfile = "3.8"
+
+[[bench]]
+name = "performance_benchmarks"
+harness = false

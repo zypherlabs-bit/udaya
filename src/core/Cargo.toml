@@ -32,4 +32,5 @@ num-traits.workspace = true
 zeroize.workspace = true
 blake3.workspace = true
 toml = "0.8"
+subtle.workspace = true
 prometheus.workspace = true

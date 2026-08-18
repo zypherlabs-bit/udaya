@@ -8,8 +8,8 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Rust](https://img.shields.io/badge/rust-1.75%2B-blue)](https://www.rust-lang.org)
-[![Build Status](https://github.com/UdayaFoundation/Udaya/actions/workflows/ci.yml/badge.svg)](https://github.com/UdayaFoundation/Udaya/actions)
-[![Coverage](https://codecov.io/gh/UdayaFoundation/Udaya/branch/main/graph/badge.svg)](https://codecov.io/gh/UdayaFoundation/Udaya)
+[![Build Status](https://github.com/zypherlabs-bit/udaya/actions/workflows/ci.yml/badge.svg)](https://github.com/zypherlabs-bit/udaya/actions)
+[![Coverage](https://codecov.io/gh/zypherlabs-bit/udaya/branch/master/graph/badge.svg)](https://codecov.io/gh/zypherlabs-bit/udaya)
 [![Security](https://img.shields.io/badge/security-audited-green)](SECURITY.md)
 
 </div>
@@ -32,7 +32,7 @@ Udaya is a **production-grade, SHA-256d Proof-of-Work Layer-1 blockchain** imple
 - **Prometheus Metrics**: Built-in observability and monitoring
 - **Security Framework**: Comprehensive fuzzing and adversarial simulation
 - **On-chain Governance**: Decentralized proposal and voting system
-- **Docker & Kubernetes**: Production-ready containerization
+- **Native Execution**: Direct binary deployment without containers
 
 ---
 
@@ -84,8 +84,8 @@ Udaya is a **production-grade, SHA-256d Proof-of-Work Layer-1 blockchain** imple
 
 ```bash
 # Clone the repository
-git clone https://github.com/UdayaFoundation/Udaya.git
-cd Udaya
+git clone https://github.com/zypherlabs-bit/udaya.git
+cd udaya
 
 # Build the node
 cargo build --release
@@ -117,16 +117,21 @@ cargo test
    cors_domains = ["https://your-app.com"]
    ```
 
-### Docker
+### Native Execution
 
 ```bash
-# Build image
-docker build -t udaya-node -f deployments/docker/Dockerfile .
+# Build the release binary
+cargo build --release
 
-# Run container
-docker run -d -p 9798:9798 -p 8332:8332 \
-  -v /path/to/data:/data/udaya \
-  udaya-node:latest
+# Start the node directly
+./target/release/udayad --config config/bitfury.conf
+
+# For production deployment:
+./target/release/udayad --config config/mainnet/udaya.conf --datadir /data/udaya start
+
+# Run as a system service (Linux)
+sudo cp deployments/scripts/deploy.sh /usr/local/bin/udaya-deploy
+sudo udaya-deploy
 ```
 
 ---
@@ -251,7 +256,7 @@ We offer bug bounties for qualifying vulnerabilities:
 
 ## Community
 
-- **Discussions**: [GitHub Discussions](https://github.com/UdayaFoundation/Udaya/discussions)
+- **Discussions**: [GitHub Discussions](https://github.com/zypherlabs-bit/udaya/discussions)
 - **Discord**: [Join our Discord](https://discord.gg/udaya)
 - **Twitter**: [@UdayaFoundation](https://twitter.com/UdayaFoundation)
 - **Blog**: [udaya.org/blog](https://udaya.org/blog)

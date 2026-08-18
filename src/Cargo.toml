@@ -9,6 +9,10 @@ description = "Udaya daemon - Next-generation Proof-of-Work cryptocurrency node"
 name = "Udayad"
 path = "main.rs"
 
+[[test]]
+name = "rpc_security_tests"
+path = "../tests/unit/rpc_security_tests.rs"
+
 [dependencies]
 udaya-core = { path = "core" }
 udaya-storage = { path = "storage" }
@@ -31,7 +35,15 @@ tower-http.workspace = true
 tower.workspace = true
 futures.workspace = true
 parking_lot.workspace = true
+dashmap.workspace = true
 chrono.workspace = true
 prometheus.workspace = true
 num-bigint.workspace = true
 bincode.workspace = true
+base64 = "0.21"
+tokio-rustls = "0.24"
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
+rustls-pemfile = "1.0"
+http-body-util = "0.1"
+hyper-util = { version = "0.1", features = ["tokio", "server-auto"] }
+axum-server = { version = "0.7", features = ["tls-rustls"] }

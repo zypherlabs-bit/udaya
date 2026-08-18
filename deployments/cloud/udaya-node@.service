@@ -1,0 +1,35 @@
+[Unit]
+Description=Udaya Testnet Node %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=udaya
+Group=udaya
+ExecStart=/usr/local/bin/Udayad start \
+    --config /etc/udaya/testnet-node%i.conf \
+    --datadir /var/lib/udaya/node%i
+
+Restart=always
+RestartSec=30
+StartLimitIntervalSec=300
+StartLimitBurst=5
+
+LimitNOFILE=65536
+LimitNPROC=4096
+LimitAS=infinity
+LimitFSIZE=10G
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/udaya /var/log/udaya /tmp
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=udaya-node%i
+
+[Install]
+WantedBy=multi-user.target

@@ -62,6 +62,15 @@ pub struct RPCConfig {
     pub enable_ws: bool,
     pub ws_port: u16,
     pub cors_domains: Vec<String>,
+    pub enable_tls: bool,
+    pub tls_cert_path: Option<String>,
+    pub tls_key_path: Option<String>,
+    pub enable_auth: bool,
+    pub rate_limit_rps: u32,
+    pub rate_limit_burst: u32,
+    pub max_request_size_mb: u32,
+    pub max_connections: u32,
+    pub restricted_methods: Vec<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -112,7 +121,24 @@ impl Default for UdayaConfig {
                 password: String::new(),
                 enable_ws: true,
                 ws_port: 8333,
-                cors_domains: vec!["*".to_string()],
+                cors_domains: vec![
+                    "http://127.0.0.1:8080".to_string(),
+                    "http://localhost:8080".to_string(),
+                ],
+                enable_tls: false,
+                tls_cert_path: None,
+                tls_key_path: None,
+                enable_auth: false,
+                rate_limit_rps: 100,
+                rate_limit_burst: 200,
+                max_request_size_mb: 10,
+                max_connections: 500,
+                restricted_methods: vec![
+                    "stop".to_string(),
+                    "generate".to_string(),
+                    "invalidateblock".to_string(),
+                    "reconsiderblock".to_string(),
+                ],
             },
             logging: LoggingConfig {
                 level: "info".to_string(),

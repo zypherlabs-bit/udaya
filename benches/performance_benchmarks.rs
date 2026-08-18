@@ -5,6 +5,36 @@ use udaya_storage::StorageConfig;
 use udaya_mempool::Mempool;
 use udaya_wallet::Wallet;
 use std::time::Instant;
+use tempfile::tempdir;
+
+/// Benchmark node startup time
+fn bench_node_startup(c: &mut Criterion) {
+    let mut group = c.benchmark_group("node_startup");
+    group.sample_size(10);
+
+    group.bench_function("node_initialization", |b| {
+        b.iter(|| {
+            let consensus_params = ConsensusParams::default();
+            let consensus = ConsensusEngine::new(consensus_params);
+
+            let temp_dir = tempdir().unwrap();
+            let storage_config = StorageConfig {
+                data_dir: temp_dir.path().to_str().unwrap().to_string(),
+                db_cache_size_mb: 64,
+                max_open_files: 100,
+                enable_compression: false,
+                prune_blocks: false,
+                prune_target_gb: 1,
+            };
+
+            let _db = BlockchainDB::open(&storage_config).unwrap();
+            let _mempool = Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone());
+            let _wallet = Wallet::new("Bench Wallet", "testnet");
+        })
+    });
+
+    group.finish();
+}
 
 /// Benchmark block validation throughput
 fn bench_block_validation(c: &mut BenchmarkGroup) {
@@ -75,11 +105,9 @@ fn bench_utxo_operations(c: &mut BenchmarkGroup) {
 
 /// Benchmark database operations
 fn bench_db_operations(c: &mut BenchmarkGroup) {
-    let temp_dir = std::env::temp_dir().join(format!("udaya_bench_{}", std::process::id()));
-    let _ = std::fs::create_dir_all(&temp_dir);
-
+    let temp_dir = tempdir().unwrap();
     let config = StorageConfig {
-        data_dir: temp_dir.to_str().unwrap().to_string(),
+        data_dir: temp_dir.path().to_str().unwrap().to_string(),
         db_cache_size_mb: 64,
         max_open_files: 100,
         enable_compression: false,
@@ -103,7 +131,7 @@ fn bench_db_operations(c: &mut BenchmarkGroup) {
         });
     }
 
-    let _ = std::fs::remove_dir_all(&temp_dir);
+    let _ = temp_dir.close();
 }
 
 /// Benchmark hashing operations (SHA-256d)
@@ -161,17 +189,17 @@ fn bench_signature_operations(c: &mut BenchmarkGroup) {
 fn bench_throughput(c: &mut Criterion) {
     let mut group = c.benchmark_group("throughput");
     group.sample_size(10);
-    
-    bench_block_validation(&group);
-    bench_transaction_validation(&group);
-    bench_mempool_operations(&group);
-    bench_wallet_operations(&group);
-    bench_utxo_operations(&mut group.clone());
-    bench_db_operations(&mut group.clone());
-    bench_hash_operations(&mut group.clone());
-    bench_merkle_operations(&mut group.clone());
-    bench_signature_operations(&group);
-    
+
+    bench_block_validation(&mut group);
+    bench_transaction_validation(&mut group);
+    bench_mempool_operations(&mut group);
+    bench_wallet_operations(&mut group);
+    bench_utxo_operations(&mut group);
+    bench_db_operations(&mut group);
+    bench_hash_operations(&mut group);
+    bench_merkle_operations(&mut group);
+    bench_signature_operations(&mut group);
+
     group.finish();
 }
 
@@ -180,12 +208,17 @@ fn bench_latency(c: &mut Criterion) {
     let mut group = c.benchmark_group("latency");
     group.sample_size(1000);
     group.measurement_time(std::time::Duration::from_secs(10));
-    
+
     bench_block_validation(&mut group);
     bench_transaction_validation(&mut group);
-    
+
     group.finish();
 }
 
-criterion_group!(benches, bench_throughput, bench_latency);
+/// Run node startup benchmarks
+fn bench_startup(c: &mut Criterion) {
+    bench_node_startup(c);
+}
+
+criterion_group!(benches, bench_throughput, bench_latency, bench_startup);
 criterion_main!(benches);

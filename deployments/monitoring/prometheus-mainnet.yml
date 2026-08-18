@@ -1,0 +1,482 @@
+# Udaya Mainnet Prometheus Monitoring Configuration
+# Comprehensive monitoring for production mainnet deployment
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    environment: "mainnet"
+    network: "udaya"
+    cluster: "udaya-mainnet"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - "alertmanager-mainnet-1.udaya.net:9093"
+            - "alertmanager-mainnet-2.udaya.net:9093"
+            - "alertmanager-mainnet-3.udaya.net:9093"
+      scheme: https
+      tls_config:
+        ca_file: /etc/prometheus/tls/ca.pem
+        cert_file: /etc/prometheus/tls/cert.pem
+        key_file: /etc/prometheus/tls/key.pem
+      timeout: 10s
+      api_version: v2
+
+# Rule files for alerting
+rule_files:
+  - "/etc/prometheus/rules/alert.rules"
+  - "/etc/prometheus/rules/blockchain.rules"
+  - "/etc/prometheus/rules/performance.rules"
+  - "/etc/prometheus/rules/security.rules"
+  - "/etc/prometheus/rules/network.rules"
+
+# Scrape configurations
+scrape_configs:
+
+  # Prometheus self-monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets:
+          - "localhost:9090"
+          - "prometheus-mainnet-1.udaya.net:9090"
+          - "prometheus-mainnet-2.udaya.net:9090"
+          - "prometheus-mainnet-3.udaya.net:9090"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    metrics_path: "/metrics"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    honor_labels: true
+
+  # Udaya Mainnet Seed Nodes
+  - job_name: "udaya-mainnet-seed-nodes"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "seed-us-east-1.udaya.net:18332"
+          - "seed-us-west-1.udaya.net:18332"
+          - "seed-eu-central-1.udaya.net:18332"
+          - "seed-eu-west-1.udaya.net:18332"
+          - "seed-ap-southeast-1.udaya.net:18332"
+          - "seed-ap-northeast-1.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - source_labels: [__address__]
+        target_label: region
+        regex: "seed-(.*)-.*"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-seed-node"
+
+  # Udaya Mainnet Public RPC Nodes
+  - job_name: "udaya-mainnet-rpc-nodes"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "rpc-node-1.udaya.net:18332"
+          - "rpc-node-2.udaya.net:18332"
+          - "rpc-node-3.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-rpc-node"
+
+  # Udaya Mainnet Explorer
+  - job_name: "udaya-mainnet-explorer"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "explorer-node-1.udaya.net:18080"
+          - "explorer-node-2.udaya.net:18080"
+          - "explorer-node-3.udaya.net:18080"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18080"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-explorer"
+
+  # Udaya Testnet Faucet
+  - job_name: "udaya-testnet-faucet"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "faucet-node-1.udaya.net:18081"
+          - "faucet-node-2.udaya.net:18081"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18081"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-faucet"
+
+  # Udaya Database Servers
+  - job_name: "udaya-databases"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "explorer-db.udaya.net:9187"
+          - "faucet-db.udaya.net:9187"
+          - "rpc-db.udaya.net:9187"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):9187"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-database"
+
+  # Udaya Redis Servers
+  - job_name: "udaya-redis"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "redis-mainnet-1.udaya.net:9121"
+          - "redis-mainnet-2.udaya.net:9121"
+          - "redis-mainnet-3.udaya.net:9121"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):9121"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-redis"
+
+  # Udaya Load Balancers
+  - job_name: "udaya-load-balancers"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "lb-mainnet-1.udaya.net:9100"
+          - "lb-mainnet-2.udaya.net:9100"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):9100"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-load-balancer"
+
+  # Udaya Monitoring Infrastructure
+  - job_name: "udaya-monitoring"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "grafana-mainnet.udaya.net:3000"
+          - "alertmanager-mainnet-1.udaya.net:9093"
+          - "alertmanager-mainnet-2.udaya.net:9093"
+          - "alertmanager-mainnet-3.udaya.net:9093"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):.*"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-monitoring"
+
+  # Udaya Network Monitoring
+  - job_name: "udaya-network"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "network-monitor-1.udaya.net:9100"
+          - "network-monitor-2.udaya.net:9100"
+          - "network-monitor-3.udaya.net:9100"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):9100"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-network-monitor"
+
+  # Udaya Blockchain Metrics
+  - job_name: "udaya-blockchain-metrics"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics/blockchain"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "seed-us-east-1.udaya.net:18332"
+          - "seed-us-west-1.udaya.net:18332"
+          - "seed-eu-central-1.udaya.net:18332"
+          - "seed-eu-west-1.udaya.net:18332"
+          - "seed-ap-southeast-1.udaya.net:18332"
+          - "seed-ap-northeast-1.udaya.net:18332"
+          - "rpc-node-1.udaya.net:18332"
+          - "rpc-node-2.udaya.net:18332"
+          - "rpc-node-3.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-blockchain"
+
+  # Udaya P2P Network Metrics
+  - job_name: "udaya-p2p-metrics"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics/p2p"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "seed-us-east-1.udaya.net:18332"
+          - "seed-us-west-1.udaya.net:18332"
+          - "seed-eu-central-1.udaya.net:18332"
+          - "seed-eu-west-1.udaya.net:18332"
+          - "seed-ap-southeast-1.udaya.net:18332"
+          - "seed-ap-northeast-1.udaya.net:18332"
+          - "rpc-node-1.udaya.net:18332"
+          - "rpc-node-2.udaya.net:18332"
+          - "rpc-node-3.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-p2p"
+
+  # Udaya Mempool Metrics
+  - job_name: "udaya-mempool-metrics"
+    scrape_interval: 5s
+    scrape_timeout: 3s
+    metrics_path: "/metrics/mempool"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "seed-us-east-1.udaya.net:18332"
+          - "seed-us-west-1.udaya.net:18332"
+          - "seed-eu-central-1.udaya.net:18332"
+          - "seed-eu-west-1.udaya.net:18332"
+          - "seed-ap-southeast-1.udaya.net:18332"
+          - "seed-ap-northeast-1.udaya.net:18332"
+          - "rpc-node-1.udaya.net:18332"
+          - "rpc-node-2.udaya.net:18332"
+          - "rpc-node-3.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-mempool"
+
+  # Udaya RPC Metrics
+  - job_name: "udaya-rpc-metrics"
+    scrape_interval: 10s
+    scrape_timeout: 5s
+    metrics_path: "/metrics/rpc"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "rpc-node-1.udaya.net:18332"
+          - "rpc-node-2.udaya.net:18332"
+          - "rpc-node-3.udaya.net:18332"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18332"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-rpc"
+
+  # Udaya Explorer Metrics
+  - job_name: "udaya-explorer-metrics"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics/explorer"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "explorer-node-1.udaya.net:18080"
+          - "explorer-node-2.udaya.net:18080"
+          - "explorer-node-3.udaya.net:18080"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18080"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-explorer"
+
+  # Udaya Faucet Metrics
+  - job_name: "udaya-faucet-metrics"
+    scrape_interval: 15s
+    scrape_timeout: 5s
+    metrics_path: "/metrics/faucet"
+    scheme: https
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    static_configs:
+      - targets:
+          - "faucet-node-1.udaya.net:18081"
+          - "faucet-node-2.udaya.net:18081"
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: instance
+        regex: "(.*):18081"
+        replacement: "$1"
+      - target_label: service
+        replacement: "udaya-faucet"
+
+# Remote write configuration for long-term storage
+remote_write:
+  - url: "https://thanos-receiver.udaya.net:19291/api/v1/receive"
+    queue_config:
+      max_samples_per_send: 1000
+      max_shards: 200
+      capacity: 2500
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+
+# Remote read configuration for long-term queries
+remote_read:
+  - url: "https://thanos-query.udaya.net:19192"
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    timeout: 30s
+
+# Service discovery configuration
+service_discovery:
+  kubernetes_sd_configs:
+    - role: pod
+      namespaces:
+        names: ["udaya-mainnet"]
+      api_server: "https://kubernetes-api.udaya.net"
+      tls_config:
+        ca_file: /etc/prometheus/k8s/ca.pem
+        cert_file: /etc/prometheus/k8s/cert.pem
+        key_file: /etc/prometheus/k8s/key.pem
+      bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+
+  consul_sd_configs:
+    - server: "consul.udaya.net:8500"
+      services: ["udaya-seed-node", "udaya-rpc-node", "udaya-explorer", "udaya-faucet"]
+      scheme: https
+      tls_config:
+        ca_file: /etc/prometheus/consul/ca.pem
+        cert_file: /etc/prometheus/consul/cert.pem
+        key_file: /etc/prometheus/consul/key.pem
+
+# Alertmanager configuration for high availability
+alertmanager_config:
+  - scheme: https
+    static_configs:
+      - targets:
+          - "alertmanager-mainnet-1.udaya.net:9093"
+          - "alertmanager-mainnet-2.udaya.net:9093"
+          - "alertmanager-mainnet-3.udaya.net:9093"
+    tls_config:
+      ca_file: /etc/prometheus/tls/ca.pem
+      cert_file: /etc/prometheus/tls/cert.pem
+      key_file: /etc/prometheus/tls/key.pem
+    timeout: 10s
+    api_version: v2

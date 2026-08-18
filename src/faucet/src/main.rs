@@ -22,11 +22,11 @@ struct Cli {
     rpc_url: String,
 
     /// RPC username
-    #[arg(long, default_value = "Udaya")]
+    #[arg(long)]
     rpc_user: String,
 
     /// RPC password
-    #[arg(long, default_value = "Udaya_rpc")]
+    #[arg(long)]
     rpc_password: String,
 
     /// Amount to dispense per request (in satoshis)

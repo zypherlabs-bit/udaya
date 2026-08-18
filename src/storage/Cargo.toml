@@ -20,3 +20,4 @@ dashmap.workspace = true
 sled.workspace = true
 chrono.workspace = true
 tempfile.workspace = true
+num-bigint.workspace = true

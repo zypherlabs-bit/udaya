@@ -5,6 +5,7 @@ use axum::{
     Json, Router,
 };
 use clap::Parser;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -273,7 +274,7 @@ async fn handle_stratum_connection(mut stream: tokio::net::TcpStream, state: Arc
                                     .await;
                                 continue;
                             }
-                            let hashrate = 100.0 + rand::random::<f64>() * 50.0;
+                            let hashrate = 100.0 + rand::thread_rng().gen::<f64>() * 50.0;
                             let now = SystemTime::now()
                                 .duration_since(UNIX_EPOCH)
                                 .unwrap()

@@ -1,64 +1,77 @@
 ---
-name: Bug Report
-about: Report a bug to help us improve Udaya
-title: '[BUG] '
-labels: bug
+name: 🐛 Bug Report
+about: Report a bug encountered during Phase 3 Public Alpha Testing
+title: '[Bug]: '
+labels: ['bug', 'Phase3-Testing']
 assignees: ''
 
 ---
 
+**Thank you for participating in Udaya's Phase 3 Public Alpha Testing!**
+
+Please fill out this template to help us understand and reproduce the issue.
+
 ## Bug Description
 
-A clear and concise description of what the bug is.
+**Title**: [Concise description of the issue]
 
-## Steps To Reproduce
+**Severity**: [Choose: Critical/High/Medium/Low]
 
-1. Go to '...'
-2. Run command '...'
-3. See error
+## Environment Information
 
-## Expected Behavior
+- **OS**: [e.g., Ubuntu 22.04, Windows 11, macOS 13.4]
+- **Architecture**: [e.g., x86_64, aarch64]
+- **Rust version**: [`rustc --version` output]
+- **Commit hash**: [git commit hash or "latest"]
+- **Build type**: [release/debug]
+- **Installation method**: [source/docker/kubernetes]
 
-A clear and concise description of what you expected to happen.
+## Steps to Reproduce
 
-## Actual Behavior
+1. [First step]
+2. [Second step]
+3. [Third step]
 
-What actually happened.
+**Expected Behavior**:
+[What you expected to happen]
 
-## Environment
+**Actual Behavior**:
+[What actually happened]
 
-- **OS**: [e.g. Ubuntu 22.04, macOS 14.0, Windows 11]
-- **Rust Version**: [e.g. 1.75.0]
-- **Udaya Version**: [e.g. 1.0.0-alpha.1]
-- **Network**: [e.g. mainnet, testnet, regtest]
-
-## Configuration
-
-```toml
-# Relevant sections of your udaya.conf
-[network]
-listen_port = 
-
-[mining]
-enable = 
-
-[wallet]
-enable = 
-```
-
-## Logs
+## Logs and Error Messages
 
 ```
-Paste relevant log output here (remove sensitive information)
+[Paste relevant logs here - please redact any sensitive information]
 ```
 
 ## Additional Context
 
-Add any other context about the problem here.
+- [ ] This is a regression (worked in previous version)
+- [ ] I can provide a minimal reproduction case
+- [ ] I'm available to help debug further
+- [ ] This affects core functionality
+- [ ] This is a performance issue
 
-## Checklist
+**Possible Solution**:
+[If you have ideas for a fix or workaround]
 
-- [ ] I have searched existing issues
-- [ ] I have provided all requested information
-- [ ] I have removed sensitive information from logs
-- [ ] This is not a feature request (use feature_request template instead)
+**Screenshots**:
+[If applicable, add screenshots to help explain]
+
+## Testing Checklist
+
+- [ ] I have searched existing issues for duplicates
+- [ ] I have included all relevant environment details
+- [ ] I have provided clear reproduction steps
+- [ ] I have attached relevant logs (with sensitive info redacted)
+- [ ] I am using the latest version from main branch
+
+---
+
+**Note to Maintainers**:
+- Critical: Crashes, security vulnerabilities, data corruption
+- High: Major functionality broken, severe performance issues
+- Medium: Minor functionality issues, usability problems
+- Low: Cosmetic issues, documentation typos
+
+Thank you for helping improve Udaya! 🚀

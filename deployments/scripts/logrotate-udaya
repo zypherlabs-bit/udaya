@@ -1,0 +1,26 @@
+# Log rotation configuration for Udaya nodes
+# Install with: sudo cp logrotate-udaya /etc/logrotate.d/udaya
+
+/var/log/udaya/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 udaya udaya
+    postrotate
+        systemctl reload udaya-node1 udaya-node2 udaya-node3 > /dev/null 2>&1 || true
+    endscript
+}
+
+/var/log/udaya/node*.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 udaya udaya
+    size 100M
+}

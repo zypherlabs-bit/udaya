@@ -2,6 +2,7 @@ use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;
 use ripemd::Ripemd160;
 use sha2::{Digest, Sha256};
+use subtle::ConstantTimeEq;
 
 /// Udaya address types
 #[derive(Debug, Clone, PartialEq)]
@@ -81,9 +82,9 @@ impl Address {
         let version = data[0];
         let hash: [u8; 20] = data[1..21].try_into()?;
 
-        // Verify checksum
+        // Verify checksum with constant-time comparison
         let checksum = double_sha256_first_4(&data[..data.len() - 4]);
-        if data[data.len() - 4..] != checksum {
+        if bool::from(!data[data.len() - 4..].ct_eq(&checksum)) {
             anyhow::bail!("Invalid address checksum");
         }
 

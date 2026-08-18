@@ -115,6 +115,7 @@ pub struct WalletAccount {
     pub internal_keys: Vec<String>,
     pub next_external_index: u32,
     pub next_internal_index: u32,
+    pub mnemonic: Option<Vec<String>>,
 }
 
 /// Full wallet state
@@ -154,6 +155,7 @@ impl Wallet {
                 internal_keys: Vec::new(),
                 next_external_index: 0,
                 next_internal_index: 0,
+                mnemonic: None,
             }],
             active_account: 0,
             transactions: Vec::new(),
@@ -257,6 +259,7 @@ impl Wallet {
         let address = key.to_native_segwit_address(MAINNET_HRP);
 
         let mut state = self.state.write();
+        state.accounts[0].mnemonic = Some(mnemonic.clone());
         state.accounts[0].external_keys.push(address.clone());
 
         (mnemonic, address)
@@ -279,6 +282,7 @@ impl Wallet {
         let address = key.to_native_segwit_address(MAINNET_HRP);
 
         let mut state = self.state.write();
+        state.accounts[0].mnemonic = Some(mnemonic_words.to_vec());
         state.accounts[0].external_keys.push(address.clone());
 
         Ok(address)

@@ -804,7 +804,7 @@ impl MetricsState {
     pub fn record_reorg(&self, depth: u64) {
         self.reorgs_total.inc();
         self.reorg_depth
-            .with_label_values(&[])
+            .with_label_values::<&str>(&[])
             .observe(depth as f64);
     }
 
@@ -834,7 +834,7 @@ impl MetricsState {
     /// Track block validation time
     pub fn observe_block_validation(&self, duration_secs: f64) {
         self.block_validation_duration_seconds
-            .with_label_values(&[])
+            .with_label_values::<&str>(&[])
             .observe(duration_secs);
     }
 

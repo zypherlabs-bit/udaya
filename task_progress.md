@@ -1,11 +1,14 @@
 # UDAYA PRODUCTION READINESS - TASK PROGRESS
 
-## PHASE 1 — CRYPTOGRAPHIC SECURITY
-- [x] ECDSA Signature Verification implemented in validation.rs
-- [x] ScriptVerifier with P2PKH and P2PK support
+## PHASE 1 — CRYPTOGRAPHIC SECURITY ✅
+- [x] ECDSA Signature Verification implemented & enforced in validation.rs
+- [x] ScriptVerifier with P2PKH and P2PK support (low-S canonical check)
 - [x] Signature hash computation (SIGHASH_ALL)
-- [ ] Write cryptographic validation tests
-- [ ] Generate Cryptographic Validation Report
+- [x] Upgrade all vulnerable dependencies (ring, protobuf, rustls-webpki)
+- [x] Implement constant-time comparisons (subtle::ConstantTimeEq)
+- [x] Harden RNG usage (OsRng for wallet entropy)
+- [x] Write cryptographic validation tests
+- [x] Generate Cryptographic Validation Report
 
 ## PHASE 2 — GENESIS ACTIVATION ✅
 - [x] Mine production genesis block

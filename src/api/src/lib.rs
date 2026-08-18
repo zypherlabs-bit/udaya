@@ -96,6 +96,17 @@ impl RpcHandler {
     }
 
     pub fn handle(&self, request: JsonRpcRequest) -> JsonRpcResponse {
+        if request.method.is_empty() {
+            return JsonRpcResponse {
+                jsonrpc: "2.0".to_string(),
+                id: request.id,
+                result: None,
+                error: Some(RpcError {
+                    code: -32600,
+                    message: "Invalid request: method cannot be empty".to_string(),
+                }),
+            };
+        }
         if let Some(handler) = self.handlers.get(&request.method) {
             handler(request)
         } else {

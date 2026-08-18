@@ -4,6 +4,7 @@ pub mod network;
 use dashmap::DashMap;
 use parking_lot::RwLock;
 use std::net::SocketAddr;
+use std::sync::atomic::{AtomicU64, Ordering};
 use udaya_core::transaction::Transaction;
 use udaya_core::types::{Block, BlockHash, InvVector};
 
@@ -32,6 +33,8 @@ pub struct PeerInfo {
     pub ban_score: i32,
     pub last_ping: u64,
     pub ping_time: u64,
+    pub last_seen: u64,
+    pub fail_count: u32,
 }
 
 /// Network configuration
@@ -52,6 +55,10 @@ pub struct P2PConfig {
     pub protocol_version: u32,
     pub services: u64,
     pub user_agent: String,
+    pub enable_tls: bool,
+    pub tls_cert_path: Option<String>,
+    pub tls_key_path: Option<String>,
+    pub tls_ca_cert_path: Option<String>,
 }
 
 impl Default for P2PConfig {
@@ -80,6 +87,10 @@ impl Default for P2PConfig {
             protocol_version: 70016,
             services: 1 | 2,
             user_agent: "/Udaya:1.0.0/".to_string(),
+            enable_tls: false,
+            tls_cert_path: None,
+            tls_key_path: None,
+            tls_ca_cert_path: None,
         }
     }
 }
@@ -180,6 +191,8 @@ pub struct NetworkState {
     pub config: P2PConfig,
     pub stats: RwLock<NetworkStats>,
     pub start_time: chrono::DateTime<chrono::Utc>,
+    /// Current chain height advertised to peers in version messages
+    pub start_height: AtomicU64,
 }
 
 impl NetworkState {
@@ -200,7 +213,21 @@ impl NetworkState {
                 uptime_seconds: 0,
             }),
             start_time: chrono::Utc::now(),
+            start_height: AtomicU64::new(0),
         }
+    }
+
+    /// Set the chain height advertised in version messages
+    pub fn set_start_height(&self, height: u64) {
+        let old = self.start_height.swap(height, Ordering::Relaxed);
+        if old != height {
+            log::debug!("Advertised chain height updated: {} -> {}", old, height);
+        }
+    }
+
+    /// Current advertised chain height
+    pub fn advertised_height(&self) -> u64 {
+        self.start_height.load(Ordering::Relaxed)
     }
 
     pub fn is_banned(&self, addr: &str) -> bool {
@@ -218,6 +245,30 @@ impl NetworkState {
 
     pub fn get_connected_count(&self) -> usize {
         self.peers.len()
+    }
+
+    pub fn update_peer_height(&self, peer_id: u64, height: u64) {
+        if let Some(mut peer) = self.peers.get_mut(&peer_id) {
+            peer.height = height;
+        }
+    }
+
+    pub fn increment_ban_score(&self, addr: &str, score: i32) -> bool {
+        let mut ban = false;
+        if let Some(mut peer) = self
+            .peers
+            .iter_mut()
+            .find(|p| p.address.to_string().starts_with(addr))
+        {
+            peer.ban_score += score;
+            if peer.ban_score >= self.config.ban_threshold {
+                ban = true;
+            }
+        }
+        if ban {
+            self.ban_peer(addr, 3600); // Ban for 1 hour
+        }
+        ban
     }
 
     pub fn get_outbound_peers(&self) -> Vec<PeerInfo> {

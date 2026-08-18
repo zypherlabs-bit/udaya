@@ -1,0 +1,33 @@
+# Udaya Testnet Monitoring Configuration
+# Prometheus scrape config for testnet nodes
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  - job_name: 'udaya-node1'
+    static_configs:
+      - targets: ['localhost:9090']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  - job_name: 'udaya-node2'
+    static_configs:
+      - targets: ['localhost:9091']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+  - job_name: 'udaya-node3'
+    static_configs:
+      - targets: ['localhost:9092']
+    metrics_path: /metrics
+    scrape_interval: 15s
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
+
+rule_files:
+  - 'udaya-alerts.yml'

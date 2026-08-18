@@ -1,0 +1,13 @@
+[package]
+name = "stability-tests"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Udaya Phase 3 Stability Tests"
+
+[dependencies]
+udaya-core = { path = "../core" }
+udaya-storage = { path = "../storage" }
+tempfile.workspace = true
+num-bigint.workspace = true
+num-traits.workspace = true

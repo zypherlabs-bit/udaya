@@ -7,7 +7,7 @@ use secp256k1::{ecdsa::Signature, All, Message, PublicKey, Secp256k1};
 use std::collections::{HashMap, HashSet};
 
 /// UTXO set entry
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UTXOEntry {
     pub value: u64,
     pub script_pubkey: Vec<u8>,
@@ -18,7 +18,7 @@ pub struct UTXOEntry {
 /// UTXO set for tracking unspent outputs
 #[derive(Default)]
 pub struct UTXOSet {
-    utxos: HashMap<OutPoint, UTXOEntry>,
+    pub utxos: HashMap<OutPoint, UTXOEntry>,
 }
 
 impl UTXOSet {
@@ -175,13 +175,21 @@ impl ScriptVerifier {
             sig_bytes
         };
 
-        let sig = match Signature::from_der(der_sig) {
+        let mut sig = match Signature::from_der(der_sig) {
             Ok(s) => s,
             Err(e) => {
                 log::warn!("Invalid DER signature: {}", e);
                 return false;
             }
         };
+
+        // Enforce canonical low-S signature (BIP-62 / malleability prevention)
+        let der_before = sig.serialize_der();
+        sig.normalize_s();
+        if sig.serialize_der() != der_before {
+            log::warn!("Rejected non-canonical high-S ECDSA signature");
+            return false;
+        }
 
         let pk = match PublicKey::from_slice(pk_bytes) {
             Ok(p) => p,
@@ -234,10 +242,17 @@ impl ScriptVerifier {
             sig_bytes
         };
 
-        let sig = match Signature::from_der(der_sig) {
+        let mut sig = match Signature::from_der(der_sig) {
             Ok(s) => s,
             Err(_) => return false,
         };
+
+        // Enforce canonical low-S signature (BIP-62 / malleability prevention)
+        let der_before = sig.serialize_der();
+        sig.normalize_s();
+        if sig.serialize_der() != der_before {
+            return false;
+        }
 
         // Parse script_pubkey: <pk_len> <pk_bytes> OP_CHECKSIG
         if script_pubkey.len() < 2 {
@@ -515,6 +530,7 @@ impl TransactionValidator {
             } else {
                 // Regular transactions
                 self.validate_transaction_context(tx, utxo_set, height, median_time)?;
+                self.verify_transaction_signatures(tx, utxo_set)?;
             }
         }
 
@@ -601,5 +617,41 @@ mod tests {
 
         let empty_tx = Transaction::new(1, vec![], vec![], 0);
         assert!(validator.validate_transaction(&empty_tx).is_err());
+    }
+
+    #[test]
+    fn test_signature_verifier_invalid_sig() {
+        let verifier = ScriptVerifier::new();
+        let sig_hash = [0u8; 32];
+        let invalid_script_sig = vec![0x04, 0x01, 0x02, 0x03, 0x04, 0x04, 0x05, 0x06, 0x07, 0x08];
+        let script_pubkey = vec![opcodes::OP_DUP, opcodes::OP_HASH160, 0x00];
+
+        assert!(!verifier.verify_p2pkh(&invalid_script_sig, &script_pubkey, &sig_hash));
+    }
+
+    #[test]
+    fn test_signature_verifier_valid_ecdsa_p2pkh() {
+        use secp256k1::SecretKey;
+
+        let secp = Secp256k1::new();
+        let secret_key = SecretKey::from_slice(&[0x01; 32]).unwrap();
+        let pubkey = PublicKey::from_secret_key(&secp, &secret_key);
+        let pubkey_bytes = pubkey.serialize();
+
+        let sig_hash = [0x42u8; 32];
+        let msg = Message::from_digest_slice(&sig_hash).unwrap();
+        let mut sig = secp.sign_ecdsa(&msg, &secret_key);
+        sig.normalize_s();
+        let mut der_sig = sig.serialize_der().to_vec();
+        der_sig.push(0x01); // SIGHASH_ALL
+
+        let mut script_sig = Vec::new();
+        script_sig.push(der_sig.len() as u8);
+        script_sig.extend_from_slice(&der_sig);
+        script_sig.push(pubkey_bytes.len() as u8);
+        script_sig.extend_from_slice(&pubkey_bytes);
+
+        let verifier = ScriptVerifier::new();
+        assert!(verifier.verify_p2pkh(&script_sig, &[], &sig_hash));
     }
 }

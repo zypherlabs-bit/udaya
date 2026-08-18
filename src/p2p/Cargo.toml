@@ -23,3 +23,9 @@ rand.workspace = true
 uuid.workspace = true
 byteorder.workspace = true
 sha2.workspace = true
+tokio-rustls = "0.24"
+rustls = { version = "0.21", features = ["dangerous_configuration"] }
+webpki = "0.22"
+rcgen = "0.14"
+rustls-pemfile = "1.0"
+

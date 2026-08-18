@@ -70,6 +70,11 @@ impl Mempool {
         }
     }
 
+    /// Check if a transaction is in the mempool (or orphan pool)
+    pub fn contains(&self, txid: &Txid) -> bool {
+        self.transactions.contains_key(txid) || self.orphans.contains_key(txid)
+    }
+
     pub fn submit_transaction(
         &self,
         tx: Transaction,

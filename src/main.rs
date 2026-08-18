@@ -1,15 +1,26 @@
 use axum::{
+    body::Body,
     extract::State,
-    http::StatusCode,
-    response::IntoResponse,
+    http::{
+        header::{AUTHORIZATION, WWW_AUTHENTICATE},
+        HeaderMap, HeaderValue, Request, StatusCode,
+    },
+    middleware,
+    middleware::Next,
+    response::{IntoResponse, Response},
     routing::{get, post},
     Json, Router,
 };
+use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use clap::{Parser, Subcommand};
-use log::{error, info, warn};
+use dashmap::DashMap;
+use log::{debug, error, info, warn};
+use parking_lot::Mutex;
 use prometheus::Encoder;
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
+use tokio::sync::mpsc;
 use udaya_api::{
     blockchain_info_to_json, JsonRpcRequest, JsonRpcResponse, RpcError, RpcHandler, SoftForkInfo,
 };
@@ -38,7 +49,7 @@ pub struct NodeState {
     pub wallet: Wallet,
     pub explorer: ExplorerEngine,
     pub mining_pool: Option<MiningPool>,
-    pub rpc_handler: RpcHandler,
+    pub rpc_handler: std::sync::Mutex<RpcHandler>,
     pub metrics: MetricsState,
     pub system_metrics: SystemMetrics,
     pub p2p_network: Option<udaya_p2p::network::P2PNetwork>,
@@ -268,10 +279,17 @@ fn initialize_node_state(config: &UdayaConfig) -> anyhow::Result<Arc<NodeState>>
     let mempool =
         udaya_mempool::Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone());
 
-    let p2p_config = udaya_p2p::P2PConfig {
+    // Build P2P config from node config, mapping preferred_peers to seed_nodes
+    let mut p2p_config = udaya_p2p::P2PConfig {
         listen_port: config.network.listen_port,
+        max_peers: config.network.max_peers as usize,
+        enable_dns_seed: false,
         ..Default::default()
     };
+    // Use preferred_peers as seed nodes for local testnet connectivity
+    if !config.network.preferred_peers.is_empty() {
+        p2p_config.seed_nodes = config.network.preferred_peers.clone();
+    }
     let network_state = std::sync::Arc::new(udaya_p2p::NetworkState::new(p2p_config.clone()));
 
     let p2p_network = Some(udaya_p2p::network::P2PNetwork::new(
@@ -312,7 +330,7 @@ fn initialize_node_state(config: &UdayaConfig) -> anyhow::Result<Arc<NodeState>>
         wallet,
         explorer,
         mining_pool,
-        rpc_handler,
+        rpc_handler: std::sync::Mutex::new(rpc_handler),
         metrics,
         system_metrics,
         p2p_network,
@@ -768,7 +786,12 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                     .map_err(|e| anyhow::anyhow!("System time error: {}", e))?
                     .as_secs();
                 let height = state.db.get_chain_height().unwrap_or(0);
-                let _ = state.mempool.submit_transaction(tx, height, now);
+                if let Err(e) = state.mempool.submit_transaction(tx.clone(), height, now) {
+                    anyhow::bail!("Transaction rejected by mempool: {}", e);
+                }
+
+                // Note: The P2P layer broadcasts accepted transactions to peers via
+                // the p2p message handler. This RPC path just adds to local mempool.
 
                 Ok(txid.to_string())
             })();
@@ -1127,6 +1150,234 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
     });
 }
 
+// ============================================================================
+// RPC Security Middleware
+// ============================================================================
+
+/// In-memory rate limiter state
+struct RateLimiterState {
+    requests: DashMap<std::net::IpAddr, (AtomicU64, parking_lot::Mutex<std::time::Instant>)>,
+}
+
+impl RateLimiterState {
+    fn new() -> Self {
+        Self {
+            requests: DashMap::new(),
+        }
+    }
+
+    fn check_rate_limit(&self, ip: std::net::IpAddr, _max_rps: u32, burst: u32) -> bool {
+        let now = std::time::Instant::now();
+        let entry = self
+            .requests
+            .entry(ip)
+            .or_insert_with(|| (AtomicU64::new(0), parking_lot::Mutex::new(now)));
+        let (count, last_reset_mutex) = entry.value();
+
+        let mut last_reset = last_reset_mutex.lock();
+        let elapsed = now.duration_since(*last_reset).as_secs();
+        if elapsed >= 1 {
+            count.store(0, Ordering::SeqCst);
+            *last_reset = now;
+        }
+        drop(last_reset);
+
+        let current = count.fetch_add(1, Ordering::SeqCst) + 1;
+        if current > burst as u64 {
+            return false;
+        }
+        true
+    }
+}
+
+/// HTTP Basic Auth middleware
+async fn auth_middleware(
+    State(config): State<Arc<UdayaConfig>>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    if !config.rpc.enable_auth {
+        return next.run(req).await;
+    }
+
+    let headers = req.headers();
+    let auth_header = match headers.get(AUTHORIZATION) {
+        Some(h) => h,
+        None => {
+            return build_auth_challenge_response();
+        }
+    };
+
+    let auth_str = match auth_header.to_str() {
+        Ok(s) => s,
+        Err(_) => return build_auth_challenge_response(),
+    };
+
+    if !auth_str.starts_with("Basic ") {
+        return build_auth_challenge_response();
+    }
+
+    let decoded = match BASE64.decode(&auth_str[6..]) {
+        Ok(d) => d,
+        Err(_) => return build_auth_challenge_response(),
+    };
+
+    let credentials = match std::str::from_utf8(&decoded) {
+        Ok(s) => s.to_string(),
+        Err(_) => return build_auth_challenge_response(),
+    };
+
+    let parts: Vec<&str> = credentials.splitn(2, ':').collect();
+    if parts.len() != 2 {
+        return build_auth_challenge_response();
+    }
+
+    let (username, password) = (parts[0], parts[1]);
+    if username == config.rpc.username && password == config.rpc.password {
+        next.run(req).await
+    } else {
+        build_auth_challenge_response()
+    }
+}
+
+fn build_auth_challenge_response() -> Response {
+    let mut headers = HeaderMap::new();
+    headers.insert(
+        WWW_AUTHENTICATE,
+        HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+    );
+    (
+        StatusCode::UNAUTHORIZED,
+        headers,
+        Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+    )
+        .into_response()
+}
+
+/// Rate limiting middleware
+async fn rate_limit_middleware(
+    State(limiter): State<Arc<RateLimiterState>>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    let ip = req
+        .extensions()
+        .get::<std::net::SocketAddr>()
+        .map(|addr| addr.ip())
+        .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
+
+    let config = req.extensions().get::<Arc<UdayaConfig>>();
+    let max_rps = config.map(|c| c.rpc.rate_limit_rps).unwrap_or(100);
+    let burst = config.map(|c| c.rpc.rate_limit_burst).unwrap_or(200);
+
+    if !limiter.check_rate_limit(ip, max_rps, burst) {
+        return (
+            StatusCode::TOO_MANY_REQUESTS,
+            Json(serde_json::json!({"error": "Rate limit exceeded", "code": -429})),
+        )
+            .into_response();
+    }
+
+    next.run(req).await
+}
+
+/// Request size limiting middleware
+async fn request_size_middleware(
+    State(config): State<Arc<UdayaConfig>>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    let max_size = (config.rpc.max_request_size_mb as usize) * 1024 * 1024;
+
+    let (parts, body) = req.into_parts();
+    let body = http_body_util::BodyExt::collect(body).await.map_err(|_| {
+        (
+            StatusCode::BAD_REQUEST,
+            Json(serde_json::json!({"error": "Failed to read request body"})),
+        )
+            .into_response()
+    });
+
+    match body {
+        Ok(collected) => {
+            let bytes = collected.to_bytes();
+            let total_size = bytes.len();
+            if total_size > max_size {
+                return (
+                    StatusCode::PAYLOAD_TOO_LARGE,
+                    Json(serde_json::json!({"error": "Request too large", "code": -32600})),
+                )
+                    .into_response();
+            }
+            let req = Request::from_parts(parts, Body::from(bytes));
+            next.run(req).await
+        }
+        Err(resp) => resp,
+    }
+}
+
+/// Restricted method middleware
+async fn restricted_method_middleware(
+    State(config): State<Arc<UdayaConfig>>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    if !config.rpc.enable_auth {
+        return next.run(req).await;
+    }
+
+    let auth_header = req.headers().get(AUTHORIZATION);
+    let is_authenticated = auth_header.is_some();
+
+    if is_authenticated {
+        return next.run(req).await;
+    }
+
+    let body_bytes = match axum::body::to_bytes(req.into_body(), 1024 * 1024).await {
+        Ok(b) => b,
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Invalid request"})),
+            )
+                .into_response();
+        }
+    };
+
+    let body: JsonRpcRequest = match serde_json::from_slice(&body_bytes) {
+        Ok(b) => b,
+        Err(_) => {
+            return (
+                StatusCode::BAD_REQUEST,
+                Json(serde_json::json!({"error": "Invalid JSON-RPC request"})),
+            )
+                .into_response();
+        }
+    };
+
+    if config
+        .rpc
+        .restricted_methods
+        .iter()
+        .any(|m| m == &body.method)
+    {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({"error": "Method requires authentication", "code": -403})),
+        )
+            .into_response();
+    }
+
+    let req = Request::from_parts(
+        Request::new(Body::empty()).into_parts().0,
+        Body::from(body_bytes.clone()),
+    );
+    let (mut parts, _) = req.into_parts();
+    parts.extensions.insert(config);
+    let req = Request::from_parts(parts, Body::from(body_bytes));
+    next.run(req).await
+}
+
 async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     info!("╔══════════════════════════════════════════════════╗");
     info!(
@@ -1144,9 +1395,11 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
 
     let state = initialize_node_state(&config)?;
 
-    // === Register live RPC handlers ===
-    let mut rpc_handler = RpcHandler::new();
-    register_rpc_handlers(&mut rpc_handler, &state);
+    // === Register live RPC handlers into the existing state ===
+    {
+        let mut rpc_handler = state.rpc_handler.lock().unwrap();
+        register_rpc_handlers(&mut rpc_handler, &state);
+    }
     info!("Registered {} RPC handlers with live node state", 22);
 
     // Initialize UTXO set
@@ -1155,6 +1408,9 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     let chain_height = state.db.get_chain_height()?;
     info!("Chain height: {}", chain_height);
 
+    // Advertise our current height in version messages so peers can sync from us
+    state.network_state.set_start_height(chain_height);
+
     if chain_height == 0 {
         info!("Initializing genesis block...");
         let genesis = create_genesis_block();
@@ -1162,6 +1418,8 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
 
         // Store genesis and apply coinbase to UTXO set
         state.db.store_block(&genesis, 0)?;
+        state.db.update_utxo_set_for_block(&genesis, 0)?;
+
         let coinbase_tx = genesis.coinbase_tx().unwrap();
         utxo_set.apply_coinbase(coinbase_tx, &coinbase_tx.txid(), 0);
 
@@ -1174,7 +1432,7 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     }
 
     // Start P2P network
-    if let Some(p2p) = state.p2p_network.as_ref() {
+    let p2p_rx = if let Some(p2p) = state.p2p_network.as_ref() {
         info!(
             "Starting P2P network on port {}",
             config.network.listen_port
@@ -1184,7 +1442,37 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
                 "P2P network failed to start: {}. Continuing without P2P.",
                 e
             );
+            None
+        } else {
+            p2p.take_message_receiver().await
         }
+    } else {
+        None
+    };
+
+    // Process incoming P2P messages (blocks and transactions) in background
+    if let Some(rx) = p2p_rx {
+        let p2p_state = state.clone();
+        tokio::spawn(async move {
+            handle_p2p_messages(p2p_state, rx).await;
+        });
+    }
+
+    // Periodically re-sync from peers. This catches up nodes that fell behind,
+    // including after a restart/reconnect, by re-requesting headers whenever a
+    // connected peer advertises a higher height than we have.
+    {
+        let sync_state = state.clone();
+        tokio::spawn(async move {
+            periodic_sync_loop(sync_state).await;
+        });
+    }
+
+    // Connect explorer to blockchain database
+    if let Err(e) = state.explorer.load_from_database(&state.db) {
+        warn!("Failed to load explorer data from database: {}", e);
+    } else {
+        info!("Explorer connected to blockchain database");
     }
 
     // Start mining loop if enabled
@@ -1281,41 +1569,213 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     let rpc_addr = format!("{}:{}", config.rpc.listen_addr, config.rpc.listen_port);
     info!("Starting JSON-RPC server on {}", rpc_addr);
 
-    let app = Router::new()
+    let config_arc = Arc::new(config.clone());
+    let config_arc_for_mw1 = config_arc.clone();
+    let config_arc_for_mw2 = config_arc.clone();
+    let rate_limiter = Arc::new(RateLimiterState::new());
+
+    let mut app = Router::new()
         .route("/", post(handle_json_rpc))
         .route("/health", get(health_check_handler))
         .route("/healthz", get(health_check_liveness))
         .route("/readyz", get(health_check_readiness))
         .route("/metrics", get(metrics_handler))
-        .with_state(state.clone());
+        .with_state(state.clone())
+        .layer(middleware::from_fn(move |req: Request<Body>, next: Next| {
+            let config = config_arc_for_mw1.clone();
+            let limiter = rate_limiter.clone();
+            async move {
+                let ip = req
+                    .extensions()
+                    .get::<std::net::SocketAddr>()
+                    .map(|addr| addr.ip())
+                    .unwrap_or(std::net::IpAddr::V4(std::net::Ipv4Addr::new(127, 0, 0, 1)));
 
-    let listener = tokio::net::TcpListener::bind(&rpc_addr).await?;
-    info!("RPC server listening on http://{}", rpc_addr);
+                if !limiter.check_rate_limit(ip, config.rpc.rate_limit_rps, config.rpc.rate_limit_burst) {
+                    return (
+                        StatusCode::TOO_MANY_REQUESTS,
+                        Json(serde_json::json!({"error": "Rate limit exceeded", "code": -429})),
+                    )
+                        .into_response();
+                }
 
-    if config.rpc.enable_ws {
-        let ws_addr = format!("{}:{}", config.rpc.listen_addr, config.rpc.ws_port);
-        info!("WebSocket server configured on ws://{}", ws_addr);
+                if config.rpc.enable_auth {
+                    let headers = req.headers();
+                    let auth_header = match headers.get(AUTHORIZATION) {
+                        Some(h) => h,
+                        None => {
+                            let mut resp_headers = HeaderMap::new();
+                            resp_headers.insert(
+                                WWW_AUTHENTICATE,
+                                HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                            );
+                            return (
+                                StatusCode::UNAUTHORIZED,
+                                resp_headers,
+                                Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                            )
+                                .into_response();
+                        }
+                    };
+
+                    let auth_str = match auth_header.to_str() {
+                        Ok(s) => s,
+                        Err(_) => {
+                            let mut resp_headers = HeaderMap::new();
+                            resp_headers.insert(
+                                WWW_AUTHENTICATE,
+                                HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                            );
+                            return (
+                                StatusCode::UNAUTHORIZED,
+                                resp_headers,
+                                Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                            )
+                                .into_response();
+                        }
+                    };
+
+                    if !auth_str.starts_with("Basic ") {
+                        let mut resp_headers = HeaderMap::new();
+                        resp_headers.insert(
+                            WWW_AUTHENTICATE,
+                            HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                        );
+                        return (
+                            StatusCode::UNAUTHORIZED,
+                            resp_headers,
+                            Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                            )
+                                .into_response();
+                    }
+
+                    let decoded = match BASE64.decode(&auth_str[6..]) {
+                        Ok(d) => d,
+                        Err(_) => {
+                            let mut resp_headers = HeaderMap::new();
+                            resp_headers.insert(
+                                WWW_AUTHENTICATE,
+                                HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                            );
+                            return (
+                                StatusCode::UNAUTHORIZED,
+                                resp_headers,
+                                Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                            )
+                                .into_response();
+                        }
+                    };
+
+                    let credentials = match std::str::from_utf8(&decoded) {
+                        Ok(s) => s.to_string(),
+                        Err(_) => {
+                            let mut resp_headers = HeaderMap::new();
+                            resp_headers.insert(
+                                WWW_AUTHENTICATE,
+                                HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                            );
+                            return (
+                                StatusCode::UNAUTHORIZED,
+                                resp_headers,
+                                Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                            )
+                                .into_response();
+                        }
+                    };
+
+                    let parts: Vec<&str> = credentials.splitn(2, ':').collect();
+                    if parts.len() != 2 || parts[0] != config.rpc.username || parts[1] != config.rpc.password {
+                        let mut resp_headers = HeaderMap::new();
+                        resp_headers.insert(
+                            WWW_AUTHENTICATE,
+                            HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
+                        );
+                        return (
+                            StatusCode::UNAUTHORIZED,
+                            resp_headers,
+                            Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
+                        )
+                            .into_response();
+                    }
+                }
+
+                next.run(req).await
+            }
+        }))
+        .layer(middleware::from_fn(move |req: Request<Body>, next: Next| {
+            let config = config_arc_for_mw2.clone();
+            async move {
+                if !config.rpc.enable_auth {
+                    return next.run(req).await;
+                }
+
+                let body_bytes = match axum::body::to_bytes(req.into_body(), config.rpc.max_request_size_mb as usize * 1024 * 1024).await {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(serde_json::json!({"error": "Invalid request body"})),
+                        )
+                            .into_response();
+                    }
+                };
+
+                let rpc_req: JsonRpcRequest = match serde_json::from_slice(&body_bytes) {
+                    Ok(b) => b,
+                    Err(_) => {
+                        return (
+                            StatusCode::BAD_REQUEST,
+                            Json(serde_json::json!({"error": "Invalid JSON-RPC request"})),
+                        )
+                            .into_response();
+                    }
+                };
+
+                if config.rpc.restricted_methods.iter().any(|m| m == &rpc_req.method) {
+                    return (
+                        StatusCode::FORBIDDEN,
+                        Json(serde_json::json!({"error": "Method requires elevated privileges", "code": -403})),
+                    )
+                        .into_response();
+                }
+
+                let req = Request::from_parts(
+                    Request::new(Body::empty()).into_parts().0,
+                    Body::from(body_bytes.clone()),
+                );
+                let (mut parts, _) = req.into_parts();
+                parts.extensions.insert(config);
+                let req = Request::from_parts(parts, Body::from(body_bytes));
+                next.run(req).await
+            }
+        }));
+
+    if config_arc.rpc.enable_tls {
+        info!("RPC server listening on https://{}", rpc_addr);
+        let acceptor = axum_server::tls_rustls::RustlsAcceptor::new(
+            axum_server::tls_rustls::RustlsConfig::from_pem_file(
+                config_arc.rpc.tls_cert_path.as_deref().unwrap_or_default(),
+                config_arc.rpc.tls_key_path.as_deref().unwrap_or_default(),
+            )
+            .await
+            .map_err(|e| anyhow::anyhow!("Failed to load TLS config: {}", e))?,
+        );
+        let rpc_socket_addr: std::net::SocketAddr = rpc_addr.parse()?;
+        axum_server::Server::bind(rpc_socket_addr)
+            .acceptor(acceptor)
+            .serve(app.into_make_service())
+            .await?;
+    } else {
+        let listener = tokio::net::TcpListener::bind(&rpc_addr).await?;
+        info!("RPC server listening on http://{}", rpc_addr);
+        axum::serve(listener, app).await?;
     }
-
-    let metrics_updater_state = state.clone();
-    tokio::spawn(async move {
-        metrics_update_loop(metrics_updater_state).await;
-    });
-
-    let health_monitor_state = state.clone();
-    tokio::spawn(async move {
-        health_monitor_loop(health_monitor_state).await;
-    });
-
-    axum::serve(listener, app).await?;
-
     Ok(())
 }
 
 /// Mining loop: creates block templates, mines PoW, and submits blocks
 async fn mining_loop(state: Arc<NodeState>) {
     info!("Mining loop started");
-    let mut utxo_set = UTXOSet::new();
     let mut height = match state.db.get_chain_height() {
         Ok(h) => h,
         Err(_) => 0,
@@ -1324,12 +1784,21 @@ async fn mining_loop(state: Arc<NodeState>) {
     loop {
         tokio::time::sleep(Duration::from_millis(100)).await;
 
+        // Get a wallet address for the coinbase reward
+        let coinbase_script = {
+            let wallet_addr = state.wallet.generate_address();
+            udaya_core::types::ScriptPubKey::with_address(
+                wallet_addr.as_bytes().to_vec(),
+                wallet_addr,
+            )
+        };
+
         // Create block template from mempool transactions
         let coinbase_tx = udaya_core::transaction::Transaction::new_coinbase(
             format!("Udaya Block {}", height + 1).into_bytes(),
             vec![udaya_core::types::TxOut::new(
                 state.consensus.mining_reward(height + 1, 0),
-                udaya_core::types::ScriptPubKey::new(vec![0x6a, 0x24, 0xaa, 0x21, 0xa9, 0xed]),
+                coinbase_script,
             )],
             height + 1,
         );
@@ -1359,12 +1828,17 @@ async fn mining_loop(state: Arc<NodeState>) {
             _ => udaya_core::types::BlockHash([0u8; 32]),
         };
 
+        // Use a very easy difficulty for testnet mining
+        // bits = 0x207FFFFF means exponent=32, mantissa=0x7FFFFF
+        // This gives a target of 0x7FFFFF * 2^(8*(32-3)) = 0x7FFFFF * 2^232
+        // which is much easier than the Bitcoin minimum difficulty
+        let testnet_bits: u32 = 0x207FFFFF;
         let mut header = udaya_core::types::BlockHeader {
             version: 1,
             previous_block_hash: prev_hash,
             merkle_root,
             timestamp: now,
-            bits: udaya_core::consensus::GENESIS_BITS,
+            bits: testnet_bits,
             nonce: 0,
         };
 
@@ -1384,17 +1858,36 @@ async fn mining_loop(state: Arc<NodeState>) {
         if found {
             let block = udaya_core::types::Block::new(header, txs);
             if block.verify_pow() && block.verify_merkle_root() {
-                // Apply to UTXO set
-                if let Some(coinbase) = block.coinbase_tx() {
-                    utxo_set.apply_coinbase(coinbase, &coinbase.txid(), height + 1);
-                }
-
-                // Store block
+                // Store block and update UTXO set
                 if let Err(e) = state.db.store_block(&block, height + 1) {
                     warn!("Failed to store mined block: {}", e);
+                } else if let Err(e) = state.db.update_utxo_set_for_block(&block, height + 1) {
+                    warn!("Failed to update UTXO set for mined block: {}", e);
                 } else {
                     height += 1;
                     info!("Mined block #{}: {}", height, block.hash());
+
+                    // Register coinbase UTXO with wallet so it can spend mining rewards
+                    if let Some(coinbase) = block.coinbase_tx() {
+                        // Track the coinbase output in the wallet
+                        for (vout, output) in coinbase.outputs.iter().enumerate() {
+                            if let Some(addr) = &output.script_pubkey.address {
+                                let utxo = udaya_wallet::WalletUTXO {
+                                    txid: coinbase.txid(),
+                                    vout: vout as u32,
+                                    value: output.value,
+                                    address: addr.clone(),
+                                    script_pubkey: output.script_pubkey.data.clone(),
+                                    height,
+                                    confirmations: 1,
+                                    is_coinbase: true,
+                                    is_spent: false,
+                                    is_frozen: false,
+                                };
+                                state.wallet.add_utxo(utxo);
+                            }
+                        }
+                    }
 
                     // Broadcast to network
                     if let Some(p2p) = state.p2p_network.as_ref() {
@@ -1419,7 +1912,10 @@ async fn handle_json_rpc(
     Json(request): Json<JsonRpcRequest>,
 ) -> impl IntoResponse {
     info!("RPC call: {} (id: {})", request.method, request.id);
-    let response = state.rpc_handler.handle(request);
+    let response = {
+        let handler = state.rpc_handler.lock().unwrap();
+        handler.handle(request)
+    };
     (StatusCode::OK, Json(response))
 }
 
@@ -1574,6 +2070,915 @@ async fn health_monitor_loop(state: Arc<NodeState>) {
     loop {
         interval.tick().await;
         let _ = perform_health_checks(&state.metrics, &state.config);
+    }
+}
+
+async fn handle_p2p_messages(
+    state: Arc<NodeState>,
+    mut rx: tokio::sync::mpsc::UnboundedReceiver<(
+        Arc<udaya_p2p::network::PeerConnection>,
+        udaya_p2p::NetworkMessage,
+    )>,
+) {
+    use std::collections::HashSet;
+    use udaya_core::types::{BlockHash, InvType, InvVector};
+    use udaya_p2p::NetworkMessage;
+
+    // Track blocks we've already requested to avoid duplicate requests
+    let pending_block_requests: Arc<parking_lot::Mutex<HashSet<BlockHash>>> =
+        Arc::new(parking_lot::Mutex::new(HashSet::new()));
+
+    // Orphan block buffer: blocks whose parent we don't have yet
+    let orphan_blocks: Arc<
+        parking_lot::Mutex<std::collections::HashMap<BlockHash, udaya_core::types::Block>>,
+    > = Arc::new(parking_lot::Mutex::new(std::collections::HashMap::new()));
+    const MAX_ORPHAN_BLOCKS: usize = 500;
+
+    while let Some((peer, msg)) = rx.recv().await {
+        match msg {
+            NetworkMessage::Version(v) => {
+                info!(
+                    "[SYNC] Peer {} handshake: version={}, user_agent={}, height={}",
+                    peer.address, v.version, v.user_agent, v.start_height
+                );
+
+                // Update peer height in state
+                state
+                    .network_state
+                    .update_peer_height(peer.id, v.start_height);
+
+                // Trigger initial sync if peer is ahead
+                let current_height = state.db.get_chain_height().unwrap_or(0);
+                if v.start_height > current_height {
+                    info!(
+                        "[SYNC] Peer {} is ahead ({} > {}), requesting headers",
+                        peer.address, v.start_height, current_height
+                    );
+                    let locator = get_block_locator(&state.db);
+                    let _ = peer
+                        .send_message(&udaya_p2p::network::create_getheaders_message(
+                            &state.network_state.config,
+                            locator,
+                            BlockHash::default(),
+                        ))
+                        .await;
+                }
+            }
+            NetworkMessage::Verack => {
+                debug!("[SYNC] Received verack from {}", peer.address);
+
+                // Send our mempool transactions to the newly connected peer
+                let mempool_txs = state.mempool.get_block_template(1_000_000);
+                if !mempool_txs.is_empty() {
+                    let invs: Vec<InvVector> = mempool_txs
+                        .iter()
+                        .map(|tx| {
+                            let txid = tx.txid();
+                            InvVector::new(InvType::Tx, BlockHash::from_bytes(&txid.0))
+                        })
+                        .collect();
+                    let inv_msg = udaya_p2p::network::create_inv_message(&invs);
+                    let _ = peer.send_message(&inv_msg).await;
+                    debug!(
+                        "[SYNC] Sent {} mempool tx invs to {}",
+                        invs.len(),
+                        peer.address
+                    );
+                }
+
+                // Also trigger a sync check
+                let current_height = state.db.get_chain_height().unwrap_or(0);
+                let peer_height = state
+                    .network_state
+                    .peers
+                    .get(&peer.id)
+                    .map(|p| p.height)
+                    .unwrap_or(0);
+                if peer_height > current_height {
+                    let locator = get_block_locator(&state.db);
+                    let _ = peer
+                        .send_message(&udaya_p2p::network::create_getheaders_message(
+                            &state.network_state.config,
+                            locator,
+                            BlockHash::default(),
+                        ))
+                        .await;
+                }
+            }
+            NetworkMessage::Inv(inv_list) => {
+                let mut blocks_to_request = Vec::new();
+                let mut txs_to_request = Vec::new();
+
+                for inv in inv_list {
+                    match inv.inv_type {
+                        InvType::Block => {
+                            // Check if we already have this block
+                            if !state.db.block_exists(&inv.hash).unwrap_or(false) {
+                                // Check if we haven't already requested it
+                                let already_requested = {
+                                    let pending = pending_block_requests.lock();
+                                    pending.contains(&inv.hash)
+                                };
+                                if !already_requested {
+                                    {
+                                        let mut pending = pending_block_requests.lock();
+                                        pending.insert(inv.hash);
+                                    }
+                                    blocks_to_request.push(inv);
+                                }
+                            }
+                        }
+                        InvType::Tx => {
+                            if !state.mempool.contains(&udaya_core::types::Txid(inv.hash.0)) {
+                                txs_to_request.push(inv);
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+
+                if !blocks_to_request.is_empty() {
+                    debug!(
+                        "[SYNC] Requesting {} blocks from {}",
+                        blocks_to_request.len(),
+                        peer.address
+                    );
+                    let getdata = udaya_p2p::network::create_getdata_message(&blocks_to_request);
+                    let _ = peer.send_message(&getdata).await;
+                }
+                if !txs_to_request.is_empty() {
+                    let getdata = udaya_p2p::network::create_getdata_message(&txs_to_request);
+                    let _ = peer.send_message(&getdata).await;
+                }
+            }
+            NetworkMessage::Headers(headers) => {
+                if headers.is_empty() {
+                    debug!("[SYNC] Received empty headers from {}", peer.address);
+                    continue;
+                }
+                info!(
+                    "[SYNC] Received {} headers from {} (first={:?}, last={:?})",
+                    headers.len(),
+                    peer.address,
+                    headers.first().map(|h| h.hash()),
+                    headers.last().map(|h| h.hash())
+                );
+
+                // Find the starting point: look for the first header whose parent we have
+                let mut start_idx = None;
+                for (i, header) in headers.iter().enumerate() {
+                    if header.previous_block_hash.is_zero() {
+                        // Genesis header
+                        start_idx = Some(i);
+                        break;
+                    }
+                    if state
+                        .db
+                        .block_exists(&header.previous_block_hash)
+                        .unwrap_or(false)
+                    {
+                        start_idx = Some(i);
+                        break;
+                    }
+                }
+
+                // If we can't find a connection point, request headers with a broader locator
+                if start_idx.is_none() {
+                    warn!(
+                        "[SYNC] Headers from {} don't connect to our chain. Requesting with locator.",
+                        peer.address
+                    );
+                    let locator = get_block_locator(&state.db);
+                    let _ = peer
+                        .send_message(&udaya_p2p::network::create_getheaders_message(
+                            &state.network_state.config,
+                            locator,
+                            BlockHash::default(),
+                        ))
+                        .await;
+                    continue;
+                }
+
+                // Validate headers starting from the connection point
+                let mut valid_headers = Vec::new();
+                let start = start_idx.unwrap();
+
+                for header in &headers[start..] {
+                    // Verify PoW
+                    if !state.consensus.verify_pow(header) {
+                        warn!(
+                            "[SYNC] Invalid PoW in header {} from {}",
+                            header.hash(),
+                            peer.address
+                        );
+                        state
+                            .network_state
+                            .increment_ban_score(&peer.address.ip().to_string(), 20);
+                        break;
+                    }
+
+                    // Check timestamp not too far in the future
+                    let now = SystemTime::now()
+                        .duration_since(UNIX_EPOCH)
+                        .map(|d| d.as_secs() as u32)
+                        .unwrap_or(0);
+                    if header.timestamp > now + 7200 {
+                        warn!(
+                            "[SYNC] Header {} has future timestamp {}",
+                            header.hash(),
+                            header.timestamp
+                        );
+                        break;
+                    }
+
+                    // If we already have this block, skip it but continue
+                    if state.db.block_exists(&header.hash()).unwrap_or(false) {
+                        continue;
+                    }
+
+                    valid_headers.push(header.clone());
+                }
+
+                if valid_headers.is_empty() {
+                    debug!("[SYNC] No new valid headers from {}", peer.address);
+                    continue;
+                }
+
+                info!(
+                    "[SYNC] {} new valid headers from {} (range: {} -> {})",
+                    valid_headers.len(),
+                    peer.address,
+                    valid_headers.first().map(|h| h.hash()).unwrap_or_default(),
+                    valid_headers.last().map(|h| h.hash()).unwrap_or_default()
+                );
+
+                // Request blocks for the valid headers
+                let invs: Vec<InvVector> = valid_headers
+                    .iter()
+                    .map(|h| InvVector::new(InvType::Block, h.hash()))
+                    .collect();
+
+                {
+                    let mut pending = pending_block_requests.lock();
+                    for inv in &invs {
+                        pending.insert(inv.hash);
+                    }
+                }
+
+                let getdata = udaya_p2p::network::create_getdata_message(&invs);
+                let _ = peer.send_message(&getdata).await;
+
+                // If we got 2000 headers (max), request more from the last hash
+                if headers.len() >= 2000 {
+                    let last_hash = headers.last().unwrap().hash();
+                    let locator = vec![last_hash];
+                    let _ = peer
+                        .send_message(&udaya_p2p::network::create_getheaders_message(
+                            &state.network_state.config,
+                            locator,
+                            BlockHash::default(),
+                        ))
+                        .await;
+                    debug!(
+                        "[SYNC] Requesting more headers from {} after {}",
+                        peer.address, last_hash
+                    );
+                }
+            }
+            NetworkMessage::Block(block) => {
+                let hash = block.hash();
+                let prev_hash = block.header.previous_block_hash;
+
+                // Remove from pending requests
+                {
+                    let mut pending = pending_block_requests.lock();
+                    pending.remove(&hash);
+                }
+
+                // Duplicate check
+                if state.db.block_exists(&hash).unwrap_or(false) {
+                    debug!("[SYNC] Duplicate block {} from {}", hash, peer.address);
+                    continue;
+                }
+
+                let current_height = state.db.get_chain_height().unwrap_or(0);
+
+                // Check if it's the next block (extends our tip)
+                let is_next = match state.db.get_chain_tip().unwrap_or(None) {
+                    Some(tip) => tip == prev_hash,
+                    None => prev_hash.is_zero(),
+                };
+
+                if is_next {
+                    // Validate and accept the block
+                    if let Err(e) = state
+                        .consensus
+                        .verify_block_basic(&block, current_height + 1)
+                    {
+                        warn!("[SYNC] Invalid block {} from {}: {}", hash, peer.address, e);
+                        state
+                            .network_state
+                            .increment_ban_score(&peer.address.ip().to_string(), 20);
+                        continue;
+                    }
+
+                    // Contextual validation
+                    let prev_header = if prev_hash.is_zero() {
+                        None
+                    } else {
+                        state.db.get_block_header(&prev_hash).unwrap_or(None)
+                    };
+
+                    if let Some(prev) = prev_header {
+                        if let Err(e) = state.consensus.verify_block_context(
+                            &block,
+                            current_height + 1,
+                            &prev,
+                            prev.timestamp as u64,
+                        ) {
+                            warn!(
+                                "[SYNC] Block {} from {} failed context validation: {}",
+                                hash, peer.address, e
+                            );
+                            continue;
+                        }
+                    }
+
+                    // Store and update UTXO set
+                    if let Err(e) = state.db.store_block(&block, current_height + 1) {
+                        warn!("[SYNC] Failed to store block {}: {}", hash, e);
+                    } else if let Err(e) = state
+                        .db
+                        .update_utxo_set_for_block(&block, current_height + 1)
+                    {
+                        warn!("[SYNC] Failed to update UTXO for block {}: {}", hash, e);
+                    } else {
+                        info!(
+                            "[SYNC] ✅ Accepted block #{} ({}) from peer {}",
+                            current_height + 1,
+                            hash,
+                            peer.address
+                        );
+
+                        // Update advertised height
+                        state.network_state.set_start_height(current_height + 1);
+
+                        // Remove confirmed txs from mempool
+                        state.mempool.remove_transactions(&block.transactions);
+
+                        // Relay to other peers
+                        if let Some(p2p) = state.p2p_network.as_ref() {
+                            p2p.broadcast_block(&block).await;
+                        }
+
+                        // Try to process any orphan blocks that now connect
+                        process_orphan_blocks(
+                            &state,
+                            &orphan_blocks,
+                            &pending_block_requests,
+                            &peer,
+                        )
+                        .await;
+                    }
+                } else {
+                    // Not the next block - could be orphan, out-of-order, or reorg
+                    if !state.db.block_exists(&prev_hash).unwrap_or(false) {
+                        // We don't have the parent - it's an orphan
+                        debug!(
+                            "[SYNC] Orphan block {} from {} (parent {} unknown)",
+                            hash, peer.address, prev_hash
+                        );
+
+                        // Buffer the orphan block
+                        {
+                            let mut orphans = orphan_blocks.lock();
+                            if orphans.len() >= MAX_ORPHAN_BLOCKS {
+                                // Remove oldest orphan (first inserted)
+                                if let Some(&oldest_hash) = orphans.keys().next() {
+                                    orphans.remove(&oldest_hash);
+                                }
+                            }
+                            orphans.insert(hash, block.clone());
+                        }
+
+                        // Request headers to find the missing parent
+                        let locator = get_block_locator(&state.db);
+                        let _ = peer
+                            .send_message(&udaya_p2p::network::create_getheaders_message(
+                                &state.network_state.config,
+                                locator,
+                                BlockHash::default(),
+                            ))
+                            .await;
+                    } else {
+                        // We have the parent but it's not our tip - potential reorg
+                        info!(
+                            "[SYNC] Potential reorg: block {} from {} (parent {} exists but not tip)",
+                            hash, peer.address, prev_hash
+                        );
+                        handle_potential_reorg(&state, block, current_height, &peer).await;
+                    }
+                }
+            }
+            NetworkMessage::Tx(tx) => {
+                let txid = tx.txid();
+                if state.mempool.contains(&txid) {
+                    debug!("[SYNC] Duplicate tx {} from {}", txid, peer.address);
+                    continue;
+                }
+
+                let now = SystemTime::now()
+                    .duration_since(UNIX_EPOCH)
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                let height = state.db.get_chain_height().unwrap_or(0);
+
+                if let Err(e) = state.mempool.submit_transaction(tx.clone(), height, now) {
+                    debug!("[SYNC] Rejected tx {} from {}: {}", txid, peer.address, e);
+                } else {
+                    info!("[SYNC] ✅ Accepted tx {} from peer {}", txid, peer.address);
+                    // Relay to other peers
+                    if let Some(p2p) = state.p2p_network.as_ref() {
+                        p2p.broadcast_transaction(&tx).await;
+                    }
+                }
+            }
+            NetworkMessage::GetHeaders(req) => {
+                debug!(
+                    "[SYNC] getheaders from {} (locator_count={})",
+                    peer.address,
+                    req.locator_hashes.len()
+                );
+
+                let mut headers = Vec::new();
+                let mut start_height = 0;
+
+                // Find the first locator hash we have in our chain
+                for hash in &req.locator_hashes {
+                    if let Ok(Some(height)) = state.db.get_block_height_by_hash(hash) {
+                        start_height = height + 1;
+                        break;
+                    }
+                }
+
+                // Collect up to 2000 headers starting from start_height
+                let current_height = state.db.get_chain_height().unwrap_or(0);
+                for h in start_height..=current_height {
+                    if headers.len() >= 2000 {
+                        break;
+                    }
+                    if let Ok(Some(block)) = state.db.get_block_by_height(h) {
+                        headers.push(block.header);
+                        if block.hash() == req.hash_stop {
+                            break;
+                        }
+                    }
+                }
+
+                debug!(
+                    "[SYNC] Sending {} headers to {} (start_height={})",
+                    headers.len(),
+                    peer.address,
+                    start_height
+                );
+
+                let msg = udaya_p2p::network::create_headers_message(&headers);
+                let _ = peer.send_message(&msg).await;
+            }
+            NetworkMessage::GetData(inv_list) => {
+                for inv in inv_list {
+                    match inv.inv_type {
+                        InvType::Block => {
+                            if let Ok(Some(block)) = state.db.get_block(&inv.hash) {
+                                let block_data = bincode::serialize(&block).unwrap_or_default();
+                                let msg = udaya_p2p::network::Message::new(
+                                    b"block\0\0\0\0\0\0\0",
+                                    block_data,
+                                );
+                                let _ = peer.send_message(&msg).await;
+                                debug!("[SYNC] Sent block {} to {}", inv.hash, peer.address);
+                            }
+                        }
+                        InvType::Tx => {
+                            // Check mempool first, then DB
+                            let txid = udaya_core::types::Txid(inv.hash.0);
+                            if let Some(entry) = state.mempool.transactions.get(&txid) {
+                                let tx_data = bincode::serialize(&entry.tx).unwrap_or_default();
+                                let msg = udaya_p2p::network::Message::new(
+                                    b"tx\0\0\0\0\0\0\0\0\0\0",
+                                    tx_data,
+                                );
+                                let _ = peer.send_message(&msg).await;
+                            } else if let Ok(Some(tx)) = state.db.get_transaction(&txid) {
+                                let tx_data = bincode::serialize(&tx).unwrap_or_default();
+                                let msg = udaya_p2p::network::Message::new(
+                                    b"tx\0\0\0\0\0\0\0\0\0\0",
+                                    tx_data,
+                                );
+                                let _ = peer.send_message(&msg).await;
+                            }
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            NetworkMessage::Addr(addrs) => {
+                debug!(
+                    "[SYNC] Received {} peer addresses from {}",
+                    addrs.len(),
+                    peer.address
+                );
+            }
+            NetworkMessage::SendHeaders => {
+                debug!("[SYNC] Peer {} prefers header relay", peer.address);
+            }
+            NetworkMessage::Reject(reject) => {
+                warn!(
+                    "[SYNC] Rejected by {}: {} (code: {})",
+                    peer.address, reject.message, reject.ccode
+                );
+            }
+            _ => {
+                debug!("[SYNC] Unhandled message from {}", peer.address);
+            }
+        }
+    }
+}
+
+/// Try to process orphan blocks that may now connect to our chain.
+async fn process_orphan_blocks(
+    state: &Arc<NodeState>,
+    orphan_blocks: &Arc<
+        parking_lot::Mutex<std::collections::HashMap<BlockHash, udaya_core::types::Block>>,
+    >,
+    _pending_block_requests: &Arc<parking_lot::Mutex<std::collections::HashSet<BlockHash>>>,
+    _peer: &Arc<udaya_p2p::network::PeerConnection>,
+) {
+    let mut processed_any = true;
+    while processed_any {
+        processed_any = false;
+        let current_height = state.db.get_chain_height().unwrap_or(0);
+        let tip = state.db.get_chain_tip().unwrap_or(None);
+
+        // Find orphans whose parent is now our tip
+        let mut to_process: Vec<(BlockHash, udaya_core::types::Block)> = Vec::new();
+        {
+            let orphans = orphan_blocks.lock();
+            for (hash, block) in orphans.iter() {
+                if block.header.previous_block_hash == tip.unwrap_or_default() {
+                    to_process.push((*hash, block.clone()));
+                }
+            }
+        }
+
+        for (hash, block) in to_process {
+            // Remove from orphan pool
+            {
+                let mut orphans = orphan_blocks.lock();
+                orphans.remove(&hash);
+            }
+
+            // Validate
+            if let Err(e) = state
+                .consensus
+                .verify_block_basic(&block, current_height + 1)
+            {
+                warn!("[SYNC] Orphan block {} failed validation: {}", hash, e);
+                continue;
+            }
+
+            if let Err(e) = state.db.store_block(&block, current_height + 1) {
+                warn!("[SYNC] Failed to store orphan block {}: {}", hash, e);
+                continue;
+            }
+            if let Err(e) = state
+                .db
+                .update_utxo_set_for_block(&block, current_height + 1)
+            {
+                warn!(
+                    "[SYNC] Failed to update UTXO for orphan block {}: {}",
+                    hash, e
+                );
+                continue;
+            }
+
+            info!(
+                "[SYNC] ✅ Accepted orphan block #{} ({})",
+                current_height + 1,
+                hash
+            );
+
+            state.network_state.set_start_height(current_height + 1);
+            state.mempool.remove_transactions(&block.transactions);
+
+            // Relay
+            if let Some(p2p) = state.p2p_network.as_ref() {
+                p2p.broadcast_block(&block).await;
+            }
+
+            processed_any = true;
+        }
+    }
+}
+
+/// Periodically request headers from connected peers to catch up on missed blocks.
+/// This is the primary mechanism for recovering after reconnects/restarts when a
+/// peer advertises a higher chain height than ours. It runs alongside the
+/// event-driven sync in `handle_p2p_messages`.
+async fn periodic_sync_loop(state: Arc<NodeState>) {
+    use udaya_core::types::BlockHash;
+
+    let mut interval = tokio::time::interval(Duration::from_secs(10));
+    // Skip the first immediate tick so the node can finish startup
+    interval.tick().await;
+
+    loop {
+        interval.tick().await;
+
+        // Update our advertised height so peers know we may be behind/ahead
+        if let Ok(height) = state.db.get_chain_height() {
+            state.network_state.set_start_height(height);
+        }
+
+        let local_height = state.db.get_chain_height().unwrap_or(0);
+        let p2p_network = match state.p2p_network.as_ref() {
+            Some(p) => p,
+            None => continue,
+        };
+
+        // Check if any connected peer advertises a higher height
+        let mut max_peer_height = 0;
+        let mut need_sync = false;
+        let mut peer_count = 0;
+
+        for peer in state.network_state.peers.iter() {
+            peer_count += 1;
+            if peer.height > max_peer_height {
+                max_peer_height = peer.height;
+            }
+            if peer.height > local_height {
+                need_sync = true;
+            }
+        }
+
+        if need_sync {
+            info!(
+                "[SYNC] Periodic sync: local={} behind peers (max_peer_height={}, peers={}), requesting headers",
+                local_height, max_peer_height, peer_count
+            );
+            let locator = get_block_locator(&state.db);
+            for conn in p2p_network.connections.iter() {
+                let msg = udaya_p2p::network::create_getheaders_message(
+                    &state.network_state.config,
+                    locator.clone(),
+                    BlockHash::default(),
+                );
+                let _ = conn.send_message(&msg).await;
+            }
+        } else if peer_count > 0 && local_height > 0 {
+            // We're in sync - log periodically
+            debug!(
+                "[SYNC] In sync: height={}, peers={}",
+                local_height, peer_count
+            );
+        }
+    }
+}
+
+/// Build a block locator for header-first sync.
+/// The locator contains hashes at exponentially increasing distances back from
+/// the tip, allowing peers to quickly find a common ancestor.
+fn get_block_locator(db: &BlockchainDB) -> Vec<udaya_core::types::BlockHash> {
+    let mut locator = Vec::new();
+    let height = db.get_chain_height().unwrap_or(0);
+
+    if height == 0 {
+        // Just return genesis if we have it
+        if let Ok(Some(hash)) = db.get_block_hash_by_height(0) {
+            locator.push(hash);
+        }
+        return locator;
+    }
+
+    // Start from the tip and go back with exponentially increasing steps
+    let mut step = 1u64;
+    let mut current = height;
+
+    loop {
+        if let Ok(Some(hash)) = db.get_block_hash_by_height(current) {
+            locator.push(hash);
+        }
+
+        // After 10 entries, start doubling the step
+        if locator.len() >= 10 {
+            step *= 2;
+        }
+
+        if current < step {
+            break;
+        }
+        current = current.saturating_sub(step);
+
+        // Safety: don't go below 0
+        if current == 0 {
+            break;
+        }
+    }
+
+    // Always include genesis
+    if let Ok(Some(hash)) = db.get_block_hash_by_height(0) {
+        if !locator.contains(&hash) {
+            locator.push(hash);
+        }
+    }
+
+    locator
+}
+
+/// Handle a potential chain reorganization.
+/// This is called when we receive a block whose parent exists in our DB
+/// but is not our current tip. We compare cumulative chain work and
+/// reorganize to the chain with more work if it's valid.
+async fn handle_potential_reorg(
+    state: &Arc<NodeState>,
+    block: udaya_core::types::Block,
+    current_height: u64,
+    _peer: &Arc<udaya_p2p::network::PeerConnection>,
+) {
+    use num_bigint::BigUint;
+
+    let hash = block.hash();
+    let prev_hash = block.header.previous_block_hash;
+
+    info!(
+        "[REORG] Evaluating potential reorg: new block {} (parent={})",
+        hash, prev_hash
+    );
+
+    // Basic validation
+    if let Err(e) = state
+        .consensus
+        .verify_block_basic(&block, current_height + 1)
+    {
+        warn!("[REORG] Invalid reorg block {}: {}", hash, e);
+        return;
+    }
+
+    if !block.verify_pow() || !block.verify_merkle_root() {
+        warn!("[REORG] Block {} failed PoW/merkle verification", hash);
+        return;
+    }
+
+    // Find the height of the parent block using reverse lookup
+    let parent_height = match state.db.get_block_height_by_hash(&prev_hash) {
+        Ok(Some(h)) => h,
+        _ => {
+            warn!(
+                "[REORG] Could not find height for parent block {}",
+                prev_hash
+            );
+            return;
+        }
+    };
+
+    // The new block would be at parent_height + 1
+    let new_block_height = parent_height + 1;
+
+    // Check reorg depth safety
+    let reorg_depth = current_height.saturating_sub(parent_height);
+    if reorg_depth > state.consensus.params.max_reorg_depth {
+        warn!(
+            "[REORG] Reorg depth {} exceeds max allowed {} for block {}",
+            reorg_depth, state.consensus.params.max_reorg_depth, hash
+        );
+        return;
+    }
+
+    // Calculate cumulative work for the new block
+    let new_block_work = state
+        .db
+        .get_chain_work(&prev_hash)
+        .unwrap_or(BigUint::from(0u32))
+        + udaya_core::consensus::ConsensusEngine::calculate_block_work(&block.header);
+
+    // Calculate cumulative work for our current tip
+    let current_tip_work = state.db.get_tip_chain_work().unwrap_or(BigUint::from(0u32));
+
+    info!(
+        "[REORG] Comparing work: new_chain_work={} vs current_chain_work={}",
+        new_block_work, current_tip_work
+    );
+
+    // Only reorg if the new chain has more cumulative work
+    if new_block_work <= current_tip_work {
+        info!(
+            "[REORG] New block {} has less work than current tip. Not reorganizing.",
+            hash
+        );
+        // Still store the block so we have it if a longer fork arrives later
+        let _ = state.db.store_block(&block, new_block_height);
+        return;
+    }
+
+    // We need to reorganize. First, store the new block.
+    if let Err(e) = state.db.store_block(&block, new_block_height) {
+        warn!("[REORG] Failed to store reorg block {}: {}", hash, e);
+        return;
+    }
+
+    // Walk back from current tip to find the common ancestor
+    let current_tip = state.db.get_chain_tip().unwrap_or(None);
+    let mut blocks_to_remove: Vec<BlockHash> = Vec::new();
+
+    // Find common ancestor by walking back from current tip
+    let mut walk_hash = current_tip;
+    let mut common_ancestor_height: Option<u64> = None;
+
+    while let Some(h) = walk_hash {
+        // Check if this hash is the parent of our new block (i.e., the fork point)
+        if h == prev_hash {
+            common_ancestor_height = Some(parent_height);
+            break;
+        }
+
+        // Check if this block exists at the same height as our new chain
+        if let Ok(Some(this_height)) = state.db.get_block_height_by_hash(&h) {
+            if this_height <= parent_height {
+                common_ancestor_height = Some(this_height);
+                break;
+            }
+        }
+
+        blocks_to_remove.push(h);
+
+        // Get the previous block
+        if let Ok(Some(block_data)) = state.db.get_block(&h) {
+            walk_hash = Some(block_data.header.previous_block_hash);
+        } else {
+            break;
+        }
+    }
+
+    let Some(fork_height) = common_ancestor_height else {
+        warn!(
+            "[REORG] Could not find common ancestor for reorg block {}",
+            hash
+        );
+        return;
+    };
+
+    info!(
+        "[REORG] Fork point at height {}, removing {} blocks from old chain",
+        fork_height,
+        blocks_to_remove.len()
+    );
+
+    // Remove blocks from the old chain (above fork point)
+    for old_hash in &blocks_to_remove {
+        if let Err(e) = state.db.remove_block(old_hash) {
+            warn!("[REORG] Failed to remove old block {}: {}", old_hash, e);
+        }
+    }
+
+    // Set the new tip
+    if let Err(e) = state.db.set_chain_tip(&hash, new_block_height) {
+        warn!("[REORG] Failed to set new chain tip: {}", e);
+        return;
+    }
+
+    // Rebuild UTXO set from the fork point
+    // This is a simplified approach: rebuild from genesis to the new tip
+    info!("[REORG] Rebuilding UTXO set from genesis...");
+    let mut utxo_set = udaya_core::validation::UTXOSet::new();
+
+    // Replay all blocks from genesis to the new tip
+    for h in 0..=new_block_height {
+        if let Ok(Some(block)) = state.db.get_block_by_height(h) {
+            if let Some(coinbase) = block.coinbase_tx() {
+                utxo_set.apply_coinbase(coinbase, &coinbase.txid(), h);
+            }
+            for tx in &block.transactions[1..] {
+                utxo_set.apply_transaction(tx, &tx.txid(), h);
+            }
+        }
+    }
+
+    // Store the rebuilt UTXO set
+    if let Err(e) = state.db.store_utxo_set(&utxo_set) {
+        warn!("[REORG] Failed to store rebuilt UTXO set: {}", e);
+    }
+
+    // Update advertised height
+    state.network_state.set_start_height(new_block_height);
+
+    info!(
+        "[REORG] ✅ Chain reorganized: new tip #{} ({}) from fork at height {} (reorg depth {})",
+        new_block_height, hash, fork_height, reorg_depth
+    );
+
+    // Broadcast the reorg block to peers
+    if let Some(p2p) = state.p2p_network.as_ref() {
+        p2p.broadcast_block(&block).await;
     }
 }
 

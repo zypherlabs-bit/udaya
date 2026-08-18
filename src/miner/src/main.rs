@@ -1,5 +1,6 @@
 use clap::Parser;
 use log::{error, info, warn};
+use rand::Rng;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
@@ -32,11 +33,11 @@ struct Cli {
     rpc_url: String,
 
     /// RPC username
-    #[arg(long, default_value = "Udaya")]
+    #[arg(long)]
     rpc_user: String,
 
     /// RPC password
-    #[arg(long, default_value = "Udaya_rpc")]
+    #[arg(long)]
     rpc_password: String,
 
     /// Worker name for pool
@@ -382,7 +383,7 @@ async fn handle_pool_message(
                             job_id,
                             "00000000",
                             ntime,
-                            format!("{:08x}", rand::random::<u32>())
+                            format!("{:08x}", rand::thread_rng().gen::<u32>())
                         ]
                     });
 

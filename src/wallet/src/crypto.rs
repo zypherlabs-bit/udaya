@@ -1,10 +1,11 @@
 use hmac::{Hmac, Mac};
 use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;
-use rand::Rng;
+use rand::{rngs::OsRng, Rng, RngCore};
 use ripemd::Ripemd160;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use sha2::{Digest, Sha256};
+use subtle::ConstantTimeEq;
 
 /// Udaya Wallet Cryptography Module
 /// Implements BIP39, BIP32, BIP44, BIP49, BIP84, BIP86 key derivation
@@ -221,10 +222,10 @@ pub struct EntropySource {
 }
 
 impl EntropySource {
-    /// Generate cryptographically secure entropy
+    /// Generate cryptographically secure entropy using OS RNG
     pub fn generate() -> Self {
         let mut entropy = [0u8; 16];
-        rand::thread_rng().fill(&mut entropy);
+        OsRng.fill_bytes(&mut entropy);
         Self { entropy }
     }
 
@@ -242,9 +243,7 @@ impl EntropySource {
     pub fn generate_with_bits(bits: u32) -> Vec<u8> {
         let bytes = (bits / 8) as usize;
         let mut entropy = vec![0u8; bytes];
-        for byte in entropy.iter_mut() {
-            *byte = rand::thread_rng().gen();
-        }
+        OsRng.fill_bytes(&mut entropy);
         entropy
     }
 }
@@ -570,7 +569,7 @@ pub fn mnemonic_to_entropy(words: &[String]) -> anyhow::Result<Vec<u8>> {
     let expected_trimmed = expected_checksum >> (8 - checksum_bits);
     let actual_trimmed = actual_checksum >> (8 - checksum_bits);
 
-    if expected_trimmed != actual_trimmed {
+    if bool::from(!expected_trimmed.ct_eq(&actual_trimmed)) {
         anyhow::bail!(
             "BIP39 checksum mismatch: expected {:02x}, got {:02x}",
             expected_trimmed,
@@ -788,12 +787,12 @@ impl ExtendedKey {
         private_key.copy_from_slice(private_key_bytes);
         let public_key = private_to_public(&private_key);
 
-        // Verify checksum (last 4 bytes)
+        // Verify checksum (last 4 bytes) with constant-time comparison
         let checksum_start = if is_compressed { 34 } else { 33 };
         let provided_checksum = &data[checksum_start..checksum_start + 4];
         let check_data = &data[..checksum_start];
         let expected_checksum = double_sha256_first_4(check_data);
-        if provided_checksum != expected_checksum {
+        if bool::from(!provided_checksum.ct_eq(&expected_checksum)) {
             anyhow::bail!("WIF checksum mismatch");
         }
 

@@ -1,0 +1,14 @@
+/var/log/udaya/node*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+    maxsize 100M
+    create 0640 udaya udaya
+    postrotate
+        systemctl reload udaya-node@1.service udaya-node@2.service udaya-node@3.service 2>/dev/null || true
+    endscript
+}

@@ -1,0 +1,57 @@
+groups:
+  - name: udaya_testnet_alerts
+    interval: 30s
+    rules:
+      - alert: UdayaNodeDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Udaya node {{ $labels.instance }} is down"
+          description: "{{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: UdayaChainHeightDivergence
+        expr: udaya_chain_height != max(udaya_chain_height)
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Chain height divergence detected"
+          description: "Node {{ $labels.instance }} height {{ $value }} differs from network max."
+
+      - alert: UdayaPeerCountLow
+        expr: udaya_peer_count < 3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low peer count on {{ $labels.instance }}"
+          description: "Node {{ $labels.instance }} has only {{ $value }} peers."
+
+      - alert: UdayaDiskSpaceLow
+        expr: udaya_disk_usage_bytes / udaya_disk_total_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space low on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} disk usage is {{ $value | humanizePercentage }}."
+
+      - alert: UdayaMiningStopped
+        expr: rate(udaya_mining_blocks_mined[1h]) == 0 and udaya_mining_enabled == 1
+        for: 2h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Mining stopped on {{ $labels.instance }}"
+          description: "Node {{ $labels.instance }} has mining enabled but no blocks in the last hour."
+
+      - alert: UdayaHighMemoryUsage
+        expr: udaya_memory_usage_bytes / udaya_memory_total_bytes > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage on {{ $labels.instance }}"
+          description: "{{ $labels.instance }} memory usage is {{ $value | humanizePercentage }}."

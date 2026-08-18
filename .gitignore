@@ -66,3 +66,17 @@ cache/
 tmp/
 temp/
 *.tmp
+
+# Binaries and executables
+*.exe
+kind.exe
+
+# Python virtual environments
+.venv/
+venv/
+
+# Test and validation artifacts
+stability_test_log.csv
+*_REPORT.json
+*_VALIDATION_REPORT.json
+*_VALIDATION_SUMMARY.md

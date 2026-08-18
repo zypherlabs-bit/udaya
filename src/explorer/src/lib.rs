@@ -269,6 +269,37 @@ impl ExplorerEngine {
         self.tx_cache.read().get(txid).cloned()
     }
 
+    /// Load blockchain data from database
+    pub fn load_from_database(&self, db: &udaya_storage::BlockchainDB) -> anyhow::Result<()> {
+        let chain_height = db.get_chain_height()?;
+        let mut stats = ChainStats::default();
+        stats.block_height = chain_height;
+        stats.total_blocks = chain_height;
+
+        // Update stats from database
+        if let Some(tip) = db.get_chain_tip()? {
+            stats.chain_tip = tip.to_string();
+        }
+
+        // Count total transactions (including genesis block at height 0)
+        let mut total_txs = 0u64;
+        for height in 0..=chain_height {
+            if let Some(block) = db.get_block_by_height(height)? {
+                total_txs += block.transactions.len() as u64;
+
+                // Cache recent blocks
+                if height >= chain_height.saturating_sub(100) {
+                    let summary = Self::block_to_summary(&block, height, 0, None);
+                    self.cache_block(height, summary);
+                }
+            }
+        }
+        stats.total_transactions = total_txs;
+
+        self.update_stats(stats);
+        Ok(())
+    }
+
     /// Convert block to summary
     pub fn block_to_summary(
         block: &Block,
@@ -385,6 +416,7 @@ impl WsEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use tempfile::tempdir;
 
     #[test]
     fn test_explorer_creation() {
@@ -408,5 +440,36 @@ mod tests {
         let data = serde_json::json!({"test": true});
         let event = WsEvent::new(WsEventType::NewBlock, data);
         assert!(event.timestamp > 0);
+    }
+
+    #[test]
+    fn test_explorer_database_connection() {
+        use udaya_storage::blockchain_db::BlockchainDB;
+        use udaya_storage::StorageConfig;
+
+        let dir = tempdir().unwrap();
+        let mut config = StorageConfig::default();
+        config.data_dir = dir.path().to_str().unwrap().to_string();
+
+        let db = BlockchainDB::open(&config).unwrap();
+        let explorer = ExplorerEngine::new();
+
+        // Test with empty database
+        explorer.load_from_database(&db).unwrap();
+        let stats = explorer.get_stats();
+        assert_eq!(stats.block_height, 0);
+        assert_eq!(stats.total_transactions, 0);
+
+        // Add a genesis block
+        let genesis = udaya_core::consensus::create_genesis_block();
+        db.store_block(&genesis, 0).unwrap();
+        db.update_utxo_set_for_block(&genesis, 0).unwrap();
+
+        // Load data again - the explorer should now see the genesis block
+        explorer.load_from_database(&db).unwrap();
+        let stats = explorer.get_stats();
+        assert_eq!(stats.block_height, 0);
+        // Genesis block has 1 transaction, so total should be 1
+        assert_eq!(stats.total_transactions, 1);
     }
 }

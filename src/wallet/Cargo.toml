@@ -24,4 +24,5 @@ uuid.workspace = true
 bincode.workspace = true
 zeroize.workspace = true
 chrono.workspace = true
+subtle.workspace = true
 log.workspace = true

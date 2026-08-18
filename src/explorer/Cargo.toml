@@ -6,7 +6,9 @@ license.workspace = true
 
 [dependencies]
 udaya-core = { path = "../core" }
+udaya-storage = { path = "../storage" }
 serde.workspace = true
 serde_json.workspace = true
 anyhow.workspace = true
 parking_lot.workspace = true
+tempfile.workspace = true

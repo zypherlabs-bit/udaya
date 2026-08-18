@@ -1,4 +1,5 @@
 pub mod blockchain_db;
+pub use blockchain_db::BlockchainDB;
 
 use serde::{Deserialize, Serialize};
 
@@ -7,6 +8,8 @@ pub mod column {
     pub const BLOCKS: &str = "blocks";
     pub const BLOCK_HASHES: &str = "block_hashes";
     pub const BLOCK_HEADERS: &str = "block_headers";
+    pub const BLOCK_HEIGHT_BY_HASH: &str = "block_height_by_hash";
+    pub const CHAIN_WORK: &str = "chain_work";
     pub const TRANSACTIONS: &str = "transactions";
     pub const UTXO_SET: &str = "utxo_set";
     pub const MEMPOOL: &str = "mempool";

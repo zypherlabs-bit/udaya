@@ -269,6 +269,14 @@ impl P2PNetwork {
             loop {
                 match listener.accept().await {
                     Ok((stream, addr)) => {
+                        if connections.len() >= config.max_peers as usize {
+                            log::warn!(
+                                "Rejecting inbound connection from {}: max peers ({}) reached",
+                                addr,
+                                config.max_peers
+                            );
+                            continue;
+                        }
                         log::info!("Inbound connection from {}", addr);
                         let state = state.clone();
                         let connections = connections.clone();
@@ -498,7 +506,18 @@ async fn handle_peer_connection(
         }
     });
 
-    let result = read_messages(reader, peer.clone(), tx, state.clone(), config).await;
+    let result = match tokio::time::timeout(
+        Duration::from_secs(config.timeout_secs),
+        read_messages(reader, peer.clone(), tx, state.clone(), config),
+    )
+    .await
+    {
+        Ok(r) => r,
+        Err(_) => {
+            log::warn!("[P2P] Connection timeout from {}", addr);
+            Ok(())
+        }
+    };
 
     connections.remove(&peer_id);
     {
@@ -838,6 +857,16 @@ fn parse_headers_message(payload: &[u8]) -> anyhow::Result<Vec<BlockHeader>> {
         offset += 81; // 80 byte header + 1 byte tx count (0 for headers)
     }
     Ok(headers)
+}
+
+/// Create a headers message for header-first sync
+pub fn create_headers_message(headers: &[BlockHeader]) -> Message {
+    let mut payload = serialize_varint(headers.len() as u64);
+    for header in headers {
+        payload.extend_from_slice(&header.serialize());
+        payload.push(0);
+    }
+    Message::new(b"headers\0\0\0\0\0", payload)
 }
 
 /// Create an addr message with peer addresses
