@@ -198,6 +198,41 @@ const server = http.createServer(async (req, res) => {
         }
     }
 
+    // Serve centralized branding assets
+    if (pathname.startsWith('/branding/')) {
+        const brandDir = path.resolve(__dirname, '..', '..', 'assets', 'branding', 'logo');
+        const fileName = pathname.substring('/branding/'.length);
+        const filePath = path.join(brandDir, fileName);
+        const ext = path.extname(filePath);
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+        try {
+            const content = fs.readFileSync(filePath);
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
+        } catch (err) {
+            res.writeHead(404);
+            res.end('Not Found');
+        }
+        return;
+    }
+
+    if (pathname.startsWith('/logo/')) {
+        const logoDir = path.resolve(__dirname, '..', '..', 'assets', 'logo');
+        const fileName = pathname.substring('/logo/'.length);
+        const filePath = path.join(logoDir, fileName);
+        const ext = path.extname(filePath);
+        const contentType = MIME_TYPES[ext] || 'application/octet-stream';
+        try {
+            const content = fs.readFileSync(filePath);
+            res.writeHead(200, { 'Content-Type': contentType });
+            res.end(content);
+        } catch (err) {
+            res.writeHead(404);
+            res.end('Not Found');
+        }
+        return;
+    }
+
     // Static file serving (base is the website/ directory, one level up from js/)
     const baseDir = path.resolve(__dirname, '..');
     let filePath = path.join(baseDir, pathname === '/' ? 'index.html' : pathname);

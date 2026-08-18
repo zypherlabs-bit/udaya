@@ -5,9 +5,9 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-/// Udaya Faucet - Distribute testnet UDYA to users
+/// UDAYA Faucet - Distribute testnet UDYA to users
 #[derive(clap::Parser, Clone)]
-#[command(name = "Udaya-faucet")]
+#[command(name = "udaya-faucet")]
 struct Cli {
     /// Listen address
     #[arg(long, default_value = "0.0.0.0")]
@@ -288,7 +288,7 @@ async fn handle_stats(state: axum::extract::State<Arc<FaucetState>>) -> Json<Fau
 async fn health_check() -> impl IntoResponse {
     Json(serde_json::json!({
         "status": "ok",
-        "service": "Udaya-faucet",
+        "service": "udaya-faucet",
         "version": "1.0.0"
     }))
 }

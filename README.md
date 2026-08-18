@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![Udaya Logo](website/images/udaya-logo.png)
+<img src="assets/logo/udaya_logo.png" alt="Udaya Logo" width="280">
 
 **Production-grade, SHA-256d Proof-of-Work Layer-1 Blockchain**
 

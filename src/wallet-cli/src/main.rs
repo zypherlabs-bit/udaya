@@ -2,10 +2,10 @@ use clap::{Parser, Subcommand};
 use udaya_wallet::crypto::{entropy_to_mnemonic, EntropySource};
 use udaya_wallet::Wallet;
 
-/// Udaya Wallet CLI - Manage UDYA wallets from the command line
+/// UDAYA Wallet CLI - Manage UDYA wallets from the command line
 #[derive(Parser)]
-#[command(name = "Udaya-wallet")]
-#[command(about = "Udaya wallet - send, receive, and manage UDYA")]
+#[command(name = "udaya-wallet")]
+#[command(about = "UDAYA wallet - send, receive, and manage UDYA")]
 struct Cli {
     #[command(subcommand)]
     command: WalletCommands,
@@ -98,7 +98,7 @@ async fn main() -> anyhow::Result<()> {
             println!("First Address: {}", address);
             println!("");
             println!(
-                "To save this wallet, use: Udaya-wallet --wallet-file {} export-seed",
+                "To save this wallet, use: udaya-wallet --wallet-file {} export-seed",
                 cli.wallet_file
             );
         }
@@ -267,7 +267,7 @@ async fn main() -> anyhow::Result<()> {
                 .all(|a| a.external_keys.is_empty() && a.internal_keys.is_empty())
             {
                 println!("  No addresses generated yet.");
-                println!("  Use 'Udaya-wallet new-address' to generate one.");
+                println!("  Use 'udaya-wallet new-address' to generate one.");
             }
         }
     }
