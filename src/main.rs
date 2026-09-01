@@ -15,12 +15,10 @@ use base64::{engine::general_purpose::STANDARD as BASE64, Engine as _};
 use clap::{Parser, Subcommand};
 use dashmap::DashMap;
 use log::{debug, error, info, warn};
-use parking_lot::Mutex;
 use prometheus::Encoder;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Arc;
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
-use tokio::sync::mpsc;
 use udaya_api::{
     blockchain_info_to_json, JsonRpcRequest, JsonRpcResponse, RpcError, RpcHandler, SoftForkInfo,
 };
@@ -276,13 +274,22 @@ fn initialize_node_state(config: &UdayaConfig) -> anyhow::Result<Arc<NodeState>>
 
     let db = BlockchainDB::open(&storage_config)?;
 
-    let mempool =
-        udaya_mempool::Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone());
+    let utxo_set = db.load_utxo_set().unwrap_or_else(|_| UTXOSet::new());
+
+    let mempool = udaya_mempool::Mempool::new(
+        udaya_mempool::MempoolConfig::default(),
+        consensus.clone(),
+        utxo_set,
+    );
 
     // Build P2P config from node config, mapping preferred_peers to seed_nodes
     let mut p2p_config = udaya_p2p::P2PConfig {
         listen_port: config.network.listen_port,
         max_peers: config.network.max_peers as usize,
+        enable_tls: config.network.enable_tls,
+        tls_cert_path: config.network.tls_cert_path.clone(),
+        tls_key_path: config.network.tls_key_path.clone(),
+        tls_ca_cert_path: config.network.tls_ca_cert_path.clone(),
         enable_dns_seed: false,
         ..Default::default()
     };
@@ -298,6 +305,13 @@ fn initialize_node_state(config: &UdayaConfig) -> anyhow::Result<Arc<NodeState>>
     ));
 
     let wallet = Wallet::new("Udaya Wallet", &config.consensus.network);
+
+    if let Ok(Some(data)) = db.load_wallet_raw() {
+        if let Ok(saved_state) = bincode::deserialize::<udaya_wallet::WalletState>(&data) {
+            info!("Loaded persisted wallet state from database");
+            wallet.import_state(saved_state);
+        }
+    }
 
     let explorer = ExplorerEngine::new();
 
@@ -349,13 +363,25 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
             let result = (|| -> anyhow::Result<serde_json::Value> {
                 let chain = state.config.consensus.network.clone();
                 let blocks = state.db.get_chain_height()?;
-                let headers = blocks; // simplified: headers == height
+                let headers = blocks;
                 let tip = state.db.get_chain_tip()?;
                 let best_block_hash = tip.map(|h| h.to_string()).unwrap_or_default();
                 let difficulty = 1.0;
-                let median_time = 0;
-                let chain_work = blocks.to_string();
-                let size_on_disk = state.db.block_count().unwrap_or(0) * 1_000_000; // rough estimate
+                let median_time = if blocks > 0 {
+                    if let Ok(Some(block)) = state.db.get_block_by_height(blocks) {
+                        block.header.timestamp as u64
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+                let chain_work = if let Ok(work) = state.db.get_tip_chain_work() {
+                    work.to_string()
+                } else {
+                    blocks.to_string()
+                };
+                let size_on_disk = state.db.block_count().unwrap_or(0) * 1_000_000;
                 let pruned = state.config.storage.prune_blocks;
                 let softforks: Vec<SoftForkInfo> = Vec::new();
 
@@ -449,23 +475,25 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                     .ok_or_else(|| anyhow::anyhow!("Block not found"))?;
 
                 let verbosity = req.params.get(1).and_then(|v| v.as_u64()).unwrap_or(1);
-                let height = state.db.get_chain_height().unwrap_or(0);
-                let confirmations = 1; // simplified
+                let chain_height = state.db.get_chain_height().unwrap_or(0);
+                let block_height = state.db.get_block_height_by_hash(&hash)?.unwrap_or(0);
+                let confirmations = if block_height > 0 && chain_height >= block_height {
+                    chain_height - block_height + 1
+                } else {
+                    0
+                };
 
                 match verbosity {
                     0 => {
-                        // Return serialized block as hex
                         let serialized = block.serialize();
                         Ok(serde_json::json!(hex::encode(serialized)))
                     }
                     _ => {
                         let txs: Vec<serde_json::Value> = if verbosity == 1 {
-                            // Just txids
                             block.transactions.iter().map(|tx| {
                                 serde_json::json!(tx.txid().to_string())
                             }).collect()
                         } else {
-                            // Full tx details
                             block.transactions.iter().map(|tx| {
                                 serde_json::json!({
                                     "txid": tx.txid().to_string(),
@@ -491,7 +519,7 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                         Ok(serde_json::json!({
                             "hash": block.hash().to_string(),
                             "confirmations": confirmations,
-                            "height": height,
+                            "height": block_height,
                             "version": block.header.version,
                             "merkleroot": hex::encode(block.header.merkle_root.0),
                             "time": block.header.timestamp,
@@ -499,7 +527,7 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                             "nonce": block.header.nonce,
                             "bits": format!("{:08x}", block.header.bits),
                             "difficulty": 1.0,
-                            "chainwork": height.to_string(),
+                            "chainwork": chain_height.to_string(),
                             "previousblockhash": block.header.previous_block_hash.to_string(),
                             "tx": txs,
                             "size": block.size(),
@@ -540,7 +568,10 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                     .db
                     .get_transaction(&txid)?
                     .ok_or_else(|| anyhow::anyhow!("Transaction not found"))?;
-                let _height = state.db.get_chain_height().unwrap_or(0);
+                let _chain_height = state.db.get_chain_height().unwrap_or(0);
+                let confirmations = 0;
+                let blockhash = String::new();
+                let blocktime = 0;
 
                 Ok(serde_json::json!({
                     "txid": txid.to_string(),
@@ -549,10 +580,10 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                     "size": tx.size(),
                     "vsize": tx.vsize(),
                     "hex": hex::encode(bincode::serialize(&tx).unwrap_or_default()),
-                    "confirmations": 1,
-                    "blockhash": "",
-                    "blocktime": 0,
-                    "time": 0,
+                    "confirmations": confirmations,
+                    "blockhash": blockhash,
+                    "blocktime": blocktime,
+                    "time": blocktime,
                     "vin": tx.inputs.iter().map(|input| serde_json::json!({
                         "txid": input.previous_output.txid.to_string(),
                         "vout": input.previous_output.vout,
@@ -590,7 +621,7 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
     handler.register("gettxout", {
         let state = Arc::clone(state);
         move |req| {
-            let txid_str = req.params.get(0).and_then(|v| v.as_str()).unwrap_or("").to_string();
+            let txid_str = req.params.first().and_then(|v| v.as_str()).unwrap_or("").to_string();
             let vout = req.params.get(1).and_then(|v| v.as_u64()).unwrap_or(0);
             let result = (|| -> anyhow::Result<serde_json::Value> {
                 let txid_bytes = hex::decode(&txid_str)?;
@@ -727,6 +758,7 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
         let state = Arc::clone(state);
         move |_req| {
             let address = state.wallet.generate_address();
+            save_wallet_state(&state);
             JsonRpcResponse {
                 jsonrpc: "2.0".to_string(),
                 id: _req.id,
@@ -760,7 +792,7 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
         move |req| {
             let address = req
                 .params
-                .get(0)
+                .first()
                 .and_then(|v| v.as_str())
                 .unwrap_or("")
                 .to_string();
@@ -789,6 +821,8 @@ fn register_rpc_handlers(handler: &mut RpcHandler, state: &Arc<NodeState>) {
                 if let Err(e) = state.mempool.submit_transaction(tx.clone(), height, now) {
                     anyhow::bail!("Transaction rejected by mempool: {}", e);
                 }
+
+                save_wallet_state(&state);
 
                 // Note: The P2P layer broadcasts accepted transactions to peers via
                 // the p2p message handler. This RPC path just adds to local mempool.
@@ -1190,71 +1224,8 @@ impl RateLimiterState {
     }
 }
 
-/// HTTP Basic Auth middleware
-async fn auth_middleware(
-    State(config): State<Arc<UdayaConfig>>,
-    req: Request<Body>,
-    next: Next,
-) -> Response {
-    if !config.rpc.enable_auth {
-        return next.run(req).await;
-    }
-
-    let headers = req.headers();
-    let auth_header = match headers.get(AUTHORIZATION) {
-        Some(h) => h,
-        None => {
-            return build_auth_challenge_response();
-        }
-    };
-
-    let auth_str = match auth_header.to_str() {
-        Ok(s) => s,
-        Err(_) => return build_auth_challenge_response(),
-    };
-
-    if !auth_str.starts_with("Basic ") {
-        return build_auth_challenge_response();
-    }
-
-    let decoded = match BASE64.decode(&auth_str[6..]) {
-        Ok(d) => d,
-        Err(_) => return build_auth_challenge_response(),
-    };
-
-    let credentials = match std::str::from_utf8(&decoded) {
-        Ok(s) => s.to_string(),
-        Err(_) => return build_auth_challenge_response(),
-    };
-
-    let parts: Vec<&str> = credentials.splitn(2, ':').collect();
-    if parts.len() != 2 {
-        return build_auth_challenge_response();
-    }
-
-    let (username, password) = (parts[0], parts[1]);
-    if username == config.rpc.username && password == config.rpc.password {
-        next.run(req).await
-    } else {
-        build_auth_challenge_response()
-    }
-}
-
-fn build_auth_challenge_response() -> Response {
-    let mut headers = HeaderMap::new();
-    headers.insert(
-        WWW_AUTHENTICATE,
-        HeaderValue::from_static("Basic realm=\"Udaya RPC\""),
-    );
-    (
-        StatusCode::UNAUTHORIZED,
-        headers,
-        Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
-    )
-        .into_response()
-}
-
 /// Rate limiting middleware
+#[allow(dead_code)]
 async fn rate_limit_middleware(
     State(limiter): State<Arc<RateLimiterState>>,
     req: Request<Body>,
@@ -1282,6 +1253,7 @@ async fn rate_limit_middleware(
 }
 
 /// Request size limiting middleware
+#[allow(dead_code)]
 async fn request_size_middleware(
     State(config): State<Arc<UdayaConfig>>,
     req: Request<Body>,
@@ -1316,68 +1288,6 @@ async fn request_size_middleware(
     }
 }
 
-/// Restricted method middleware
-async fn restricted_method_middleware(
-    State(config): State<Arc<UdayaConfig>>,
-    req: Request<Body>,
-    next: Next,
-) -> Response {
-    if !config.rpc.enable_auth {
-        return next.run(req).await;
-    }
-
-    let auth_header = req.headers().get(AUTHORIZATION);
-    let is_authenticated = auth_header.is_some();
-
-    if is_authenticated {
-        return next.run(req).await;
-    }
-
-    let body_bytes = match axum::body::to_bytes(req.into_body(), 1024 * 1024).await {
-        Ok(b) => b,
-        Err(_) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": "Invalid request"})),
-            )
-                .into_response();
-        }
-    };
-
-    let body: JsonRpcRequest = match serde_json::from_slice(&body_bytes) {
-        Ok(b) => b,
-        Err(_) => {
-            return (
-                StatusCode::BAD_REQUEST,
-                Json(serde_json::json!({"error": "Invalid JSON-RPC request"})),
-            )
-                .into_response();
-        }
-    };
-
-    if config
-        .rpc
-        .restricted_methods
-        .iter()
-        .any(|m| m == &body.method)
-    {
-        return (
-            StatusCode::FORBIDDEN,
-            Json(serde_json::json!({"error": "Method requires authentication", "code": -403})),
-        )
-            .into_response();
-    }
-
-    let req = Request::from_parts(
-        Request::new(Body::empty()).into_parts().0,
-        Body::from(body_bytes.clone()),
-    );
-    let (mut parts, _) = req.into_parts();
-    parts.extensions.insert(config);
-    let req = Request::from_parts(parts, Body::from(body_bytes));
-    next.run(req).await
-}
-
 async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     info!("╔══════════════════════════════════════════════════╗");
     info!(
@@ -1402,13 +1312,9 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
     }
     info!("Registered {} RPC handlers with live node state", 22);
 
-    // Initialize UTXO set
-    let mut utxo_set = UTXOSet::new();
-
     let chain_height = state.db.get_chain_height()?;
     info!("Chain height: {}", chain_height);
 
-    // Advertise our current height in version messages so peers can sync from us
     state.network_state.set_start_height(chain_height);
 
     if chain_height == 0 {
@@ -1416,12 +1322,8 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
         let genesis = create_genesis_block();
         info!("Genesis block hash: {}", genesis.hash());
 
-        // Store genesis and apply coinbase to UTXO set
         state.db.store_block(&genesis, 0)?;
         state.db.update_utxo_set_for_block(&genesis, 0)?;
-
-        let coinbase_tx = genesis.coinbase_tx().unwrap();
-        utxo_set.apply_coinbase(coinbase_tx, &coinbase_tx.txid(), 0);
 
         if let Some(stored_genesis) = state.db.get_block(&genesis.hash())? {
             info!("Genesis block stored successfully");
@@ -1475,6 +1377,11 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
         info!("Explorer connected to blockchain database");
     }
 
+    // Restore explorer cached state from previous run
+    if let Err(e) = state.explorer.restore_from_database(&state.db) {
+        warn!("Failed to restore explorer cached state: {}", e);
+    }
+
     // Start mining loop if enabled
     if config.mining.enable {
         info!(
@@ -1484,6 +1391,32 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
         let mining_state = state.clone();
         tokio::spawn(async move {
             mining_loop(mining_state).await;
+        });
+    }
+
+    // Periodically persist wallet state
+    {
+        let wallet_state = state.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(30));
+            loop {
+                interval.tick().await;
+                save_wallet_state(&wallet_state);
+            }
+        });
+    }
+
+    // Periodically persist explorer state
+    {
+        let explorer_state = state.clone();
+        tokio::spawn(async move {
+            let mut interval = tokio::time::interval(std::time::Duration::from_secs(60));
+            loop {
+                interval.tick().await;
+                if let Err(e) = explorer_state.explorer.persist_to_database(&explorer_state.db) {
+                    warn!("Failed to persist explorer state: {}", e);
+                }
+            }
         });
     }
 
@@ -1571,10 +1504,9 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
 
     let config_arc = Arc::new(config.clone());
     let config_arc_for_mw1 = config_arc.clone();
-    let config_arc_for_mw2 = config_arc.clone();
     let rate_limiter = Arc::new(RateLimiterState::new());
 
-    let mut app = Router::new()
+    let app = Router::new()
         .route("/", post(handle_json_rpc))
         .route("/health", get(health_check_handler))
         .route("/healthz", get(health_check_liveness))
@@ -1645,8 +1577,8 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
                             StatusCode::UNAUTHORIZED,
                             resp_headers,
                             Json(serde_json::json!({"error": "Unauthorized", "code": -401})),
-                            )
-                                .into_response();
+                        )
+                            .into_response();
                     }
 
                     let decoded = match BASE64.decode(&auth_str[6..]) {
@@ -1701,53 +1633,6 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
 
                 next.run(req).await
             }
-        }))
-        .layer(middleware::from_fn(move |req: Request<Body>, next: Next| {
-            let config = config_arc_for_mw2.clone();
-            async move {
-                if !config.rpc.enable_auth {
-                    return next.run(req).await;
-                }
-
-                let body_bytes = match axum::body::to_bytes(req.into_body(), config.rpc.max_request_size_mb as usize * 1024 * 1024).await {
-                    Ok(b) => b,
-                    Err(_) => {
-                        return (
-                            StatusCode::BAD_REQUEST,
-                            Json(serde_json::json!({"error": "Invalid request body"})),
-                        )
-                            .into_response();
-                    }
-                };
-
-                let rpc_req: JsonRpcRequest = match serde_json::from_slice(&body_bytes) {
-                    Ok(b) => b,
-                    Err(_) => {
-                        return (
-                            StatusCode::BAD_REQUEST,
-                            Json(serde_json::json!({"error": "Invalid JSON-RPC request"})),
-                        )
-                            .into_response();
-                    }
-                };
-
-                if config.rpc.restricted_methods.iter().any(|m| m == &rpc_req.method) {
-                    return (
-                        StatusCode::FORBIDDEN,
-                        Json(serde_json::json!({"error": "Method requires elevated privileges", "code": -403})),
-                    )
-                        .into_response();
-                }
-
-                let req = Request::from_parts(
-                    Request::new(Body::empty()).into_parts().0,
-                    Body::from(body_bytes.clone()),
-                );
-                let (mut parts, _) = req.into_parts();
-                parts.extensions.insert(config);
-                let req = Request::from_parts(parts, Body::from(body_bytes));
-                next.run(req).await
-            }
         }));
 
     if config_arc.rpc.enable_tls {
@@ -1776,10 +1661,7 @@ async fn start_node(config: UdayaConfig) -> anyhow::Result<()> {
 /// Mining loop: creates block templates, mines PoW, and submits blocks
 async fn mining_loop(state: Arc<NodeState>) {
     info!("Mining loop started");
-    let mut height = match state.db.get_chain_height() {
-        Ok(h) => h,
-        Err(_) => 0,
-    };
+    let mut height = state.db.get_chain_height().unwrap_or_default();
 
     loop {
         tokio::time::sleep(Duration::from_millis(100)).await;
@@ -1864,6 +1746,9 @@ async fn mining_loop(state: Arc<NodeState>) {
                 } else if let Err(e) = state.db.update_utxo_set_for_block(&block, height + 1) {
                     warn!("Failed to update UTXO set for mined block: {}", e);
                 } else {
+                    if let Ok(utxo_set) = state.db.load_utxo_set() {
+                        state.mempool.sync_utxo_set(utxo_set);
+                    }
                     height += 1;
                     info!("Mined block #{}: {}", height, block.hash());
 
@@ -1899,7 +1784,7 @@ async fn mining_loop(state: Arc<NodeState>) {
                         0.0,
                         true,
                         state.config.mining.num_miner_threads,
-                        height as u64,
+                        height,
                     );
                 }
             }
@@ -1911,12 +1796,27 @@ async fn handle_json_rpc(
     State(state): State<Arc<NodeState>>,
     Json(request): Json<JsonRpcRequest>,
 ) -> impl IntoResponse {
+    if state.config.rpc.enable_auth
+        && state
+            .config
+            .rpc
+            .restricted_methods
+            .iter()
+            .any(|m| m == &request.method)
+    {
+        return (
+            StatusCode::FORBIDDEN,
+            Json(serde_json::json!({"error": "Method requires elevated privileges", "code": -403})),
+        )
+            .into_response();
+    }
+
     info!("RPC call: {} (id: {})", request.method, request.id);
     let response = {
         let handler = state.rpc_handler.lock().unwrap();
         handler.handle(request)
     };
-    (StatusCode::OK, Json(response))
+    (StatusCode::OK, Json(response)).into_response()
 }
 
 async fn health_check_handler(State(state): State<Arc<NodeState>>) -> impl IntoResponse {
@@ -1942,7 +1842,7 @@ async fn health_check_readiness(State(state): State<Arc<NodeState>>) -> impl Int
         .health_status
         .with_label_values(&["node_status"])
         .get();
-    let healthy = (health_val as i64) == 1;
+    let healthy = health_val == 1;
 
     if healthy {
         (
@@ -1995,6 +1895,7 @@ async fn metrics_handler(State(state): State<Arc<NodeState>>) -> impl IntoRespon
     }
 }
 
+#[allow(dead_code)]
 async fn metrics_update_loop(state: Arc<NodeState>) {
     let mut interval = tokio::time::interval(Duration::from_secs(15));
     loop {
@@ -2065,6 +1966,7 @@ async fn metrics_update_loop(state: Arc<NodeState>) {
     }
 }
 
+#[allow(dead_code)]
 async fn health_monitor_loop(state: Arc<NodeState>) {
     let mut interval = tokio::time::interval(Duration::from_secs(30));
     loop {
@@ -2171,27 +2073,23 @@ async fn handle_p2p_messages(
 
                 for inv in inv_list {
                     match inv.inv_type {
-                        InvType::Block => {
-                            // Check if we already have this block
-                            if !state.db.block_exists(&inv.hash).unwrap_or(false) {
-                                // Check if we haven't already requested it
-                                let already_requested = {
-                                    let pending = pending_block_requests.lock();
-                                    pending.contains(&inv.hash)
-                                };
-                                if !already_requested {
-                                    {
-                                        let mut pending = pending_block_requests.lock();
-                                        pending.insert(inv.hash);
-                                    }
-                                    blocks_to_request.push(inv);
+                        InvType::Block if !state.db.block_exists(&inv.hash).unwrap_or(false) => {
+                            let already_requested = {
+                                let pending = pending_block_requests.lock();
+                                pending.contains(&inv.hash)
+                            };
+                            if !already_requested {
+                                {
+                                    let mut pending = pending_block_requests.lock();
+                                    pending.insert(inv.hash);
                                 }
+                                blocks_to_request.push(inv);
                             }
                         }
-                        InvType::Tx => {
-                            if !state.mempool.contains(&udaya_core::types::Txid(inv.hash.0)) {
-                                txs_to_request.push(inv);
-                            }
+                        InvType::Tx
+                            if !state.mempool.contains(&udaya_core::types::Txid(inv.hash.0)) =>
+                        {
+                            txs_to_request.push(inv);
                         }
                         _ => {}
                     }
@@ -2296,7 +2194,7 @@ async fn handle_p2p_messages(
                         continue;
                     }
 
-                    valid_headers.push(header.clone());
+                    valid_headers.push(*header);
                 }
 
                 if valid_headers.is_empty() {
@@ -2413,6 +2311,9 @@ async fn handle_p2p_messages(
                     {
                         warn!("[SYNC] Failed to update UTXO for block {}: {}", hash, e);
                     } else {
+                        if let Ok(utxo_set) = state.db.load_utxo_set() {
+                            state.mempool.sync_utxo_set(utxo_set);
+                        }
                         info!(
                             "[SYNC] ✅ Accepted block #{} ({}) from peer {}",
                             current_height + 1,
@@ -2662,6 +2563,10 @@ async fn process_orphan_blocks(
                 continue;
             }
 
+            if let Ok(utxo_set) = state.db.load_utxo_set() {
+                state.mempool.sync_utxo_set(utxo_set);
+            }
+
             info!(
                 "[SYNC] ✅ Accepted orphan block #{} ({})",
                 current_height + 1,
@@ -2741,6 +2646,16 @@ async fn periodic_sync_loop(state: Arc<NodeState>) {
                 "[SYNC] In sync: height={}, peers={}",
                 local_height, peer_count
             );
+        }
+    }
+}
+
+/// Persist wallet state to RocksDB
+fn save_wallet_state(state: &Arc<NodeState>) {
+    let wallet_state = state.wallet.export_state();
+    if let Ok(data) = bincode::serialize(&wallet_state) {
+        if let Err(e) = state.db.store_wallet_raw(&data) {
+            warn!("Failed to persist wallet state: {}", e);
         }
     }
 }
@@ -2968,6 +2883,10 @@ async fn handle_potential_reorg(
         warn!("[REORG] Failed to store rebuilt UTXO set: {}", e);
     }
 
+    if let Ok(utxo_set) = state.db.load_utxo_set() {
+        state.mempool.sync_utxo_set(utxo_set);
+    }
+
     // Update advertised height
     state.network_state.set_start_height(new_block_height);
 
@@ -3120,11 +3039,88 @@ async fn run_security_audit(fuzz_iterations: u64) -> anyhow::Result<()> {
 }
 
 async fn run_explorer_server(port: u16) -> anyhow::Result<()> {
+    let storage_config = StorageConfig {
+        data_dir: "data/Udaya".to_string(),
+        ..Default::default()
+    };
+    let db = std::sync::Arc::new(BlockchainDB::open(&storage_config)?);
     let explorer = std::sync::Arc::new(ExplorerEngine::new());
+    
+    if let Err(e) = explorer.load_from_database(&db) {
+        warn!("Explorer failed to load database: {}", e);
+    } else {
+        info!("Explorer connected to blockchain database");
+    }
+    
     info!("Explorer server starting on port {}", port);
 
     let app = Router::new()
-        .route("/api/blocks", get(|| async { Json(serde_json::json!([])) }))
+        .route("/api/blocks", get({
+            let explorer = explorer.clone();
+            let db = db.clone();
+            move || {
+                let explorer = explorer.clone();
+                let db = db.clone();
+                async move {
+                    let height = db.get_chain_height().unwrap_or(0);
+                    let mut blocks = Vec::new();
+                    for h in (0..=height).rev().take(50) {
+                        if let Some(block) = db.get_block_by_height(h).unwrap_or(None) {
+                            if let Some(summary) = explorer.get_block(h) {
+                                blocks.push(summary);
+                            } else {
+                                let total_fees = 0;
+                                let summary = ExplorerEngine::block_to_summary(&block, h, total_fees, None);
+                                blocks.push(summary);
+                            }
+                        }
+                    }
+                    Json(serde_json::json!(blocks))
+                }
+            }
+        }))
+        .route("/api/blocks/:height", get({
+            let explorer = explorer.clone();
+            let db = db.clone();
+            move |axum::extract::Path(height): axum::extract::Path<u64>| {
+                let explorer = explorer.clone();
+                let db = db.clone();
+                async move {
+                    if let Some(block) = db.get_block_by_height(height).unwrap_or(None) {
+                        if let Some(summary) = explorer.get_block(height) {
+                            Json(serde_json::json!(summary))
+                        } else {
+                            let total_fees = 0;
+                            let summary = ExplorerEngine::block_to_summary(&block, height, total_fees, None);
+                            Json(serde_json::json!(summary))
+                        }
+                    } else {
+                        Json(serde_json::json!({"error": "Block not found"}))
+                    }
+                }
+            }
+        }))
+        .route("/api/txs/:txid", get({
+            let db = db.clone();
+            move |axum::extract::Path(txid_str): axum::extract::Path<String>| {
+                let db = db.clone();
+                async move {
+                    if let Ok(txid_bytes) = hex::decode(&txid_str) {
+                        if txid_bytes.len() == 32 {
+                            let mut arr = [0u8; 32];
+                            arr.copy_from_slice(&txid_bytes);
+                            let txid = udaya_core::types::Txid(arr);
+                            if let Ok(Some(tx)) = db.get_transaction(&txid) {
+                                let height = db.get_chain_height().unwrap_or(0);
+                                let summary = ExplorerEngine::tx_to_summary(&tx, Some(height), None, Some(0), 1);
+                                return Json(serde_json::json!(summary));
+                            }
+                        }
+                    }
+                    Json(serde_json::json!({"error": "Transaction not found"}))
+                }
+            }
+        }))
         .route(
             "/api/stats",
             get({

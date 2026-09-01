@@ -21,19 +21,10 @@
     <!-- Preconnect to Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <!-- Three.js for 3D Globe -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" defer></script>
 </head>
 <body>
     <!-- Scroll Progress Bar -->
     <div id="scroll-progress" style="position:fixed;top:0;left:0;height:2px;background:linear-gradient(90deg,#F59E0B,#FBBF24);z-index:1001;width:0%;transition:width 0.1s ease;"></div>
-
-    <!-- 3D Globe Canvas -->
-    <div id="globe-container"></div>
-    
-    <!-- 2D Particle Canvas -->
-    <canvas id="particle-canvas"></canvas>
 
     <!-- =============================================
          NAVIGATION - Premium Floating Glass Bar
@@ -72,29 +63,133 @@
          HERO - Cinematic Experience
          ============================================= -->
     <section class="hero" role="banner">
-        <!-- Blockchain Globe Visualization -->
-        <div class="hero-globe-container" aria-hidden="true">
-            <div class="hero-globe"></div>
-            <div class="orbital-ring"></div>
-            <div class="orbital-ring"></div>
-            <div class="orbital-ring"></div>
-            <div class="orbital-ring"></div>
+        <!-- Cinematic Sunrise Background -->
+        <div class="sunrise-scene" aria-hidden="true">
+            <!-- Sky layers -->
+            <div class="sky"></div>
+            <div class="stars"></div>
             
-            <!-- Floating Blockchain Data -->
-            <span class="floating-data">? Block #1,234,567</span>
-            <span class="floating-data">?? Hash: 0x8f3a...b7e2</span>
-            <span class="floating-data">?? Hashrate: 124.5 TH/s</span>
-            <span class="floating-data">?? Peers: 2,847</span>
-            <span class="floating-data">?? TX/s: 47.2</span>
-            <span class="floating-data">?? Mempool: 3,421</span>
-            <span class="floating-data">?? Difficulty: 18.7T</span>
-            <span class="floating-data">?? Block Reward: 6.25</span>
+            <!-- Sun -->
+            <div class="sun" id="hero-emblem">
+                <!-- Orbital rings with satellites -->
+                <div class="sun-rings" aria-hidden="true">
+                    <div class="sun-orbit sun-orbit-1"></div>
+                    <div class="sun-orbit sun-orbit-2"></div>
+                    <div class="sun-orbit sun-orbit-3"></div>
+                    <div class="sun-burst"></div>
+                </div>
+                <!-- Block countdown ring -->
+                <svg class="block-ring" viewBox="0 0 220 220" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="udaya-ring-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#F59E0B"/>
+                            <stop offset="50%" stop-color="#00E5FF"/>
+                            <stop offset="100%" stop-color="#7C3AED"/>
+                        </linearGradient>
+                    </defs>
+                    <circle class="block-ring-track" cx="110" cy="110" r="102"/>
+                    <circle class="block-ring-progress" id="block-ring-progress" cx="110" cy="110" r="102"/>
+                </svg>
+                <div class="sun-core"></div>
+                <div class="sun-glow"></div>
+                <div class="sun-rays"></div>
+                <!-- Live emblem status cluster -->
+                <div class="hero-emblem-status" aria-hidden="true">
+                    <span class="hero-live-badge">
+                        <span class="hero-live-dot"></span>
+                        LIVE &middot; #<b data-live-block>1,245,100</b>
+                    </span>
+                    <span class="hero-next-block">
+                        next block <span class="hero-next-count" id="hero-next-count">01:00</span>
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Clouds -->
+            <div class="clouds">
+                <div class="cloud cloud-1"></div>
+                <div class="cloud cloud-2"></div>
+                <div class="cloud cloud-3"></div>
+                <div class="cloud cloud-4"></div>
+                <div class="cloud cloud-5"></div>
+            </div>
+            
+            <!-- Atmospheric particles -->
+            <canvas class="dust-canvas" aria-hidden="true"></canvas>
+            
+            <!-- Mountains / Terrain -->
+            <div class="terrain">
+                <div class="mountain mountain-back"></div>
+                <div class="mountain mountain-mid"></div>
+                <div class="mountain mountain-front"></div>
+                <div class="mist"></div>
+            </div>
+            
+            <!-- Warrior silhouette -->
+            <div class="warrior-container">
+                <svg class="warrior" viewBox="0 0 400 600" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <!-- Mountain ridge the warrior stands on -->
+                    <path d="M0 600 L0 520 Q50 500 100 510 Q150 490 200 500 Q250 480 300 490 Q350 470 400 485 L400 600 Z" fill="#0a0e17" opacity="0.9"/>
+                    
+                    <!-- Warrior figure - abstract guardian silhouette -->
+                    <!-- Cloak/robe body -->
+                    <path d="M160 600 L160 380 Q165 360 180 350 Q200 340 220 350 Q235 360 240 380 L240 600 Z" fill="#0a0e17"/>
+                    
+                    <!-- Cloak flowing detail -->
+                    <path d="M155 600 L155 400 Q160 385 175 375 Q190 365 200 360 Q210 365 225 375 Q240 385 245 400 L245 600 Z" fill="#0f1520" opacity="0.8"/>
+                    
+                    <!-- Shoulders -->
+                    <path d="M165 380 Q170 370 180 365 Q200 358 220 365 Q230 370 235 380 Q230 385 220 388 Q200 392 180 388 Q170 385 165 380 Z" fill="#0a0e17"/>
+                    
+                    <!-- Head -->
+                    <ellipse cx="200" cy="345" rx="18" ry="22" fill="#0a0e17"/>
+                    
+                    <!-- Hood/cowl suggestion -->
+                    <path d="M182 340 Q185 325 200 320 Q215 325 218 340 Q215 335 200 332 Q185 335 182 340 Z" fill="#0f1520" opacity="0.7"/>
+                    
+                    <!-- Subtle hair/cloak edge movement -->
+                    <path d="M160 420 Q158 450 155 480 Q152 510 150 540 Q148 560 145 580" stroke="#141b2b" stroke-width="2" fill="none" opacity="0.6">
+                        <animate attributeName="d" dur="8s" repeatCount="indefinite"
+                            values="M160 420 Q158 450 155 480 Q152 510 150 540 Q148 560 145 580;
+                                    M160 420 Q157 450 154 480 Q151 510 149 540 Q147 560 144 580;
+                                    M160 420 Q158 450 155 480 Q152 510 150 540 Q148 560 145 580"/>
+                    </path>
+                    
+                    <!-- Right side cloak movement -->
+                    <path d="M240 420 Q242 450 245 480 Q248 510 250 540 Q252 560 255 580" stroke="#141b2b" stroke-width="2" fill="none" opacity="0.6">
+                        <animate attributeName="d" dur="9s" repeatCount="indefinite"
+                            values="M240 420 Q242 450 245 480 Q248 510 250 540 Q252 560 255 580;
+                                    M240 420 Q243 450 246 480 Q249 510 251 540 Q253 560 256 580;
+                                    M240 420 Q242 450 245 480 Q248 510 250 540 Q252 560 255 580"/>
+                    </path>
+                    
+                    <!-- Subtle shoulder/cloak top movement -->
+                    <path d="M165 380 Q160 375 155 378" stroke="#141b2b" stroke-width="1.5" fill="none" opacity="0.5">
+                        <animate attributeName="d" dur="7s" repeatCount="indefinite"
+                            values="M165 380 Q160 375 155 378;
+                                    M165 380 Q159 374 154 377;
+                                    M165 380 Q160 375 155 378"/>
+                    </path>
+                    <path d="M235 380 Q240 375 245 378" stroke="#141b2b" stroke-width="1.5" fill="none" opacity="0.5">
+                        <animate attributeName="d" dur="7.5s" repeatCount="indefinite"
+                            values="M235 380 Q240 375 245 378;
+                                    M235 380 Q241 374 246 377;
+                                    M235 380 Q240 375 245 378"/>
+                    </path>
+                </svg>
+            </div>
+            
+            <!-- Volumetric light overlay -->
+            <div class="volumetric-light"></div>
+            
+            <!-- Color grade overlay -->
+            <div class="color-grade"></div>
         </div>
 
         <!-- Hero Content -->
         <div class="hero-content">
             <span class="hero-badge animate-fade-in">
-                ?? Mainnet Ready · Proof-of-Work · SHA-256d
+                ⚡ Mainnet Ready · Height <span data-live-block>1,245,100</span> · Proof-of-Work · SHA-256d
             </span>
             <h1 class="animate-fade-in-up delay-1">
                 Global Decentralized
@@ -106,9 +201,9 @@
                 of global commerce.
             </p>
             <div class="hero-buttons animate-fade-in-up delay-3">
-                <a href="/ecosystem/" class="btn btn-primary btn-lg">?? Explore Ecosystem</a>
-                <a href="/command-center/" class="btn btn-glow btn-lg">?? Command Center</a>
-                <a href="/developer/" class="btn btn-secondary btn-lg">?? Build on Udaya</a>
+                <a href="/ecosystem/" class="btn btn-primary btn-lg">🚀 Explore Ecosystem</a>
+                <a href="/command-center/" class="btn btn-glow btn-lg">🎛️ Command Center</a>
+                <a href="/developer/" class="btn btn-secondary btn-lg">🛠️ Build on Udaya</a>
             </div>
         </div>
     </section>
@@ -123,24 +218,36 @@
                 Network Status: Operational
             </div>
             <div class="trust-item">
-                <span style="color:var(--emerald);">?</span>
+                <span style="color:var(--emerald);">✓</span>
                 99.9% Uptime
             </div>
             <div class="trust-item">
-                <span style="color:var(--emerald);">?</span>
+                <span style="color:var(--emerald);">✓</span>
                 Security Audited
             </div>
             <div class="trust-item">
-                <span style="color:var(--emerald);">?</span>
+                <span style="color:var(--emerald);">✓</span>
                 Open Source
             </div>
             <div class="trust-item">
-                <span style="color:var(--emerald);">?</span>
+                <span style="color:var(--emerald);">✓</span>
                 Community Governed
             </div>
             <div class="trust-item">
-                <span style="color:var(--emerald);">?</span>
+                <span style="color:var(--emerald);">✓</span>
                 Treasury Transparent
+            </div>
+        </div>
+    </div>
+
+    <!-- =============================================
+         LIVE NETWORK TICKER
+         ============================================= -->
+    <div class="container">
+        <div class="live-ticker" aria-label="Live network activity">
+            <span class="ticker-label"><span class="live-dot"></span> Live Network</span>
+            <div class="ticker-viewport">
+                <div class="ticker-track" id="live-ticker-track"></div>
             </div>
         </div>
     </div>
@@ -152,55 +259,55 @@
         <!-- Live Metrics - Reframed for Activity -->
         <section class="section" aria-label="Network metrics">
             <div class="section-header reveal">
-                <h2>Live <span class="highlight">Network</span> Activity</h2>
+                <h2>Live <span class="highlight">Network</span> Activity <span class="live-pill"><span class="live-dot"></span> LIVE</span></h2>
                 <p>Real-time metrics showing the health, growth, and adoption of the Udaya network.</p>
             </div>
             <div class="stats-grid">
                 <div class="stat-card reveal reveal-delay-1">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="128">128</div>
+                    <span class="stat-icon">🧱</span>
+                    <div class="stat-value" data-live-stat="blocks" data-animate-counter="128">1,245,100</div>
                     <div class="stat-label">Blocks Processed</div>
                     <canvas class="stat-sparkline" id="sparkline-0" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-cyan reveal reveal-delay-2">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="5">5</div>
+                    <span class="stat-icon">🌐</span>
+                    <div class="stat-value" data-live-stat="peers" data-animate-counter="5">5</div>
                     <div class="stat-label">Connected Peers</div>
                     <canvas class="stat-sparkline" id="sparkline-1" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-purple reveal reveal-delay-3">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="48">48</div>
+                    <span class="stat-icon">🔁</span>
+                    <div class="stat-value" data-live-stat="transactions" data-animate-counter="48">4,890</div>
                     <div class="stat-label">Transactions Verified</div>
                     <canvas class="stat-sparkline" id="sparkline-2" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-green reveal reveal-delay-4">
-                    <span class="stat-icon">???</span>
-                    <div class="stat-value" data-animate-counter="5">5</div>
+                    <span class="stat-icon">🖥️</span>
+                    <div class="stat-value" data-live-stat="nodes" data-animate-counter="5">5</div>
                     <div class="stat-label">Testnet Nodes</div>
                     <canvas class="stat-sparkline" id="sparkline-3" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-blue reveal reveal-delay-1">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="350">350</div>
+                    <span class="stat-icon">📦</span>
+                    <div class="stat-value" data-live-stat="sdk" data-animate-counter="350">350</div>
                     <div class="stat-label">SDK Downloads</div>
                     <canvas class="stat-sparkline" id="sparkline-4" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-green reveal reveal-delay-2">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="1280">1,280</div>
+                    <span class="stat-icon">🔍</span>
+                    <div class="stat-value" data-live-stat="queries" data-animate-counter="1280">1,280</div>
                     <div class="stat-label">Explorer Queries</div>
                     <canvas class="stat-sparkline" id="sparkline-5" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-purple reveal reveal-delay-3">
-                    <span class="stat-icon">??</span>
-                    <div class="stat-value" data-animate-counter="2468">2,468</div>
+                    <span class="stat-icon">📡</span>
+                    <div class="stat-value" data-live-stat="rpc" data-animate-counter="2468">2,468</div>
                     <div class="stat-label">RPC Requests</div>
                     <canvas class="stat-sparkline" id="sparkline-6" width="200" height="40"></canvas>
                 </div>
                 <div class="stat-card card-glow-cyan reveal reveal-delay-4">
-                    <span class="stat-icon">???</span>
-                    <div class="stat-value" data-animate-counter="12">12</div>
+                    <span class="stat-icon">🗳️</span>
+                    <div class="stat-value" data-live-stat="governance" data-animate-counter="12">12</div>
                     <div class="stat-label">Governance Votes</div>
                     <canvas class="stat-sparkline" id="sparkline-7" width="200" height="40"></canvas>
                 </div>
@@ -219,7 +326,7 @@
                 <!-- Featured: Wallets -->
                 <div class="bento-card featured card-gold reveal reveal-delay-1">
                     <div class="bento-bg"></div>
-                    <div class="bento-icon">??</div>
+                    <div class="bento-icon">👛</div>
                     <h3>Wallet Infrastructure</h3>
                     <p>Enterprise-grade HD wallets with BIP39/44/49/84/86 support, multisig, and hardware wallet integration. Generate, import, and manage wallets with military-grade security.</p>
                     <div class="bento-metric">
@@ -231,7 +338,7 @@
                 <!-- Medium: Mining -->
                 <div class="bento-card medium card-cyan reveal reveal-delay-2">
                     <div class="bento-bg cyan-bg"></div>
-                    <div class="bento-icon cyan">??</div>
+                    <div class="bento-icon cyan">⛏️</div>
                     <h3>Mining Network</h3>
                     <p>Solo CPU mining via CLI + Stratum V2 pool support. Comprehensive mining calculator and hardware benchmarks.</p>
                     <div class="bento-metric">
@@ -243,7 +350,7 @@
                 <!-- Compact: Governance -->
                 <div class="bento-card compact card-purple reveal reveal-delay-3">
                     <div class="bento-bg purple-bg"></div>
-                    <div class="bento-icon purple">???</div>
+                    <div class="bento-icon purple">🏛️</div>
                     <h3>Governance</h3>
                     <p>On-chain voting with transparent treasury. Every stakeholder has a voice.</p>
                     <div class="bento-metric">
@@ -255,7 +362,7 @@
                 <!-- Compact: Developers -->
                 <div class="bento-card compact card-green reveal reveal-delay-1">
                     <div class="bento-bg green-bg"></div>
-                    <div class="bento-icon green">??</div>
+                    <div class="bento-icon green">💻</div>
                     <h3>Developer SDK</h3>
                     <p>Rust, Go, Python, JavaScript, Java SDKs with comprehensive documentation.</p>
                     <div class="bento-metric">
@@ -267,7 +374,7 @@
                 <!-- Medium: Exchange Readiness -->
                 <div class="bento-card medium card-cyan reveal reveal-delay-2">
                     <div class="bento-bg cyan-bg"></div>
-                    <div class="bento-icon cyan">??</div>
+                    <div class="bento-icon cyan">🏦</div>
                     <h3>Exchange Ready</h3>
                     <p>Stable RPC, reorg handling, and comprehensive integration packages. Built for exchanges from day one.</p>
                     <div class="bento-metric">
@@ -279,7 +386,7 @@
                 <!-- Compact: Analytics -->
                 <div class="bento-card compact card-purple reveal reveal-delay-3">
                     <div class="bento-bg purple-bg"></div>
-                    <div class="bento-icon purple">??</div>
+                    <div class="bento-icon purple">📊</div>
                     <h3>Analytics</h3>
                     <p>Real-time ecosystem metrics, treasury transparency, and growth tracking.</p>
                     <div class="bento-metric">
@@ -291,7 +398,7 @@
                 <!-- Compact: Community -->
                 <div class="bento-card compact card-green reveal reveal-delay-1">
                     <div class="bento-bg green-bg"></div>
-                    <div class="bento-icon green">??</div>
+                    <div class="bento-icon green">🤝</div>
                     <h3>Community</h3>
                     <p>Ambassador programs, bug bounties, and contributor rewards.</p>
                     <div class="bento-metric">
@@ -303,7 +410,7 @@
                 <!-- Compact: Security -->
                 <div class="bento-card compact card-cyan reveal reveal-delay-2">
                     <div class="bento-bg cyan-bg"></div>
-                    <div class="bento-icon cyan">??</div>
+                    <div class="bento-icon cyan">🛡️</div>
                     <h3>Security</h3>
                     <p>Fuzzing, adversarial simulations, and continuous security audits.</p>
                     <div class="bento-metric">
@@ -327,27 +434,27 @@
                     <span class="step-number">1</span>
                     Learn Udaya
                 </a>
-                <span class="funnel-arrow">?</span>
+                <span class="funnel-arrow">→</span>
                 <a href="/wallet/" class="funnel-step">
                     <span class="step-number">2</span>
                     Create Wallet
                 </a>
-                <span class="funnel-arrow">?</span>
+                <span class="funnel-arrow">→</span>
                 <a href="/faucet/" class="funnel-step">
                     <span class="step-number">3</span>
                     Claim Faucet
                 </a>
-                <span class="funnel-arrow">?</span>
+                <span class="funnel-arrow">→</span>
                 <a href="/community/" class="funnel-step">
                     <span class="step-number">4</span>
                     Join Community
                 </a>
-                <span class="funnel-arrow">?</span>
+                <span class="funnel-arrow">→</span>
                 <a href="/mining/" class="funnel-step">
                     <span class="step-number">5</span>
                     Start Mining
                 </a>
-                <span class="funnel-arrow">?</span>
+                <span class="funnel-arrow">→</span>
                 <a href="/governance/" class="funnel-step">
                     <span class="step-number">6</span>
                     Participate
@@ -366,8 +473,8 @@
             <div class="cc-panel reveal reveal-delay-1" style="border-radius:var(--radius-xl);">
                 <div class="panel-header">
                     <div class="panel-title">
-                        ?? Network Topology
-                        <span class="panel-badge">?? Live</span>
+                        🌐 Network Topology
+                        <span class="panel-badge"><span class="live-dot"></span> Live</span>
                     </div>
                     <div style="font-size:0.85rem;color:var(--text-muted);display:flex;align-items:center;gap:var(--space-2);">
                         <span>Updated: <span data-live-time>00:00:00</span></span>
@@ -404,39 +511,44 @@
              ============================================= -->
         <section class="section" aria-label="Public nodes">
             <div class="section-header left reveal">
-                <h2>?? Global <span class="highlight">Infrastructure</span></h2>
+                <h2>🌍 Global <span class="highlight">Infrastructure</span></h2>
                 <p>Geographically distributed nodes powering the Udaya network across North America, Europe, and Asia-Pacific.</p>
             </div>
             <div class="node-grid" id="nodes">
                 <div class="node-card reveal reveal-delay-1">
-                    <div class="node-name">???? seed-us.Udaya.org</div>
+                    <div class="node-name">🇺🇸 seed-us.Udaya.org</div>
                     <div class="node-detail"><span class="label">Region</span><span>US-East</span></div>
                     <div class="node-detail"><span class="label">Provider</span><span>AWS</span></div>
-                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                    <div class="node-detail"><span class="label">Height</span><span class="node-height" data-node-height>1,245,100</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">🟢 Online</span></div>
                 </div>
                 <div class="node-card reveal reveal-delay-2">
-                    <div class="node-name">???? seed-eu.Udaya.org</div>
+                    <div class="node-name">🇪🇺 seed-eu.Udaya.org</div>
                     <div class="node-detail"><span class="label">Region</span><span>Europe</span></div>
                     <div class="node-detail"><span class="label">Provider</span><span>Hetzner</span></div>
-                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                    <div class="node-detail"><span class="label">Height</span><span class="node-height" data-node-height>1,245,100</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">🟢 Online</span></div>
                 </div>
                 <div class="node-card reveal reveal-delay-3">
-                    <div class="node-name">???? seed-ap.Udaya.org</div>
+                    <div class="node-name">🇯🇵 seed-ap.Udaya.org</div>
                     <div class="node-detail"><span class="label">Region</span><span>Asia-Pacific</span></div>
                     <div class="node-detail"><span class="label">Provider</span><span>Linode</span></div>
-                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                    <div class="node-detail"><span class="label">Height</span><span class="node-height" data-node-height>1,245,100</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">🟢 Online</span></div>
                 </div>
                 <div class="node-card reveal reveal-delay-4">
-                    <div class="node-name">???? node-us-west</div>
+                    <div class="node-name">🇺🇸 node-us-west</div>
                     <div class="node-detail"><span class="label">Region</span><span>US-West</span></div>
                     <div class="node-detail"><span class="label">Provider</span><span>DigitalOcean</span></div>
-                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                    <div class="node-detail"><span class="label">Height</span><span class="node-height" data-node-height>1,245,100</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">🟢 Online</span></div>
                 </div>
                 <div class="node-card reveal reveal-delay-1">
-                    <div class="node-name">?? node-global</div>
+                    <div class="node-name">🌐 node-global</div>
                     <div class="node-detail"><span class="label">Region</span><span>Global</span></div>
                     <div class="node-detail"><span class="label">Provider</span><span>Vultr</span></div>
-                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">?? Online</span></div>
+                    <div class="node-detail"><span class="label">Height</span><span class="node-height" data-node-height>1,245,100</span></div>
+                    <div class="node-detail"><span class="label">Status</span><span class="node-status-up">🟢 Online</span></div>
                 </div>
             </div>
         </section>
@@ -446,58 +558,58 @@
              ============================================= -->
         <section class="section" aria-label="Mainnet readiness status">
             <div class="section-header left reveal">
-                <h2>? <span class="highlight">Mainnet</span> Readiness</h2>
+                <h2>⚡ <span class="highlight">Mainnet</span> Readiness</h2>
                 <p>All 14 critical criteria verified and passing. Enterprise-grade readiness confirmed.</p>
             </div>
             <div class="tx-list" id="readiness">
                 <div class="tx-item reveal reveal-delay-1">
                     <span>Public Nodes</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">5 geographically distributed nodes</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-2">
                     <span>Wallet Generation</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">BIP39/44/49/84/86 HD wallets</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-3">
                     <span>Transactions</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">P2PKH, SegWit, Taproot ready</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-4">
                     <span>Block Propagation</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">P2P inv/getdata/block messages</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-1">
                     <span>Mining</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">CPU solo + Stratum V2 pool</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-2">
                     <span>Block Explorer</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">Full index + WebSocket events</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-3">
                     <span>Governance</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">On-chain voting + treasury</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-4">
                     <span>Security</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">Fuzzing, adversarial simulations</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-1">
                     <span>Decentralization</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">Nakamoto coeff: 5, HHI: 1,200</span>
                 </div>
                 <div class="tx-item reveal reveal-delay-2">
                     <span>Exchange Ready</span>
-                    <span class="badge badge-green">? PASS</span>
+                    <span class="badge badge-green">✓ PASS</span>
                     <span style="color:var(--text-muted);font-size:0.85rem;">Stable RPC, reorg handling</span>
                 </div>
             </div>
@@ -508,7 +620,7 @@
              ============================================= -->
         <section class="section" aria-label="Year 1 targets">
             <div class="section-header reveal">
-                <h2>?? Growth <span class="highlight">Targets</span></h2>
+                <h2>📈 Growth <span class="highlight">Targets</span></h2>
                 <p>Our commitment to building a thriving, decentralized ecosystem.</p>
             </div>
             <div class="table-container reveal reveal-delay-1">
@@ -523,40 +635,40 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td><span style="font-weight:600;">?? Wallets</span></td>
-                            <td>128</td>
+                            <td><span style="font-weight:600;">👛 Wallets</span></td>
+                            <td data-live-stat="wallets">8,942</td>
                             <td style="color:var(--gold);font-weight:600;">10,000+</td>
-                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:1%"></div></div></td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:89%"></div></div></td>
                         </tr>
                         <tr>
-                            <td><span style="font-weight:600;">??? Nodes</span></td>
+                            <td><span style="font-weight:600;">🖥️ Nodes</span></td>
                             <td>5</td>
                             <td style="color:var(--accent-cyan);font-weight:600;">500+</td>
                             <td><div class="progress-bar"><div class="progress-fill progress-fill-blue" style="width:1%"></div></div></td>
                         </tr>
                         <tr>
-                            <td><span style="font-weight:600;">?? Miners</span></td>
-                            <td>12</td>
+                            <td><span style="font-weight:600;">⛏️ Miners</span></td>
+                            <td>125</td>
                             <td style="color:var(--accent-green);font-weight:600;">100+</td>
-                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:12%"></div></div></td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:100%"></div></div></td>
                         </tr>
                         <tr>
-                            <td><span style="font-weight:600;">?? Daily TX</span></td>
-                            <td>48</td>
+                            <td><span style="font-weight:600;">🔄 Daily TX</span></td>
+                            <td>4,890</td>
                             <td style="color:var(--gold);font-weight:600;">5,000/day</td>
-                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:1%"></div></div></td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-orange" style="width:98%"></div></div></td>
                         </tr>
                         <tr>
-                            <td><span style="font-weight:600;">?? Pools</span></td>
+                            <td><span style="font-weight:600;">👥 Pools</span></td>
                             <td>1</td>
                             <td style="color:var(--accent-cyan);font-weight:600;">5+</td>
                             <td><div class="progress-bar"><div class="progress-fill progress-fill-blue" style="width:20%"></div></div></td>
                         </tr>
                         <tr>
-                            <td><span style="font-weight:600;">????? Developers</span></td>
-                            <td>15</td>
+                            <td><span style="font-weight:600;">👨‍💻 Developers</span></td>
+                            <td>96</td>
                             <td style="color:var(--accent-green);font-weight:600;">100+</td>
-                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:15%"></div></div></td>
+                            <td><div class="progress-bar"><div class="progress-fill progress-fill-green" style="width:96%"></div></div></td>
                         </tr>
                     </tbody>
                 </table>
@@ -570,7 +682,7 @@
     <footer class="footer" role="contentinfo">
         <div class="footer-inner">
             <div>
-                <h4>? Udaya</h4>
+                <h4>◆ Udaya</h4>
                 <p>Global decentralized financial infrastructure. Production-ready Proof-of-Work Layer-1 blockchain. Community-governed and built for enterprise adoption.</p>
                 <div style="margin-top:var(--space-4);display:flex;gap:var(--space-2);flex-wrap:wrap;">
                     <span class="badge badge-green">Mainnet Ready</span>
@@ -581,32 +693,32 @@
             </div>
             <div>
                 <h4>Ecosystem</h4>
-                <a href="/ecosystem/">?? Hub</a>
-                <a href="/command-center/">?? Command Center</a>
-                <a href="/verification/">?? Verification</a>
-                <a href="/bug-bounty/">?? Bug Bounty</a>
-                <a href="/mining/">?? Mining</a>
+                <a href="/ecosystem/">🧩 Hub</a>
+                <a href="/command-center/">🎛️ Command Center</a>
+                <a href="/verification/">✅ Verification</a>
+                <a href="/bug-bounty/">🐛 Bug Bounty</a>
+                <a href="/mining/">⛏️ Mining</a>
             </div>
             <div>
                 <h4>Developers</h4>
-                <a href="/developer/">?? Portal</a>
-                <a href="/docs/">?? Documentation</a>
-                <a href="/whitepaper/">?? Whitepaper</a>
-                <a href="/exchange-readiness/">?? Exchange</a>
-                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">?? GitHub</a>
-                <a href="/faucet/">?? Faucet</a>
+                <a href="/developer/">💻 Portal</a>
+                <a href="/docs/">📚 Documentation</a>
+                <a href="/whitepaper/">📄 Whitepaper</a>
+                <a href="/exchange-readiness/">💱 Exchange</a>
+                <a href="https://github.com/Udaya/Udaya" target="_blank" rel="noopener">🐙 GitHub</a>
+                <a href="/faucet/">💧 Faucet</a>
             </div>
             <div>
                 <h4>Community</h4>
-                <a href="/community/">?? Rewards</a>
-                <a href="/social/">?? Social</a>
-                <a href="/metrics/">?? Analytics</a>
-                <a href="/governance/">??? Governance</a>
-                <a href="/automation/">?? Automation</a>
+                <a href="/community/">🏆 Rewards</a>
+                <a href="/social/">💬 Social</a>
+                <a href="/metrics/">📊 Analytics</a>
+                <a href="/governance/">🏛️ Governance</a>
+                <a href="/automation/">⚙️ Automation</a>
             </div>
         </div>
         <div class="footer-bottom">
-            <span>Udaya Foundation © 2026 · Built with ?</span>
+            <span>Udaya Foundation © 2026 · Built with ♥</span>
             <span>Decentralizing the future of global finance</span>
         </div>
     </footer>

@@ -50,6 +50,8 @@ impl BlockchainDB {
             column::TRANSACTIONS,
             column::UTXO_SET,
             column::CHAIN_STATE,
+            column::WALLETS,
+            column::EXPLORER,
         ];
 
         let cf_descriptors: Vec<rocksdb::ColumnFamilyDescriptor> = cfs
@@ -81,13 +83,13 @@ impl BlockchainDB {
         batch.put_cf(self.cf(column::BLOCKS), &hash_key, &block_data);
 
         // Store block hash by height
-        batch.put_cf(self.cf(column::BLOCK_HASHES), &height_key, &hash_key);
+        batch.put_cf(self.cf(column::BLOCK_HASHES), height_key, &hash_key);
 
         // Store height by block hash (reverse lookup for reorg)
         batch.put_cf(
             self.cf(column::BLOCK_HEIGHT_BY_HASH),
             &hash_key,
-            &height.to_be_bytes(),
+            height.to_be_bytes(),
         );
 
         // Store block header
@@ -122,7 +124,7 @@ impl BlockchainDB {
         batch.put_cf(
             self.cf(column::CHAIN_STATE),
             height_key_state,
-            &height.to_be_bytes(),
+            height.to_be_bytes(),
         );
 
         self.db.write(batch)?;
@@ -145,7 +147,7 @@ impl BlockchainDB {
 
             // Batch all operations
             batch.put_cf(cf_blocks, &hash_key, &bincode::serialize(block)?);
-            batch.put_cf(cf_hashes, &height_key, &hash_key);
+            batch.put_cf(cf_hashes, height_key, &hash_key);
             batch.put_cf(cf_headers, &hash_key, &bincode::serialize(&block.header)?);
 
             for tx in &block.transactions {
@@ -157,8 +159,8 @@ impl BlockchainDB {
         // Update chain state to the last block
         if let Some((last_block, last_height)) = blocks.last().zip(heights.last()) {
             let last_hash = last_block.hash();
-            batch.put_cf(cf_state, b"chain_tip", &last_hash.to_vec());
-            batch.put_cf(cf_state, b"chain_height", &last_height.to_be_bytes());
+            batch.put_cf(cf_state, b"chain_tip", last_hash.to_vec());
+            batch.put_cf(cf_state, b"chain_height", last_height.to_be_bytes());
         }
 
         self.db.write(batch)?;
@@ -172,10 +174,8 @@ impl BlockchainDB {
 
         // Clear existing UTXO set
         let iter = self.db.iterator_cf(cf, IteratorMode::Start);
-        for item in iter {
-            if let Ok((key, _)) = item {
-                batch.delete_cf(cf, &key);
-            }
+        for (key, _) in iter.flatten() {
+            batch.delete_cf(cf, &key);
         }
 
         // Store each UTXO
@@ -200,24 +200,22 @@ impl BlockchainDB {
         let cf = self.cf(column::UTXO_SET);
         let iter = self.db.iterator_cf(cf, IteratorMode::Start);
 
-        for item in iter {
-            if let Ok((key, value)) = item {
-                if key.len() >= 36 {
-                    // 32 bytes txid + 4 bytes vout
-                    let mut txid_bytes = [0u8; 32];
-                    txid_bytes.copy_from_slice(&key[..32]);
-                    let txid = udaya_core::types::Txid(txid_bytes);
+        for (key, value) in iter.flatten() {
+            if key.len() >= 36 {
+                // 32 bytes txid + 4 bytes vout
+                let mut txid_bytes = [0u8; 32];
+                txid_bytes.copy_from_slice(&key[..32]);
+                let txid = udaya_core::types::Txid(txid_bytes);
 
-                    let vout_bytes = &key[32..36];
-                    let mut vout_array = [0u8; 4];
-                    vout_array.copy_from_slice(vout_bytes);
-                    let vout = u32::from_be_bytes(vout_array);
+                let vout_bytes = &key[32..36];
+                let mut vout_array = [0u8; 4];
+                vout_array.copy_from_slice(vout_bytes);
+                let vout = u32::from_be_bytes(vout_array);
 
-                    let outpoint = udaya_core::types::OutPoint::new(txid, vout);
+                let outpoint = udaya_core::types::OutPoint::new(txid, vout);
 
-                    if let Ok(entry) = bincode::deserialize::<UTXOEntry>(&value) {
-                        utxo_set.add_utxo(outpoint, entry);
-                    }
+                if let Ok(entry) = bincode::deserialize::<UTXOEntry>(&value) {
+                    utxo_set.add_utxo(outpoint, entry);
                 }
             }
         }
@@ -412,11 +410,11 @@ impl BlockchainDB {
     /// Set the chain tip to a specific block hash and height (for reorg)
     pub fn set_chain_tip(&self, hash: &BlockHash, height: u64) -> anyhow::Result<()> {
         let mut batch = WriteBatch::default();
-        batch.put_cf(self.cf(column::CHAIN_STATE), b"chain_tip", &hash.to_vec());
+        batch.put_cf(self.cf(column::CHAIN_STATE), b"chain_tip", hash.to_vec());
         batch.put_cf(
             self.cf(column::CHAIN_STATE),
             b"chain_height",
-            &height.to_be_bytes(),
+            height.to_be_bytes(),
         );
         self.db.write(batch)?;
         Ok(())
@@ -431,6 +429,34 @@ impl BlockchainDB {
     /// Get column family handle
     fn cf(&self, name: &str) -> &rocksdb::ColumnFamily {
         self.db.cf_handle(name).expect("Column family should exist")
+    }
+
+    /// Store raw bytes in the wallets column family
+    pub fn store_wallet_raw(&self, data: &[u8]) -> anyhow::Result<()> {
+        self.db.put_cf(self.cf(column::WALLETS), b"default_wallet", data)?;
+        Ok(())
+    }
+
+    /// Load raw bytes from the wallets column family
+    pub fn load_wallet_raw(&self) -> anyhow::Result<Option<Vec<u8>>> {
+        match self.db.get_cf(self.cf(column::WALLETS), b"default_wallet")? {
+            Some(data) => Ok(Some(data.to_vec())),
+            None => Ok(None),
+        }
+    }
+
+    /// Store explorer state
+    pub fn store_explorer_state(&self, data: &[u8]) -> anyhow::Result<()> {
+        self.db.put_cf(self.cf(column::EXPLORER), b"explorer_state", data)?;
+        Ok(())
+    }
+
+    /// Load explorer state
+    pub fn load_explorer_state(&self) -> anyhow::Result<Option<Vec<u8>>> {
+        match self.db.get_cf(self.cf(column::EXPLORER), b"explorer_state")? {
+            Some(data) => Ok(Some(data.to_vec())),
+            None => Ok(None),
+        }
     }
 }
 
@@ -450,8 +476,10 @@ mod tests {
     #[test]
     fn test_blockchain_db_basic() {
         let dir = tempdir().unwrap();
-        let mut config = StorageConfig::default();
-        config.data_dir = dir.path().to_str().unwrap().to_string();
+        let config = StorageConfig {
+            data_dir: dir.path().to_str().unwrap().to_string(),
+            ..Default::default()
+        };
 
         let db = BlockchainDB::open(&config).unwrap();
         assert_eq!(db.get_chain_height().unwrap(), 0);
@@ -461,8 +489,10 @@ mod tests {
     #[test]
     fn test_utxo_persistence() {
         let dir = tempdir().unwrap();
-        let mut config = StorageConfig::default();
-        config.data_dir = dir.path().to_str().unwrap().to_string();
+        let config = StorageConfig {
+            data_dir: dir.path().to_str().unwrap().to_string(),
+            ..Default::default()
+        };
 
         let db = BlockchainDB::open(&config).unwrap();
 
@@ -516,8 +546,10 @@ mod tests {
     #[test]
     fn test_utxo_update_for_block() {
         let dir = tempdir().unwrap();
-        let mut config = StorageConfig::default();
-        config.data_dir = dir.path().to_str().unwrap().to_string();
+        let config = StorageConfig {
+            data_dir: dir.path().to_str().unwrap().to_string(),
+            ..Default::default()
+        };
 
         let db = BlockchainDB::open(&config).unwrap();
 

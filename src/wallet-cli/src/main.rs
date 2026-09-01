@@ -81,10 +81,10 @@ async fn main() -> anyhow::Result<()> {
             println!("╚══════════════════════════════════════════════════╝");
             println!("Name: {}", wallet_name);
             println!("Network: {}", cli.network);
-            println!("");
+            println!();
             println!("⚠️  IMPORTANT: Save your recovery phrase!");
             println!("⚠️  This is the ONLY way to recover your wallet.");
-            println!("");
+            println!();
             println!("Recovery Phrase ({} words):", mnemonic.len());
 
             for (i, word) in mnemonic.iter().enumerate() {
@@ -94,9 +94,9 @@ async fn main() -> anyhow::Result<()> {
                 }
             }
             println!();
-            println!("");
+            println!();
             println!("First Address: {}", address);
-            println!("");
+            println!();
             println!(
                 "To save this wallet, use: udaya-wallet --wallet-file {} export-seed",
                 cli.wallet_file
@@ -104,7 +104,7 @@ async fn main() -> anyhow::Result<()> {
         }
 
         WalletCommands::NewAddress => {
-            let (mnemonic, address) = wallet.generate_seed();
+            let (_mnemonic, address) = wallet.generate_seed();
             println!("New address generated:");
             println!("  Address: {}", address);
         }
@@ -199,10 +199,10 @@ async fn main() -> anyhow::Result<()> {
             println!("╔════════════════════════════════════╗");
             println!("║        Wallet Recovery Phrase       ║");
             println!("╚════════════════════════════════════╝");
-            println!("");
+            println!();
             println!("⚠️  KEEP THIS PHRASE SECURE!");
             println!("⚠️  Anyone with this phrase can access your funds.");
-            println!("");
+            println!();
             println!("Recovery Phrase:");
             for (i, word) in mnemonic.iter().enumerate() {
                 print!("{:>2}. {:<12}", i + 1, word);

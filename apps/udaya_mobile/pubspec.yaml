@@ -1,0 +1,86 @@
+name: udaya_mobile
+description: Udaya - Native Layer-1 Blockchain Mobile Client
+publish_to: 'none'
+version: 1.0.0-alpha.1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: ">=3.18.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.0
+
+  # Navigation
+  go_router: ^14.0.0
+
+  # Immutable models & JSON
+  freezed_annotation: ^2.4.0
+  json_annotation: ^4.9.0
+
+  # Secure Storage
+  flutter_secure_storage: ^9.2.0
+  local_auth: ^2.3.0
+  ffi: ^2.1.0
+
+  # QR Code
+  qr_flutter: ^4.1.0
+  mobile_scanner: ^4.0.0
+
+  # Cryptography
+  crypto: ^3.0.0
+  cryptography: ^2.7.0
+  bech32: ^0.2.2
+  convert: ^3.1.0
+
+  # Utils
+  intl: ^0.20.2
+  uuid: ^4.4.0
+  shared_preferences: ^2.2.0
+  path_provider: ^2.1.0
+  permission_handler: ^11.3.0
+  connectivity_plus: ^6.0.0
+  battery_plus: ^6.0.0
+  device_info_plus: ^10.0.0
+  url_launcher: ^6.3.0
+  http: ^1.2.0
+
+  # UI
+  flutter_svg: ^2.0.9
+  google_fonts: ^6.2.0
+  shimmer: ^3.0.0
+  fl_chart: ^0.69.0
+  share_plus: 12.0.2
+
+  # Crash reporting & analytics
+  firebase_core: ^3.0.0
+  firebase_crashlytics: ^4.0.0
+  firebase_analytics: ^11.0.0
+  firebase_messaging: ^15.0.0
+
+  # Notifications
+  flutter_local_notifications: ^18.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.4.0
+  freezed: ^2.5.0
+  json_serializable: ^6.9.0
+
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/

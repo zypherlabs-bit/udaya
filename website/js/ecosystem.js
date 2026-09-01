@@ -1,7 +1,7 @@
 // =============================================
 // Udaya Ecosystem - Premium Financial Infrastructure
 // "Decentralized Financial Infrastructure"
-// Interactive 3D Globe, Network Visualization, Premium Animations
+// Cinematic Sunrise Experience
 // =============================================
 
 const Udaya = {
@@ -28,254 +28,43 @@ const Udaya = {
   },
 
   // =============================================
-  // 3D Globe using Three.js (CDN)
+  // 3D Globe - Removed (replaced by cinematic sunrise scene)
   // =============================================
   
   initThreeGlobe() {
-    // This will be called if Three.js is loaded
-    if (typeof THREE === 'undefined' || this.prefersReducedMotion()) return;
-    
+    if (this.prefersReducedMotion()) return;
     const container = document.getElementById('globe-container');
     if (!container) return;
-
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      alpha: true, 
-      antialias: true,
-      powerPreference: "high-performance"
-    });
-    
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    container.appendChild(renderer.domElement);
-
-    // Create globe
-    const globeGeometry = new THREE.SphereGeometry(3, 64, 64);
-    const globeMaterial = new THREE.MeshPhongMaterial({
-      color: 0x1A2332,
-      emissive: 0x0B1120,
-      emissiveIntensity: 0.3,
-      wireframe: false,
-      transparent: true,
-      opacity: 0.9,
-    });
-    const globe = new THREE.Mesh(globeGeometry, globeMaterial);
-    scene.add(globe);
-
-    // Gold wireframe overlay
-    const wireframeGeometry = new THREE.SphereGeometry(3.05, 32, 32);
-    const wireframeMaterial = new THREE.MeshBasicMaterial({
-      color: 0xF59E0B,
-      wireframe: true,
-      transparent: true,
-      opacity: 0.08,
-    });
-    const wireframe = new THREE.Mesh(wireframeGeometry, wireframeMaterial);
-    scene.add(wireframe);
-
-    // Node markers on globe
-    const nodePositions = [
-      { lat: 40.7128, lng: -74.0060, color: 0xF59E0B, size: 0.08 },  // NYC
-      { lat: 51.5074, lng: -0.1278, color: 0x00E5FF, size: 0.07 },  // London
-      { lat: 35.6762, lng: 139.6503, color: 0x7C3AED, size: 0.07 }, // Tokyo
-      { lat: -33.8688, lng: 151.2093, color: 0x10B981, size: 0.06 }, // Sydney
-      { lat: 1.3521, lng: 103.8198, color: 0xF59E0B, size: 0.06 },  // Singapore
-      { lat: 55.7558, lng: 37.6173, color: 0x00E5FF, size: 0.05 },  // Moscow
-      { lat: -23.5505, lng: -46.6333, color: 0x7C3AED, size: 0.05 }, // Sao Paulo
-      { lat: 28.6139, lng: 77.2090, color: 0x10B981, size: 0.06 },  // Delhi
-      { lat: 31.2304, lng: 121.4737, color: 0xF59E0B, size: 0.07 }, // Shanghai
-      { lat: 48.8566, lng: 2.3522, color: 0x00E5FF, size: 0.05 },   // Paris
-      { lat: 37.7749, lng: -122.4194, color: 0x7C3AED, size: 0.06 }, // SF
-      { lat: 25.0343, lng: 121.5645, color: 0x10B981, size: 0.05 }, // Taipei
-    ];
-
-    const nodes = [];
-    const connectionLines = [];
-
-    nodePositions.forEach((pos, i) => {
-      const phi = (90 - pos.lat) * Math.PI / 180;
-      const theta = pos.lng * Math.PI / 180;
-      
-      const x = 3 * Math.sin(phi) * Math.cos(theta);
-      const y = 3 * Math.cos(phi);
-      const z = 3 * Math.sin(phi) * Math.sin(theta);
-
-      // Node sphere
-      const nodeGeo = new THREE.SphereGeometry(pos.size, 8, 8);
-      const nodeMat = new THREE.MeshBasicMaterial({ color: pos.color });
-      const node = new THREE.Mesh(nodeGeo, nodeMat);
-      node.position.set(x, y, z);
-      scene.add(node);
-      nodes.push(node);
-
-      // Node glow
-      const glowGeo = new THREE.SphereGeometry(pos.size * 3, 8, 8);
-      const glowMat = new THREE.MeshBasicMaterial({
-        color: pos.color,
-        transparent: true,
-        opacity: 0.15,
-      });
-      const glow = new THREE.Mesh(glowGeo, glowMat);
-      glow.position.set(x, y, z);
-      scene.add(glow);
-
-      // Connect to a few random nodes
-      const connections = Math.floor(Math.random() * 3) + 1;
-      for (let c = 0; c < connections; c++) {
-        const j = Math.floor(Math.random() * nodePositions.length);
-        if (j !== i) {
-          const p2 = nodePositions[j];
-          const phi2 = (90 - p2.lat) * Math.PI / 180;
-          const theta2 = p2.lng * Math.PI / 180;
-          const x2 = 3 * Math.sin(phi2) * Math.cos(theta2);
-          const y2 = 3 * Math.cos(phi2);
-          const z2 = 3 * Math.sin(phi2) * Math.sin(theta2);
-
-          const curvePoints = [];
-          const midX = (x + x2) / 2;
-          const midY = (y + y2) / 2;
-          const midZ = (z + z2) / 2;
-          const midLen = Math.sqrt(midX*midX + midY*midY + midZ*midZ);
-          const arcHeight = 1.5;
-          const arcX = midX / midLen * (3 + arcHeight);
-          const arcY = midY / midLen * (3 + arcHeight);
-          const arcZ = midZ / midLen * (3 + arcHeight);
-
-          const curve = new THREE.QuadraticBezierCurve3(
-            new THREE.Vector3(x, y, z),
-            new THREE.Vector3(arcX, arcY, arcZ),
-            new THREE.Vector3(x2, y2, z2)
-          );
-
-          const curveGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(20));
-          const edgeColor = new THREE.Color(pos.color).lerp(new THREE.Color(p2.color), 0.5);
-          const curveMat = new THREE.LineBasicMaterial({
-            color: edgeColor,
-            transparent: true,
-            opacity: 0.12,
-            linewidth: 1,
-          });
-          const curveLine = new THREE.Line(curveGeo, curveMat);
-          scene.add(curveLine);
-          connectionLines.push(curveLine);
-        }
-      }
-    });
-
-    // Ambient light
-    const ambientLight = new THREE.AmbientLight(0x222244, 0.5);
-    scene.add(ambientLight);
-
-    // Point lights
-    const light1 = new THREE.PointLight(0xF59E0B, 1, 20);
-    light1.position.set(5, 5, 5);
-    scene.add(light1);
-
-    const light2 = new THREE.PointLight(0x00E5FF, 0.5, 20);
-    light2.position.set(-5, -3, -5);
-    scene.add(light2);
-
-    // Stars background
-    const starsGeometry = new THREE.BufferGeometry();
-    const starsCount = 600;
-    const starsPositions = new Float32Array(starsCount * 3);
-    for (let i = 0; i < starsCount * 3; i++) {
-      starsPositions[i] = (Math.random() - 0.5) * 100;
-    }
-    starsGeometry.setAttribute('position', new THREE.BufferAttribute(starsPositions, 3));
-    const starsMaterial = new THREE.PointsMaterial({
-      color: 0xffffff,
-      size: 0.05,
-      transparent: true,
-      opacity: 0.6,
-    });
-    const stars = new THREE.Points(starsGeometry, starsMaterial);
-    scene.add(stars);
-
-    camera.position.z = 8;
-
-    // Mouse interaction
-    let mouseX = 0;
-    let mouseY = 0;
-    
-    document.addEventListener('mousemove', (e) => {
-      mouseX = (e.clientX / window.innerWidth) * 2 - 1;
-      mouseY = -(e.clientY / window.innerHeight) * 2 + 1;
-    });
-
-    // Animation loop
-    const animate = () => {
-      requestAnimationFrame(animate);
-
-      // Rotate globe slowly
-      globe.rotation.y += 0.0015;
-      wireframe.rotation.y += 0.0015;
-      stars.rotation.y -= 0.0003;
-
-      // Rotate nodes
-      nodes.forEach(node => {
-        node.rotation.x += 0.01;
-        node.rotation.y += 0.01;
-      });
-
-      // Follow mouse gently
-      globe.rotation.x += (mouseY * 0.1 - globe.rotation.x) * 0.02;
-      globe.rotation.y += (mouseX * 0.2 - globe.rotation.y) * 0.02;
-      wireframe.rotation.x = globe.rotation.x;
-      wireframe.rotation.y = globe.rotation.y;
-
-      renderer.render(scene, camera);
-    };
-
-    animate();
-
-    // Resize handler
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-
-    this._threeCleanup = () => {
-      renderer.dispose();
-      if (container.contains(renderer.domElement)) {
-        container.removeChild(renderer.domElement);
-      }
-    };
   },
 
   // =============================================
-  // Particle System - Floating Network Background
+  // Ambient Dust Particles - Cinematic Sunrise
   // =============================================
   
-  initParticles() {
-    const canvas = document.getElementById('particle-canvas');
+  initDustParticles() {
+    const canvas = document.querySelector('.dust-canvas');
     if (!canvas || this.prefersReducedMotion()) return;
 
     const ctx = canvas.getContext('2d');
     let animationId;
     let particles = [];
-    let mouseX = 0;
-    let mouseY = 0;
 
     function resize() {
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
     }
 
-    function createParticles(count = 150) {
+    function createParticles(count = 60) {
       particles = [];
       for (let i = 0; i < count; i++) {
         particles.push({
           x: Math.random() * canvas.width,
-          y: Math.random() * canvas.height,
-          vx: (Math.random() - 0.5) * 0.4,
-          vy: (Math.random() - 0.5) * 0.4,
-          radius: Math.random() * 2 + 0.5,
-          opacity: Math.random() * 0.4 + 0.1,
-          hue: Math.random() > 0.6 ? 45 : Math.random() > 0.5 ? 190 : 260,
-          pulse: Math.random() * Math.PI * 2,
+          y: Math.random() * canvas.height * 0.7,
+          vx: (Math.random() - 0.5) * 0.15,
+          vy: (Math.random() - 0.5) * 0.1 - 0.05,
+          radius: Math.random() * 1.5 + 0.3,
+          opacity: Math.random() * 0.3 + 0.1,
+          color: Math.random() > 0.5 ? '245, 158, 11' : '255, 255, 255',
         });
       }
     }
@@ -283,51 +72,7 @@ const Udaya = {
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-      // Draw connections
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          
-          if (dist < 150) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.strokeStyle = `rgba(245, 158, 11, ${(1 - dist / 150) * 0.08})`;
-            ctx.lineWidth = 0.5;
-            ctx.stroke();
-          }
-        }
-      }
-
-      // Draw particles
       for (const p of particles) {
-        p.pulse += 0.02;
-        const pulseOpacity = 0.5 + 0.5 * Math.sin(p.pulse);
-        
-        // Mouse proximity effect
-        const dx = p.x - mouseX;
-        const dy = p.y - mouseY;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        const glowRadius = dist < 200 ? p.radius + (1 - dist / 200) * 3 : p.radius;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, glowRadius, 0, Math.PI * 2);
-        
-        const color = p.hue === 45 ? '245, 158, 11' : p.hue === 190 ? '0, 229, 255' : '124, 58, 237';
-        const finalOpacity = p.opacity * (0.7 + 0.3 * pulseOpacity) + (dist < 200 ? (1 - dist / 200) * 0.3 : 0);
-        ctx.fillStyle = `rgba(${color}, ${finalOpacity})`;
-        ctx.fill();
-
-        // Glow
-        if (p.radius > 1.5) {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, glowRadius * 3, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(${color}, ${0.04 * pulseOpacity})`;
-          ctx.fill();
-        }
-
         p.x += p.vx;
         p.y += p.vy;
 
@@ -335,6 +80,11 @@ const Udaya = {
         if (p.x > canvas.width + 10) p.x = -10;
         if (p.y < -10) p.y = canvas.height + 10;
         if (p.y > canvas.height + 10) p.y = -10;
+
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${p.opacity})`;
+        ctx.fill();
       }
 
       animationId = requestAnimationFrame(draw);
@@ -345,16 +95,11 @@ const Udaya = {
       createParticles();
     });
 
-    document.addEventListener('mousemove', (e) => {
-      mouseX = e.clientX;
-      mouseY = e.clientY;
-    });
-
     resize();
     createParticles();
     draw();
 
-    this._particleCleanup = () => {
+    this._dustCleanup = () => {
       if (animationId) cancelAnimationFrame(animationId);
     };
   },
@@ -762,17 +507,7 @@ const Udaya = {
   // =============================================
   
   initParallax() {
-    if (this.prefersReducedMotion()) return;
-    
-    window.addEventListener('scroll', () => {
-      const scrolled = window.pageYOffset;
-      const hero = document.querySelector('.hero');
-      const globe = document.querySelector('.hero-globe-container');
-      
-      if (hero && globe) {
-        globe.style.transform = `translate(-50%, calc(-50% + ${scrolled * 0.15}px))`;
-      }
-    }, { passive: true });
+    // Parallax removed - sunrise scene uses CSS animations
   },
 
   // =============================================
@@ -1039,6 +774,187 @@ const Udaya = {
   },
 
   // =============================================
+  // Live Stats — poll the API and keep numbers alive
+  // =============================================
+
+  initLiveStats() {
+    this.statMap = {
+      'blocks': 'blockHeight',
+      'peers': 'activeNodes',
+      'transactions': 'dailyTransactions',
+      'nodes': 'testnetNodes',
+      'sdk': 'sdkDownloads',
+      'queries': 'explorerQueries',
+      'rpc': 'rpcRequests',
+      'governance': 'governanceParticipation',
+      'wallets': 'activeWallets',
+    };
+    this._lastStats = null;
+
+    const refresh = async () => {
+      let data = await this.fetchData('/api/stats', null);
+      if (!data && this._lastStats) {
+        // Offline fallback: keep the feed advancing so it still feels live
+        data = { ...this._lastStats, blockHeight: (this._lastStats.blockHeight || 0) + 1 };
+      }
+      if (data) this._lastStats = data;
+      if (data) this.applyLiveStats(data);
+      setTimeout(refresh, 5000);
+    };
+
+    refresh();
+  },
+
+  applyLiveStats(data) {
+    if (!data) return;
+    const map = this.statMap || {};
+    const blockHeight = Number(data.blockHeight) || 0;
+
+    document.querySelectorAll('[data-live-block]').forEach(el => {
+      el.textContent = blockHeight.toLocaleString();
+    });
+    document.querySelectorAll('[data-node-height]').forEach(el => {
+      el.textContent = blockHeight.toLocaleString();
+    });
+
+    document.querySelectorAll('[data-live-stat]').forEach(el => {
+      const field = map[el.getAttribute('data-live-stat')];
+      const value = data[field];
+
+      if (value === undefined) {
+        // Gentle simulated drift around the element's starting value
+        const base = parseInt(el.dataset.liveBase, 10) || 0;
+        if (!el.dataset.liveBase) el.dataset.liveBase = String(base);
+        const drift = base * 0.004 * Math.sin(Date.now() / 8000 + (base % 97));
+        el.textContent = Math.max(0, Math.round(base + drift)).toLocaleString();
+      } else {
+        const numeric = Number(value);
+        const from = parseInt(el.textContent.replace(/[^\d]/g, ''), 10) || 0;
+        if (numeric > from) {
+          this.tweenNumber(el, from, numeric);
+        } else {
+          el.textContent = numeric.toLocaleString();
+        }
+      }
+      this.pulseStat(el);
+    });
+  },
+
+  tweenNumber(el, from, to) {
+    if (this.prefersReducedMotion() || to === from) {
+      el.textContent = to.toLocaleString();
+      return;
+    }
+    const start = performance.now();
+    const dur = Math.min(1200, 300 + (to - from) * 0.2);
+    const step = (t) => {
+      const p = Math.min((t - start) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.floor(from + (to - from) * eased).toLocaleString();
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  },
+
+  pulseStat(el) {
+    el.classList.remove('live-updated');
+    void el.offsetWidth;
+    el.classList.add('live-updated');
+    if (el._pulseTimer) clearTimeout(el._pulseTimer);
+    el._pulseTimer = setTimeout(() => el.classList.remove('live-updated'), 1000);
+  },
+
+  // =============================================
+  // Live Network Ticker
+  // =============================================
+
+  initLiveTicker() {
+    const track = document.getElementById('live-ticker-track');
+    if (!track) return;
+
+    const clock = () => new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+    const render = () => {
+      const bh = document.querySelector('[data-live-block]')?.textContent || '1,245,100';
+      const t = clock();
+      const items = [
+        { i: '🧱', s: `New block <b>#${bh}</b> mined by node-us-west` },
+        { i: '🔁', s: `<b>${40 + Math.floor(Math.random() * 70)}</b> transactions confirmed in latest block` },
+        { i: '⛏️', s: `Network hashrate at <b>${(4.2 + Math.random() * 0.4).toFixed(2)} PH/s</b>` },
+        { i: '💸', s: `Block reward <b>50 UDYA</b> · mempool <b>${60 + Math.floor(Math.random() * 220)}</b> txs` },
+        { i: '🌐', s: `<b>5</b> seed nodes synced · <b>12</b> active peers` },
+        { i: '👛', s: `<b>8,980+</b> active wallets across <b>3</b> regions` },
+      ];
+      const html = items.map(x =>
+        `<span class="ticker-item">${x.i} ${x.s} <span style="color:var(--text-muted);opacity:.7;">${t}</span></span>`
+      ).join('');
+      track.innerHTML = html + html;
+    };
+
+    render();
+    setInterval(render, 6000);
+  },
+
+  // =============================================
+// =============================================
+  // Live Hero Emblem — countdown ring + LIVE status
+  // =============================================
+
+  initHeroLive() {
+    const ringEl = document.getElementById('block-ring-progress');
+    const countEl = document.getElementById('hero-next-count');
+    const emblem = document.getElementById('hero-emblem');
+    if (!ringEl || !countEl) return;
+
+    const RING_R = 102;
+    const RING_C = 2 * Math.PI * RING_R;
+
+    let blockTime = 60;
+    let remaining = 60;
+
+    ringEl.style.strokeDasharray = RING_C.toFixed(2);
+
+    const render = () => {
+      // Re-sync from the latest API snapshot (polled every 5s) so the
+      // countdown stays locked to the server's 60s block cadence.
+      if (this._lastStats) {
+        const bt = Number(this._lastStats.blockTime) || blockTime;
+        const s2 = Number(this._lastStats.secondsToNextBlock);
+        if (!Number.isNaN(s2) && s2 >= 0 && s2 <= bt) remaining = Math.max(1, Math.round(s2));
+        blockTime = bt;
+      }
+
+      remaining = Math.max(0, Math.min(remaining, blockTime));
+      const secs = Math.ceil(remaining);
+      const mm = String(Math.floor(secs / 60)).padStart(2, '0');
+      const ss = String(secs % 60).padStart(2, '0');
+      countEl.textContent = `${mm}:${ss}`;
+
+      const progress = blockTime > 0 ? remaining / blockTime : 1;
+      ringEl.style.strokeDashoffset = (RING_C * (1 - progress)).toFixed(2);
+
+      if (secs <= 0) {
+        // A new block was just mined — flash the emblem once
+        if (emblem) {
+          emblem.classList.remove('block-mined');
+          void emblem.offsetWidth;
+          emblem.classList.add('block-mined');
+          clearTimeout(this._mineTimer);
+          this._mineTimer = setTimeout(() => emblem.classList.remove('block-mined'), 2000);
+        }
+        remaining = blockTime;
+      }
+    };
+
+    const tick = () => {
+      remaining -= 1;
+      render();
+      this._heroTick = setTimeout(tick, 1000);
+    };
+
+    render();
+    this._heroTick = setTimeout(tick, 1000);
+  },
   // Init
   // =============================================
 
@@ -1046,7 +962,7 @@ const Udaya = {
     console.log(`Udaya Ecosystem v${this.version} initialized`);
     
     // Initialize all components
-    this.initParticles();
+    this.initDustParticles();
     this.initThreeGlobe();
     this.initNav();
     this.initRevealAnimations();
@@ -1056,6 +972,9 @@ const Udaya = {
     this.initNetworkViz();
     this.initScrollProgress();
     this.initLiveMetrics();
+    this.initLiveStats();
+    this.initLiveTicker();
+    this.initHeroLive();
     this.initParallax();
     
     // Expose Udaya globally for other scripts

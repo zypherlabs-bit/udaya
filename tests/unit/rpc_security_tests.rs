@@ -2,7 +2,6 @@ use dashmap::DashMap;
 use parking_lot::Mutex;
 use std::net::IpAddr;
 use std::sync::atomic::{AtomicU64, Ordering};
-use std::sync::Arc;
 use std::time::{Duration, Instant};
 use udaya_core::config::UdayaConfig;
 
@@ -241,7 +240,7 @@ fn test_request_size_under_limit() {
 
 #[test]
 fn test_request_size_over_limit() {
-    assert!(!check_request_size((11 * 1024 * 1024), 10));
+    assert!(!check_request_size(11 * 1024 * 1024, 10));
 }
 
 #[test]

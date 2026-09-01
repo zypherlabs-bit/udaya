@@ -511,7 +511,7 @@ impl TreasuryWallet {
     }
 
     /// Get current balance for this treasury wallet
-    pub fn get_balance_UDYA(&self) -> f64 {
+    pub fn get_balance_udya(&self) -> f64 {
         self.config.balance_sats as f64 / SATS_PER_COIN as f64
     }
 
@@ -546,7 +546,7 @@ impl TreasuryWallet {
 
         serde_json::json!({
             "wallet_type": format!("{:?}", self.config.wallet_type),
-            "balance_UDYA": self.get_balance_UDYA(),
+            "balance_udya": self.get_balance_udya(),
             "balance_sats": self.config.balance_sats,
             "allocation_pct": match self.config.wallet_type {
                 TreasuryWalletType::ColdStorage => 95,
@@ -604,6 +604,7 @@ pub struct TreasuryManager {
     pub cold_storage: TreasuryWallet,
     pub operations: TreasuryWallet,
     pub daily: TreasuryWallet,
+    #[allow(dead_code)]
     audit_log: Vec<TreasuryEvent>,
 }
 
@@ -627,10 +628,10 @@ impl TreasuryManager {
     }
 
     /// Get total treasury balance
-    pub fn total_balance_UDYA(&self) -> f64 {
-        self.cold_storage.get_balance_UDYA()
-            + self.operations.get_balance_UDYA()
-            + self.daily.get_balance_UDYA()
+    pub fn total_balance_udya(&self) -> f64 {
+        self.cold_storage.get_balance_udya()
+            + self.operations.get_balance_udya()
+            + self.daily.get_balance_udya()
     }
 
     /// Generate comprehensive treasury report
@@ -639,8 +640,8 @@ impl TreasuryManager {
             "report_type": "founder_treasury_status",
             "version": "1.0.0",
             "total_allocation_UDYA": FOUNDER_ALLOCATION,
-            "total_balance_UDYA": self.total_balance_UDYA(),
-            "total_balance_sats": (self.total_balance_UDYA() * SATS_PER_COIN as f64) as u64,
+            "total_balance_udya": self.total_balance_udya(),
+            "total_balance_sats": (self.total_balance_udya() * SATS_PER_COIN as f64) as u64,
             "wallets": {
                 "cold_storage": self.cold_storage.generate_health_report(),
                 "operations": self.operations.generate_health_report(),
@@ -689,7 +690,7 @@ mod tests {
         assert_eq!(wallet.config.total_signers, 5);
         assert_eq!(wallet.config.time_lock_hours, 48);
         assert_eq!(wallet.config.balance_sats, 475_000 * SATS_PER_COIN);
-        assert!(wallet.get_balance_UDYA() > 0.0);
+        assert!(wallet.get_balance_udya() > 0.0);
     }
 
     #[test]
@@ -769,7 +770,7 @@ mod tests {
         let daily_keys = create_test_keys(2);
 
         let manager = TreasuryManager::create(cold_keys, ops_keys, daily_keys).unwrap();
-        assert!(manager.total_balance_UDYA() > 0.0);
+        assert!(manager.total_balance_udya() > 0.0);
     }
 
     #[test]

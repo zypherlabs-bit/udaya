@@ -1,6 +1,10 @@
 use byteorder::{LittleEndian, ReadBytesExt};
 use dashmap::DashMap;
 use rand::Rng;
+use rustls::client::WebPkiServerVerifier;
+use rustls::pki_types::{CertificateDer, PrivateKeyDer, ServerName};
+use rustls::{ClientConfig, RootCertStore, ServerConfig};
+use rustls_pemfile;
 use sha2::{Digest, Sha256};
 use std::io::{Cursor, Read};
 use std::net::{SocketAddr, ToSocketAddrs};
@@ -9,6 +13,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use tokio::net::{TcpListener, TcpStream};
 use tokio::sync::mpsc;
 use tokio::time::{sleep, Duration};
+use tokio_rustls::{TlsAcceptor, TlsConnector};
 use udaya_core::transaction::Transaction;
 use udaya_core::types::{Block, BlockHash, BlockHeader, InvType, InvVector, MerkleRoot};
 use udaya_core::NETWORK_MAGIC;
@@ -23,6 +28,73 @@ pub const MAGIC_BYTES: [u8; 4] = NETWORK_MAGIC;
 
 /// Maximum size of a network message payload
 pub const MAX_PAYLOAD_SIZE: u32 = 32_000_000;
+
+trait P2pStream: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + Sync + 'static {}
+impl<T: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + Sync + 'static> P2pStream
+    for T
+{
+}
+
+fn load_tls_certificates(cert_path: &str) -> anyhow::Result<Vec<CertificateDer<'static>>> {
+    let cert_data = std::fs::read(cert_path)?;
+    let mut reader = Cursor::new(cert_data);
+    let cert_bytes: Result<Vec<_>, _> = rustls_pemfile::certs(&mut reader).collect();
+    Ok(cert_bytes?)
+}
+
+fn load_tls_private_key(key_path: &str) -> anyhow::Result<PrivateKeyDer<'static>> {
+    let key_data = std::fs::read(key_path)?;
+    let mut reader = Cursor::new(key_data);
+    loop {
+        match rustls_pemfile::read_one(&mut reader)? {
+            Some(rustls_pemfile::Item::Pkcs8Key(key)) => return Ok(key.into()),
+            Some(rustls_pemfile::Item::Sec1Key(key)) => return Ok(key.into()),
+            None => break,
+            _ => continue,
+        }
+    }
+    anyhow::bail!("No private key found in {}", key_path);
+}
+
+fn make_server_config(config: &P2PConfig) -> anyhow::Result<Arc<ServerConfig>> {
+    let cert_chain = load_tls_certificates(
+        config.tls_cert_path.as_deref().unwrap_or("certs/node.crt"),
+    )?;
+    let private_key = load_tls_private_key(
+        config.tls_key_path.as_deref().unwrap_or("certs/node.key"),
+    )?;
+
+    let server_config = ServerConfig::builder()
+        .with_no_client_auth()
+        .with_single_cert(cert_chain, private_key)?;
+
+    Ok(Arc::new(server_config))
+}
+
+fn make_client_config(config: &P2PConfig) -> anyhow::Result<Arc<ClientConfig>> {
+    let mut root_store = RootCertStore::empty();
+
+    if let Some(ca_path) = &config.tls_ca_cert_path {
+        let ca_certs = load_tls_certificates(ca_path)?;
+        for cert in ca_certs {
+            root_store.add(cert)?;
+        }
+    }
+
+    let cert_chain = load_tls_certificates(
+        config.tls_cert_path.as_deref().unwrap_or("certs/node.crt"),
+    )?;
+    let private_key = load_tls_private_key(
+        config.tls_key_path.as_deref().unwrap_or("certs/node.key"),
+    )?;
+
+    let verifier = WebPkiServerVerifier::builder(Arc::new(root_store)).build()?;
+    let client_config = ClientConfig::builder()
+        .with_webpki_verifier(verifier)
+        .with_client_auth_cert(cert_chain, private_key)?;
+
+    Ok(Arc::new(client_config))
+}
 
 /// P2P message header
 #[derive(Debug, Clone)]
@@ -98,7 +170,7 @@ impl Message {
 
 fn double_sha256_first_4(data: &[u8]) -> [u8; 4] {
     let first = Sha256::digest(data);
-    let second = Sha256::digest(&first);
+    let second = Sha256::digest(first);
     let mut result = [0u8; 4];
     result.copy_from_slice(&second[..4]);
     result
@@ -203,6 +275,7 @@ pub struct P2PNetwork {
     pub state: Arc<NetworkState>,
     pub connections: Arc<DashMap<u64, Arc<PeerConnection>>>,
     pending_connections: Arc<DashMap<String, bool>>,
+    #[allow(clippy::type_complexity)]
     message_rx:
         tokio::sync::Mutex<Option<mpsc::UnboundedReceiver<(Arc<PeerConnection>, NetworkMessage)>>>,
     message_tx: mpsc::UnboundedSender<(Arc<PeerConnection>, NetworkMessage)>,
@@ -268,8 +341,8 @@ impl P2PNetwork {
         tokio::spawn(async move {
             loop {
                 match listener.accept().await {
-                    Ok((stream, addr)) => {
-                        if connections.len() >= config.max_peers as usize {
+                    Ok((tcp_stream, addr)) => {
+                        if connections.len() >= config.max_peers {
                             log::warn!(
                                 "Rejecting inbound connection from {}: max peers ({}) reached",
                                 addr,
@@ -283,6 +356,28 @@ impl P2PNetwork {
                         let pending = pending.clone();
                         let tx = tx.clone();
                         let config = config.clone();
+
+                        let stream: Box<dyn P2pStream> = if config.enable_tls {
+                            match make_server_config(&config) {
+                                Ok(server_config) => {
+                                    let acceptor = TlsAcceptor::from(server_config);
+                                    match acceptor.accept(tcp_stream).await {
+                                        Ok(tls_stream) => Box::new(tls_stream),
+                                        Err(e) => {
+                                            log::warn!("TLS handshake failed from {}: {}", addr, e);
+                                            continue;
+                                        }
+                                    }
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to create TLS config: {}", e);
+                                    continue;
+                                }
+                            }
+                        } else {
+                            Box::new(tcp_stream)
+                        };
+
                         tokio::spawn(async move {
                             if let Err(e) = handle_peer_connection(
                                 stream,
@@ -456,15 +551,25 @@ async fn connect_to_peer(
     }
     pending.insert(addr_str.to_string(), true);
     let addr: SocketAddr = addr_str.parse()?;
-    let stream = TcpStream::connect(&addr).await?;
+
+    let stream: Box<dyn P2pStream> = if config.enable_tls {
+        let tcp_stream = TcpStream::connect(&addr).await?;
+        let connector = TlsConnector::from(make_client_config(&config)?);
+        let server_name = ServerName::try_from(addr.ip().to_string())?;
+        Box::new(connector.connect(server_name, tcp_stream).await?)
+    } else {
+        Box::new(TcpStream::connect(&addr).await?)
+    };
+
     log::info!("Connected to peer: {}", addr);
     pending.remove(addr_str);
     handle_peer_connection(stream, addr, state, connections, pending, tx, config, true).await
 }
 
 /// Handle a peer connection
-async fn handle_peer_connection(
-    stream: TcpStream,
+#[allow(clippy::too_many_arguments)]
+async fn handle_peer_connection<S>(
+    stream: S,
     addr: SocketAddr,
     state: Arc<NetworkState>,
     connections: Arc<DashMap<u64, Arc<PeerConnection>>>,
@@ -472,7 +577,10 @@ async fn handle_peer_connection(
     tx: mpsc::UnboundedSender<(Arc<PeerConnection>, NetworkMessage)>,
     config: P2PConfig,
     is_outbound: bool,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<()>
+where
+    S: tokio::io::AsyncRead + tokio::io::AsyncWrite + Unpin + Send + Sync + 'static,
+{
     let (reader, mut writer) = tokio::io::split(stream);
     let (msg_tx, mut msg_rx) = mpsc::channel::<Vec<u8>>(256);
     let peer = Arc::new(PeerConnection::new(addr, is_outbound));
@@ -533,13 +641,16 @@ async fn handle_peer_connection(
 }
 
 /// Read and parse messages from a peer
-async fn read_messages(
-    mut reader: tokio::io::ReadHalf<TcpStream>,
+async fn read_messages<R>(
+    mut reader: tokio::io::ReadHalf<R>,
     peer: Arc<PeerConnection>,
     tx: mpsc::UnboundedSender<(Arc<PeerConnection>, NetworkMessage)>,
     state: Arc<NetworkState>,
     config: P2PConfig,
-) -> anyhow::Result<()> {
+) -> anyhow::Result<()>
+where
+    R: tokio::io::AsyncRead + Unpin + Send + Sync + 'static,
+{
     use tokio::io::AsyncReadExt;
     loop {
         let mut header_buf = [0u8; 24];
@@ -997,7 +1108,7 @@ mod tests {
         // Test that DNS seed resolution handles errors gracefully
         let result = resolve_dns_seed("invalid.example.nonexistent", 9798);
         // This should either succeed with a runtime error or return an empty vec
-        let _ = result;
+        std::mem::drop(result);
     }
 
     #[test]
@@ -1054,8 +1165,10 @@ mod tests {
 
     #[tokio::test]
     async fn test_dns_seed_bootstrap_disabled() {
-        let mut config = P2PConfig::default();
-        config.enable_dns_seed = false;
+        let config = P2PConfig {
+            enable_dns_seed: false,
+            ..Default::default()
+        };
         let state = Arc::new(NetworkState::new(config.clone()));
         let connections = Arc::new(DashMap::new());
         let pending = Arc::new(DashMap::new());

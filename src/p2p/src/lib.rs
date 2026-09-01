@@ -1,5 +1,6 @@
 pub mod discovery;
 pub mod network;
+pub mod tls_utils;
 
 use dashmap::DashMap;
 use parking_lot::RwLock;
@@ -287,7 +288,7 @@ impl NetworkState {
             .filter(|p| p.ban_score < self.config.ban_threshold)
             .collect();
 
-        peers.sort_by(|a, b| b.score.cmp(&a.score));
+        peers.sort_by_key(|b| std::cmp::Reverse(b.score));
         peers.truncate(count);
         peers
     }

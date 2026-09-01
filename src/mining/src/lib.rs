@@ -7,9 +7,7 @@ use udaya_core::consensus::ConsensusEngine;
 use udaya_core::transaction::Transaction;
 use udaya_core::types::*;
 
-/// Udaya Mining Infrastructure
-/// Stratum V2 mining pool protocol, miner telemetry, and dashboards.
-
+/// Udaya Mining Infrastructure - Stratum V2 mining pool protocol, miner telemetry, and dashboards.
 /// Mining pool configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PoolConfig {

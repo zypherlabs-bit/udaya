@@ -1,0 +1,50 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Udaya Node Performance",
+    "tags": ["udaya", "performance"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "refresh": "15s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Block Validation Latency",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(udaya_block_validation_duration_seconds_bucket[5m]))",
+            "legendFormat": "p95"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(udaya_block_validation_duration_seconds_bucket[5m]))",
+            "legendFormat": "p50"
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "title": "RPC Request Duration",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(udaya_rpc_request_duration_seconds_sum[5m]) / rate(udaya_rpc_request_duration_seconds_count[5m])",
+            "legendFormat": "Avg"
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Database Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(udaya_db_operations_total[5m])",
+            "legendFormat": "{{operation}}"
+          }
+        ]
+      }
+    ]
+  },
+  "overwrite": true
+}

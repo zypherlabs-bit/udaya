@@ -8,8 +8,9 @@
 //! - Crash recovery
 //! - Long-running stability
 
+#![allow(unused_imports)]
+
 use num_bigint::BigUint;
-use num_traits::Zero;
 use tempfile::tempdir;
 use udaya_core::{
     consensus::{ConsensusEngine, ConsensusParams},
@@ -26,8 +27,10 @@ use udaya_storage::{BlockchainDB, StorageConfig};
 #[test]
 fn test_restart_recovery_block_persistence() {
     let dir = tempdir().unwrap();
-    let mut config = StorageConfig::default();
-    config.data_dir = dir.path().to_str().unwrap().to_string();
+    let config = StorageConfig {
+        data_dir: dir.path().to_str().unwrap().to_string(),
+        ..Default::default()
+    };
 
     {
         let db = BlockchainDB::open(&config).unwrap();
@@ -35,7 +38,7 @@ fn test_restart_recovery_block_persistence() {
         db.store_block(&genesis, 0).unwrap();
 
         let prev_hash = genesis.hash();
-        let mut header = genesis.header.clone();
+        let mut header = genesis.header;
         header.previous_block_hash = prev_hash;
         header.timestamp += 600;
         header.nonce = 42;
@@ -55,8 +58,10 @@ fn test_restart_recovery_block_persistence() {
 #[test]
 fn test_restart_recovery_utxo_persistence() {
     let dir = tempdir().unwrap();
-    let mut config = StorageConfig::default();
-    config.data_dir = dir.path().to_str().unwrap().to_string();
+    let config = StorageConfig {
+        data_dir: dir.path().to_str().unwrap().to_string(),
+        ..Default::default()
+    };
 
     {
         let db = BlockchainDB::open(&config).unwrap();
@@ -70,15 +75,17 @@ fn test_restart_recovery_utxo_persistence() {
         let db = BlockchainDB::open(&config).unwrap();
         let utxo_set = db.load_utxo_set().unwrap();
         assert_eq!(utxo_set.len(), 1);
-        assert!(utxo_set.len() > 0);
+        assert!(!utxo_set.is_empty());
     }
 }
 
 #[test]
 fn test_restart_recovery_transaction_index() {
     let dir = tempdir().unwrap();
-    let mut config = StorageConfig::default();
-    config.data_dir = dir.path().to_str().unwrap().to_string();
+    let config = StorageConfig {
+        data_dir: dir.path().to_str().unwrap().to_string(),
+        ..Default::default()
+    };
 
     {
         let db = BlockchainDB::open(&config).unwrap();
@@ -147,7 +154,7 @@ fn test_database_consistency_chain_state() {
     assert_eq!(db.get_chain_height().unwrap(), 0);
     assert_eq!(db.get_chain_tip().unwrap(), Some(genesis.hash()));
 
-    let mut header = genesis.header.clone();
+    let mut header = genesis.header;
     header.previous_block_hash = genesis.hash();
     header.nonce = 1;
     let block = Block::new(header, vec![]);
@@ -170,7 +177,7 @@ fn test_database_consistency_utxo_after_blocks() {
     db.update_utxo_set_for_block(&genesis, 0).unwrap();
     let utxo_count_after_genesis = db.load_utxo_set().unwrap().len();
 
-    let mut header = genesis.header.clone();
+    let mut header = genesis.header;
     header.previous_block_hash = genesis.hash();
     header.nonce = 1;
     let coinbase = create_test_coinbase(1);
@@ -201,7 +208,7 @@ fn test_multi_node_block_sync() {
     };
 
     let db1 = BlockchainDB::open(&config1).unwrap();
-    let genesis = udaya_core::consensus::create_genesis_block();
+    let _genesis = udaya_core::consensus::create_genesis_block();
 
     let mut prev_hash = BlockHash::default();
     let mut blocks = Vec::new();
@@ -240,7 +247,7 @@ fn test_block_locator_for_sync() {
     };
 
     let db = BlockchainDB::open(&config).unwrap();
-    let genesis = udaya_core::consensus::create_genesis_block();
+    let _genesis = udaya_core::consensus::create_genesis_block();
 
     let mut prev_hash = BlockHash::default();
     let mut hashes = Vec::new();
@@ -360,7 +367,7 @@ fn test_crash_recovery_incomplete_block() {
         assert!(db.get_block_by_height(0).unwrap().is_some());
 
         let genesis = db.get_block_by_height(0).unwrap().unwrap();
-        let mut header = genesis.header.clone();
+        let mut header = genesis.header;
         header.previous_block_hash = genesis.hash();
         header.nonce = 1;
         let block = Block::new(header, vec![]);
@@ -381,7 +388,7 @@ fn test_crash_recovery_database_integrity() {
         let db = BlockchainDB::open(&config).unwrap();
         for height in 0..10 {
             let genesis = udaya_core::consensus::create_genesis_block();
-            let mut header = genesis.header.clone();
+            let mut header = genesis.header;
             header.nonce = height as u32;
             let block = Block::new(header, vec![]);
             db.store_block(&block, height).unwrap();
@@ -510,6 +517,7 @@ fn test_long_running_validation_consistency() {
 // HELPER FUNCTIONS
 // ============================================================
 
+#[allow(dead_code)]
 fn create_test_header(prev_hash: BlockHash, height: u64) -> udaya_core::types::BlockHeader {
     use udaya_core::consensus::GENESIS_BITS;
     udaya_core::types::BlockHeader {
@@ -522,6 +530,7 @@ fn create_test_header(prev_hash: BlockHash, height: u64) -> udaya_core::types::B
     }
 }
 
+#[allow(dead_code)]
 fn create_test_coinbase(height: u64) -> udaya_core::transaction::Transaction {
     use udaya_core::{
         transaction::Transaction, types::ScriptPubKey, types::TxOut, INITIAL_BLOCK_REWARD,
@@ -536,6 +545,7 @@ fn create_test_coinbase(height: u64) -> udaya_core::transaction::Transaction {
     )
 }
 
+#[allow(dead_code)]
 fn calculate_chain_work(hashes: &[BlockHash]) -> BigUint {
     use num_bigint::BigUint;
     use num_traits::Zero;
@@ -690,7 +700,7 @@ fn test_large_utxo_set_stability() {
             udaya_core::validation::UTXOEntry {
                 value: 1000 + i,
                 script_pubkey: vec![0x76, 0xa9, 0x14],
-                height: i as u64,
+                height: i,
                 is_coinbase: i % 2 == 0,
             },
         );
@@ -718,7 +728,7 @@ fn test_max_size_block_storage() {
         txs.push(tx);
     }
 
-    let mut header = genesis.header.clone();
+    let mut header = genesis.header;
     header.previous_block_hash = genesis.hash();
     header.nonce = 1;
     let block = Block::new(header, txs);

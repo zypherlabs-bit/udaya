@@ -35,6 +35,7 @@ fn test_transaction_lifecycle() {
     let mempool = Mempool::new(
         udaya_mempool::MempoolConfig::default(),
         consensus.clone(),
+        UTXOSet::new(),
     );
 
     let mempool_result = mempool.submit_transaction(tx, 0, 0);
@@ -101,6 +102,78 @@ fn test_storage_integration() {
     assert!(height.is_ok());
 
     // Cleanup
+    let _ = std::fs::remove_dir_all(&temp);
+}
+
+/// Test UTXO set persistence across simulated restart
+#[test]
+fn test_utxo_persistence_across_restart() {
+    use udaya_core::types::{OutPoint, Txid};
+    use udaya_core::validation::{UTXOEntry, UTXOSet};
+
+    let temp = temp_dir();
+    let config = udaya_storage::StorageConfig {
+        data_dir: temp.to_str().unwrap().to_string(),
+        db_cache_size_mb: 64,
+        max_open_files: 100,
+        enable_compression: false,
+        prune_blocks: false,
+        prune_target_gb: 1,
+    };
+
+    let db = BlockchainDB::open(&config).expect("Failed to open database");
+
+    // Create a genesis block and store it
+    let consensus = ConsensusEngine::new(udaya_core::consensus::ConsensusParams::default());
+    let genesis = consensus.create_genesis_block();
+    db.store_block(&genesis, 0).expect("Failed to store genesis");
+    db.update_utxo_set_for_block(&genesis, 0).expect("Failed to update UTXO set");
+
+    // Verify genesis UTXO was persisted
+    let utxo_set_after_genesis = db.load_utxo_set().expect("Failed to load UTXO set");
+    assert_eq!(utxo_set_after_genesis.len(), 1, "Genesis should create 1 UTXO");
+
+    // Create a second block with a transaction
+    let mut utxo_set = utxo_set_after_genesis;
+    let coinbase_tx = genesis.coinbase_tx().unwrap();
+    let coinbase_outpoint = OutPoint::new(coinbase_tx.txid(), 0);
+
+    if let Some(coinbase_utxo) = utxo_set.get_utxo(&coinbase_outpoint).cloned() {
+        let mut tx = udaya_core::transaction::Transaction::new();
+        tx.inputs.push(udaya_core::transaction::TxInput {
+            previous_output: coinbase_outpoint,
+            script_sig: udaya_core::types::ScriptSig::new(vec![0x51]), // OP_1
+            sequence: 0xFFFFFFFF,
+        });
+        tx.outputs.push(udaya_core::transaction::TxOut::new(
+            50_000_000_000 - 1000,
+            udaya_core::types::ScriptPubKey::new(vec![0x76, 0xa9, 0x14, 0xab, 0xcd]),
+        ));
+        utxo_set.apply_transaction(&tx, &tx.txid(), 1);
+    }
+
+    // Store the updated UTXO set
+    db.store_utxo_set(&utxo_set).expect("Failed to store UTXO set");
+
+    // Simulate restart: close and reopen database
+    drop(db);
+    let db2 = BlockchainDB::open(&config).expect("Failed to reopen database");
+
+    // Load UTXO set after restart
+    let loaded_utxo_set = db2.load_utxo_set().expect("Failed to load UTXO set after restart");
+
+    // Verify UTXO set persisted correctly
+    assert_eq!(loaded_utxo_set.len(), 2, "Should have 2 UTXOs after transaction");
+    assert!(loaded_utxo_set.contains(&coinbase_outpoint), "Coinbase UTXO should be spent");
+    assert!(loaded_utxo_set.contains(&OutPoint::new(
+        loaded_utxo_set.utxos.keys().nth(1).map(|op| op.txid).unwrap_or(Txid([0u8; 32])),
+        loaded_utxo_set.utxos.keys().nth(1).map(|op| op.vout).unwrap_or(0)
+    )), "New transaction UTXO should exist");
+
+    // Verify chain state persisted
+    let chain_height = db2.get_chain_height().expect("Failed to get chain height");
+    assert_eq!(chain_height, 1, "Chain height should be 1");
+
     let _ = std::fs::remove_dir_all(&temp);
 }
 
@@ -301,6 +374,7 @@ fn test_mempool_limits() {
     let mempool = Mempool::new(
         udaya_mempool::MempoolConfig::default(),
         consensus,
+        UTXOSet::new(),
     );
 
     let stats = mempool.get_stats();

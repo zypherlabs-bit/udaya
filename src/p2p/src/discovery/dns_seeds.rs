@@ -45,7 +45,7 @@
 /// - Each seed maintains 1000+ peer connections
 /// - Seeds provide rotating peer lists for diversity
 /// - If one region fails, others compensate
-
+///
 /// The three official Udaya DNS seed domains
 pub const DNS_SEED_DOMAINS: [&str; 3] = [
     "seed-us.Udaya.org",
@@ -99,7 +99,7 @@ pub fn verify_seed_configuration() -> Vec<(String, bool, String)> {
     seeds
         .iter()
         .map(|seed| {
-            let addr = seed.address();
+            let _addr = seed.address();
             // Validate format: domain:port
             let valid = !seed.domain.is_empty() && seed.port > 0 && seed.domain.contains('.');
             if valid {

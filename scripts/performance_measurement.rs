@@ -49,7 +49,7 @@ fn measure_node_startup() {
     };
 
     let _db = BlockchainDB::open(&storage_config).unwrap();
-    let _mempool = Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone());
+    let _mempool = Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone(), UTXOSet::new());
     let _wallet = Wallet::new("Performance Test Wallet", "testnet");
 
     let duration = start.elapsed();

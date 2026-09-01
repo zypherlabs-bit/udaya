@@ -1,4 +1,5 @@
 pub mod crypto;
+pub mod hardware;
 pub mod psbt;
 pub mod threat_model;
 pub mod treasury;
@@ -22,8 +23,7 @@ use udaya_core::SATS_PER_COIN;
 /// - BIP49: P2SH-SegWit:  m/49'/257'/0'/0/0
 /// - BIP84: Native SegWit: m/84'/257'/0'/0/0 with bech32
 /// - BIP86: Taproot:       m/86'/257'/0'/0/0 with bech32m
-
-/// HD wallet path derivation level
+///   HD wallet path derivation level
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum DerivationPath {
     BIP44, // Legacy: m/44'/257'/0'/0/0
@@ -173,6 +173,14 @@ impl Wallet {
         }
     }
 
+    fn _derive_address_from_mnemonic(&self, mnemonic: &[String], path: Vec<u32>) -> String {
+        use crypto::{mnemonic_to_seed, ExtendedKey};
+        let seed = mnemonic_to_seed(mnemonic, "");
+        let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
+        key.to_native_segwit_address(MAINNET_HRP)
+    }
+
     /// Get wallet balance
     pub fn get_balance(&self) -> WalletBalance {
         let state = self.state.read();
@@ -218,7 +226,7 @@ impl Wallet {
     pub fn get_transactions(&self, count: usize, skip: usize) -> Vec<WalletTx> {
         let state = self.state.read();
         let mut txs: Vec<WalletTx> = state.transactions.clone();
-        txs.sort_by(|a, b| b.timestamp.cmp(&a.timestamp));
+        txs.sort_by_key(|b| std::cmp::Reverse(b.timestamp));
         txs.into_iter().skip(skip).take(count).collect()
     }
 
@@ -246,21 +254,17 @@ impl Wallet {
 
     /// Generate a new wallet seed and derive first address (BIP-84 Native SegWit)
     pub fn generate_seed(&self) -> (Vec<String>, String) {
-        use crypto::{entropy_to_mnemonic, EntropySource, ExtendedKey};
+        use crypto::{entropy_to_mnemonic, EntropySource};
 
         let entropy = EntropySource::generate();
         let mnemonic = entropy_to_mnemonic(&entropy.entropy);
-        let seed = crypto::mnemonic_to_seed(&mnemonic, "");
-        let master = ExtendedKey::from_seed(&seed);
 
-        // Derive BIP84 first address using Udaya coin type (257')
-        let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
-        let address = key.to_native_segwit_address(MAINNET_HRP);
+        let address = self._derive_address_from_mnemonic(&mnemonic, derive_bip84_path());
 
         let mut state = self.state.write();
         state.accounts[0].mnemonic = Some(mnemonic.clone());
-        state.accounts[0].external_keys.push(address.clone());
+        state.accounts[0].external_keys = vec![address.clone()];
+        state.accounts[0].next_external_index = 1;
 
         (mnemonic, address)
     }
@@ -269,17 +273,9 @@ impl Wallet {
     pub fn recover_from_mnemonic(
         &self,
         mnemonic_words: &[String],
-        passphrase: &str,
+        _passphrase: &str,
     ) -> anyhow::Result<String> {
-        use crypto::{mnemonic_to_seed, ExtendedKey};
-
-        let seed = mnemonic_to_seed(mnemonic_words, passphrase);
-        let master = ExtendedKey::from_seed(&seed);
-
-        // Derive BIP84 first address using Udaya coin type (257')
-        let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
-        let address = key.to_native_segwit_address(MAINNET_HRP);
+        let address = self._derive_address_from_mnemonic(mnemonic_words, derive_bip84_path());
 
         let mut state = self.state.write();
         state.accounts[0].mnemonic = Some(mnemonic_words.to_vec());
@@ -295,27 +291,19 @@ impl Wallet {
         passphrase: &str,
         derivation: DerivationPath,
     ) -> anyhow::Result<String> {
-        use crypto::{mnemonic_to_seed, ExtendedKey};
+        use crypto::mnemonic_to_seed;
 
-        let seed = mnemonic_to_seed(mnemonic_words, passphrase);
-        let master = ExtendedKey::from_seed(&seed);
+        let _seed = mnemonic_to_seed(mnemonic_words, passphrase);
 
         let path = match derivation {
             DerivationPath::BIP44 => derive_bip44_path(),
             DerivationPath::BIP49 => derive_bip49_path(),
             DerivationPath::BIP84 => derive_bip84_path(),
             DerivationPath::BIP86 => derive_bip86_path(),
-            DerivationPath::Custom(_) => derive_bip84_path(), // default
+            DerivationPath::Custom(_) => derive_bip84_path(),
         };
 
-        let key = master.derive_from_path(&path);
-        let address = match derivation {
-            DerivationPath::BIP44 => key.to_p2pkh_address(),
-            DerivationPath::BIP49 => key.to_p2sh_segwit_address(),
-            DerivationPath::BIP84 => key.to_native_segwit_address(MAINNET_HRP),
-            DerivationPath::BIP86 => key.to_taproot_address(MAINNET_HRP),
-            DerivationPath::Custom(_) => key.to_native_segwit_address(MAINNET_HRP),
-        };
+        let address = self._derive_address_from_mnemonic(mnemonic_words, path);
 
         let mut state = self.state.write();
         state.accounts[0].external_keys.push(address.clone());
@@ -325,25 +313,79 @@ impl Wallet {
 
     /// Generate a Native SegWit (BIP-84 bech32) address
     pub fn generate_address(&self) -> String {
-        use crypto::{entropy_to_mnemonic, EntropySource, ExtendedKey};
-        let entropy = EntropySource::generate();
-        let mnemonic = entropy_to_mnemonic(&entropy.entropy);
-        let seed = crypto::mnemonic_to_seed(&mnemonic, "");
-        let master = ExtendedKey::from_seed(&seed);
-        let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
-        key.to_native_segwit_address(MAINNET_HRP)
+        use crypto::{mnemonic_to_seed, ExtendedKey, EntropySource, entropy_to_mnemonic};
+
+        let mut state = self.state.write();
+        let address = if let Some(ref mnemonic) = state.accounts[0].mnemonic {
+            let index = state.accounts[0].next_external_index;
+            let path = crypto::derive_bip84_path_with_index(index);
+            let seed = mnemonic_to_seed(mnemonic, "");
+            let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+            let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
+            let addr = key.to_native_segwit_address(MAINNET_HRP);
+            state.accounts[0].external_keys.push(addr.clone());
+            state.accounts[0].next_external_index += 1;
+            addr
+        } else {
+            let entropy = EntropySource::generate();
+            let mnemonic = entropy_to_mnemonic(&entropy.entropy);
+            let seed = mnemonic_to_seed(&mnemonic, "");
+            let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+            let path = crypto::derive_bip84_path_with_index(0);
+            let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
+            let addr = key.to_native_segwit_address(MAINNET_HRP);
+            state.accounts[0].mnemonic = Some(mnemonic.clone());
+            state.accounts[0].external_keys.push(addr.clone());
+            state.accounts[0].next_external_index = 1;
+            addr
+        };
+
+        address
     }
 
     /// Generate a Taproot (BIP-86) address
     pub fn generate_taproot_address(&self) -> String {
-        use crypto::{entropy_to_mnemonic, EntropySource, ExtendedKey};
-        let entropy = EntropySource::generate();
-        let mnemonic = entropy_to_mnemonic(&entropy.entropy);
-        let seed = crypto::mnemonic_to_seed(&mnemonic, "");
-        let master = ExtendedKey::from_seed(&seed);
-        let path = derive_bip86_path();
-        let key = master.derive_from_path(&path);
+        use crypto::{mnemonic_to_seed, ExtendedKey, EntropySource, entropy_to_mnemonic};
+
+        let mut state = self.state.write();
+        let address = if let Some(ref mnemonic) = state.accounts[0].mnemonic {
+            let index = state.accounts[0].next_external_index;
+            let path = crypto::derive_bip86_path_with_index(index);
+            let seed = mnemonic_to_seed(mnemonic, "");
+            let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+            let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
+            let addr = key.to_taproot_address(MAINNET_HRP);
+            state.accounts[0].external_keys.push(addr.clone());
+            state.accounts[0].next_external_index += 1;
+            addr
+        } else {
+            let entropy = EntropySource::generate();
+            let mnemonic = entropy_to_mnemonic(&entropy.entropy);
+            let seed = mnemonic_to_seed(&mnemonic, "");
+            let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+            let path = crypto::derive_bip86_path_with_index(0);
+            let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
+            let addr = key.to_taproot_address(MAINNET_HRP);
+            state.accounts[0].mnemonic = Some(mnemonic.clone());
+            state.accounts[0].external_keys.push(addr.clone());
+            state.accounts[0].next_external_index = 1;
+            addr
+        };
+
+        address
+    }
+
+    fn _derive_taproot_from_mnemonic(&self, mnemonic: &[String]) -> String {
+        use crypto::{mnemonic_to_seed, ExtendedKey, EntropySource, entropy_to_mnemonic};
+        let seed = if mnemonic.is_empty() {
+            let entropy = EntropySource::generate();
+            let m = entropy_to_mnemonic(&entropy.entropy);
+            mnemonic_to_seed(&m, "")
+        } else {
+            mnemonic_to_seed(mnemonic, "")
+        };
+        let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
+        let key = master.derive_from_path(&derive_bip86_path()).expect("Valid path should derive valid key");
         key.to_taproot_address(MAINNET_HRP)
     }
 
@@ -378,22 +420,23 @@ impl Wallet {
             );
         }
 
-        // Generate signing key using BIP-84 with Udaya coin type
-        use crypto::{entropy_to_mnemonic, mnemonic_to_seed, EntropySource, ExtendedKey};
-        let entropy = EntropySource::generate();
-        let mnemonic = entropy_to_mnemonic(&entropy.entropy);
-        let seed = mnemonic_to_seed(&mnemonic, "");
-        let master = ExtendedKey::from_seed(&seed);
-        let path = derive_bip84_path();
-        let signing_key = master.derive_from_path(&path);
+        let state = self.state.read();
+        let secret_key = if let Some(ref mnemonic) = state.accounts[0].mnemonic {
+            use crypto::{mnemonic_to_seed, ExtendedKey};
+            let seed = mnemonic_to_seed(mnemonic, "");
+            let master = ExtendedKey::from_seed(&seed)?;
+            let key = master.derive_from_path(&derive_bip84_path())?;
+            key.to_secret_key()?
+        } else {
+            anyhow::bail!("Wallet has no seed: call generate_seed or recover_from_mnemonic first");
+        };
 
-        let secret_key = signing_key.to_secret_key()?;
         let secp = secp256k1::Secp256k1::new();
 
         let tx = create_p2pkh_transaction(
             selected_utxos,
             to_script.to_vec(),
-            vec![], // change script (simplified)
+            vec![],
             amount_sats,
             fee_sats,
             &secret_key,
@@ -405,11 +448,14 @@ impl Wallet {
 
     /// Export private key as WIF
     pub fn export_wif(&self) -> anyhow::Result<String> {
-        use crypto::ExtendedKey;
-        // Generate a deterministic key for the current wallet state
-        let entropy = [0u8; 16]; // Placeholder - real wallet would use stored seed
-        let seed = crypto::mnemonic_to_seed(&crypto::entropy_to_mnemonic(&entropy), "");
-        let master = ExtendedKey::from_seed(&seed);
+        let state = self.state.read();
+        let mnemonic = state.accounts[0].mnemonic.as_ref().ok_or_else(|| {
+            anyhow::anyhow!("Wallet has no seed: call generate_seed or recover_from_mnemonic first")
+        })?;
+
+        use crypto::{mnemonic_to_seed, ExtendedKey};
+        let seed = mnemonic_to_seed(mnemonic, "");
+        let master = ExtendedKey::from_seed(&seed)?;
         Ok(master.to_wif(true))
     }
 

@@ -20,6 +20,10 @@ pub struct NetworkConfig {
     pub enable_upnp: bool,
     pub preferred_peers: Vec<String>,
     pub ban_duration_secs: u64,
+    pub enable_tls: bool,
+    pub tls_cert_path: Option<String>,
+    pub tls_key_path: Option<String>,
+    pub tls_ca_cert_path: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -90,6 +94,10 @@ impl Default for UdayaConfig {
                 enable_upnp: false,
                 preferred_peers: Vec::new(),
                 ban_duration_secs: 86400,
+                enable_tls: false,
+                tls_cert_path: None,
+                tls_key_path: None,
+                tls_ca_cert_path: None,
             },
             storage: StorageConfig {
                 data_dir: "data/Udaya".to_string(),

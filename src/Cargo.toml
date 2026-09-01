@@ -13,6 +13,74 @@ path = "main.rs"
 name = "rpc_security_tests"
 path = "../tests/unit/rpc_security_tests.rs"
 
+[[test]]
+name = "node_integration_tests"
+path = "../tests/integration/node_integration_tests.rs"
+
+[[test]]
+name = "utxo_persistence_tests"
+path = "../tests/integration/utxo_persistence_tests.rs"
+
+[[test]]
+name = "wallet_persistence_tests"
+path = "../tests/integration/wallet_persistence_tests.rs"
+
+[[test]]
+name = "phase7_rpc_explorer_tests"
+path = "../tests/integration/phase7_rpc_explorer_tests.rs"
+
+[[test]]
+name = "explorer_persistence_tests"
+path = "../tests/integration/explorer_persistence_tests.rs"
+
+[[test]]
+name = "phase10_attack_resistance_tests"
+path = "../tests/integration/phase10_attack_resistance_tests.rs"
+
+[[test]]
+name = "phase11_operational_stability_tests"
+path = "../tests/integration/phase11_operational_stability_tests.rs"
+
+[[test]]
+name = "phase12_mainnet_candidate_tests"
+path = "../tests/integration/phase12_mainnet_candidate_tests.rs"
+
+[[test]]
+name = "phase13_external_validation_tests"
+path = "../tests/integration/phase13_external_validation_tests.rs"
+
+[[test]]
+name = "phase14_exchange_readiness_tests"
+path = "../tests/integration/phase14_exchange_readiness_tests.rs"
+
+[[test]]
+name = "phase15_monitoring_incident_response_tests"
+path = "../tests/integration/phase15_monitoring_incident_response_tests.rs"
+
+[[test]]
+name = "phase16_launch_readiness_tests"
+path = "../tests/integration/phase16_launch_readiness_tests.rs"
+
+[[test]]
+name = "phase17_independent_verification_tests"
+path = "../tests/integration/phase17_independent_verification_tests.rs"
+
+[[test]]
+name = "phase18_mainnet_launch_activation_tests"
+path = "../tests/integration/phase18_mainnet_launch_activation_tests.rs"
+
+[[test]]
+name = "phase19_post_launch_operations_tests"
+path = "../tests/integration/phase19_post_launch_operations_tests.rs"
+
+[[test]]
+name = "phase20_treasury_governance_sustainability_tests"
+path = "../tests/integration/phase20_treasury_governance_sustainability_tests.rs"
+
+[[test]]
+name = "phase21_ecosystem_expansion_tests"
+path = "../tests/integration/phase21_ecosystem_expansion_tests.rs"
+
 [dependencies]
 udaya-core = { path = "core" }
 udaya-storage = { path = "storage" }
@@ -41,9 +109,9 @@ prometheus.workspace = true
 num-bigint.workspace = true
 bincode.workspace = true
 base64 = "0.21"
-tokio-rustls = "0.24"
-rustls = { version = "0.21", features = ["dangerous_configuration"] }
-rustls-pemfile = "1.0"
+tokio-rustls = "0.26"
+rustls = "0.23"
+rustls-pemfile = "2.2"
 http-body-util = "0.1"
 hyper-util = { version = "0.1", features = ["tokio", "server-auto"] }
 axum-server = { version = "0.7", features = ["tls-rustls"] }

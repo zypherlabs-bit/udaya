@@ -16,6 +16,7 @@ pub mod column {
     pub const CHAIN_STATE: &str = "chain_state";
     pub const PEERS: &str = "peers";
     pub const WALLETS: &str = "wallets";
+    pub const EXPLORER: &str = "explorer";
 }
 
 /// Database configuration

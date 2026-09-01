@@ -5,9 +5,9 @@ use std::sync::Arc;
 use udaya_core::transaction::Transaction;
 use udaya_core::types::*;
 
-/// Udaya Blockchain Explorer Backend
-/// Provides data for frontend explorers, mempool visualizers, and analytics dashboards.
+use bincode;
 
+/// Udaya Blockchain Explorer Backend - Provides data for frontend explorers, mempool visualizers, and analytics dashboards.
 /// Explorer statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ChainStats {
@@ -272,9 +272,11 @@ impl ExplorerEngine {
     /// Load blockchain data from database
     pub fn load_from_database(&self, db: &udaya_storage::BlockchainDB) -> anyhow::Result<()> {
         let chain_height = db.get_chain_height()?;
-        let mut stats = ChainStats::default();
-        stats.block_height = chain_height;
-        stats.total_blocks = chain_height;
+        let mut stats = ChainStats {
+            block_height: chain_height,
+            total_blocks: chain_height,
+            ..Default::default()
+        };
 
         // Update stats from database
         if let Some(tip) = db.get_chain_tip()? {
@@ -297,6 +299,52 @@ impl ExplorerEngine {
         stats.total_transactions = total_txs;
 
         self.update_stats(stats);
+        Ok(())
+    }
+
+    /// Persist explorer state to database
+    pub fn persist_to_database(&self, db: &udaya_storage::BlockchainDB) -> anyhow::Result<()> {
+        use serde::Serialize;
+
+        #[derive(Serialize)]
+        struct ExplorerSnapshot {
+            stats: ChainStats,
+            blocks: Vec<(u64, BlockSummary)>,
+            txs: Vec<(String, TxSummary)>,
+        }
+
+        let snapshot = ExplorerSnapshot {
+            stats: self.get_stats(),
+            blocks: self.block_cache.read().clone().into_iter().collect(),
+            txs: self.tx_cache.read().clone().into_iter().collect(),
+        };
+
+        let data = bincode::serialize(&snapshot)?;
+        db.store_explorer_state(&data)?;
+        Ok(())
+    }
+
+    /// Restore explorer state from database
+    pub fn restore_from_database(&self, db: &udaya_storage::BlockchainDB) -> anyhow::Result<()> {
+        use serde::Deserialize;
+
+        #[derive(Deserialize)]
+        struct ExplorerSnapshot {
+            stats: ChainStats,
+            blocks: Vec<(u64, BlockSummary)>,
+            txs: Vec<(String, TxSummary)>,
+        }
+
+        if let Some(data) = db.load_explorer_state()? {
+            let snapshot: ExplorerSnapshot = bincode::deserialize(&data)?;
+            self.update_stats(snapshot.stats);
+            for (height, summary) in snapshot.blocks {
+                self.cache_block(height, summary);
+            }
+            for (txid, summary) in snapshot.txs {
+                self.cache_tx(txid, summary);
+            }
+        }
         Ok(())
     }
 
@@ -445,11 +493,12 @@ mod tests {
     #[test]
     fn test_explorer_database_connection() {
         use udaya_storage::blockchain_db::BlockchainDB;
-        use udaya_storage::StorageConfig;
 
         let dir = tempdir().unwrap();
-        let mut config = StorageConfig::default();
-        config.data_dir = dir.path().to_str().unwrap().to_string();
+        let config = udaya_storage::StorageConfig {
+            data_dir: dir.path().to_str().unwrap().to_string(),
+            ..Default::default()
+        };
 
         let db = BlockchainDB::open(&config).unwrap();
         let explorer = ExplorerEngine::new();

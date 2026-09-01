@@ -43,7 +43,7 @@ struct Cli {
 
     /// Maximum daily dispense limit per IP (in UDYA)
     #[arg(long, default_value = "100")]
-    max_daily_UDYA: f64,
+    max_daily_udya: f64,
 
     /// Network (testnet or mainnet)
     #[arg(long, default_value = "testnet")]
@@ -62,6 +62,7 @@ struct FaucetState {
 #[derive(Deserialize)]
 struct FaucetRequest {
     address: String,
+    #[allow(dead_code)]
     captcha_token: Option<String>,
 }
 
@@ -70,18 +71,18 @@ struct FaucetResponse {
     success: bool,
     message: String,
     txid: Option<String>,
-    amount_UDYA: f64,
+    amount_udya: f64,
     address: String,
 }
 
 #[derive(Serialize)]
 struct FaucetStats {
-    total_dispensed_UDYA: f64,
+    total_dispensed_udya: f64,
     total_requests: u64,
     requests_today: u64,
     uptime_hours: f64,
     rate_limit_secs: u64,
-    dispense_amount_UDYA: f64,
+    dispense_amount_udya: f64,
     network: String,
     status: String,
 }
@@ -153,7 +154,7 @@ async fn handle_claim(
             success: false,
             message: "Invalid address format".to_string(),
             txid: None,
-            amount_UDYA: 0.0,
+            amount_udya: 0.0,
             address: params.address,
         });
     }
@@ -165,19 +166,19 @@ async fn handle_claim(
             .duration_since(UNIX_EPOCH)
             .unwrap()
             .as_secs();
-        let requests = limiter.entry(ip.to_string()).or_insert_with(Vec::new);
+        let requests = limiter.entry(ip.to_string()).or_default();
 
         // Clean old entries
         requests.retain(|&t| now - t < state.config.rate_limit_secs);
 
-        if requests.len() >= 1 {
+        if !requests.is_empty() {
             let wait_time =
                 state.config.rate_limit_secs - (now - requests.last().copied().unwrap_or(0));
             return Json(FaucetResponse {
                 success: false,
                 message: format!("Rate limited. Please wait {} seconds.", wait_time),
                 txid: None,
-                amount_UDYA: 0.0,
+                amount_udya: 0.0,
                 address: params.address,
             });
         }
@@ -186,13 +187,13 @@ async fn handle_claim(
     }
 
     // Send coins via RPC
-    let amount_UDYA = state.config.dispense_amount as f64 / 100_000_000.0;
+    let amount_udya = state.config.dispense_amount as f64 / 100_000_000.0;
 
     let request = serde_json::json!({
         "jsonrpc": "2.0",
         "id": 1,
         "method": "sendtoaddress",
-        "params": [params.address, amount_UDYA]
+        "params": [params.address, amount_udya]
     });
 
     match state
@@ -211,7 +212,7 @@ async fn handle_claim(
 
                 log::info!(
                     "Dispensed {} UDYA to {} (txid: {})",
-                    amount_UDYA,
+                    amount_udya,
                     params.address,
                     txid
                 );
@@ -220,10 +221,10 @@ async fn handle_claim(
                     success: true,
                     message: format!(
                         "Successfully sent {} UDYA to {}",
-                        amount_UDYA, params.address
+                        amount_udya, params.address
                     ),
                     txid: Some(txid.to_string()),
-                    amount_UDYA,
+                    amount_udya,
                     address: params.address,
                 })
             } else {
@@ -235,7 +236,7 @@ async fn handle_claim(
                     success: false,
                     message: format!("RPC error: {}", error),
                     txid: None,
-                    amount_UDYA: 0.0,
+                    amount_udya: 0.0,
                     address: params.address,
                 })
             }
@@ -246,7 +247,7 @@ async fn handle_claim(
                 success: false,
                 message: format!("Failed to connect to node: {}", e),
                 txid: None,
-                amount_UDYA: 0.0,
+                amount_udya: 0.0,
                 address: params.address,
             })
         }
@@ -268,18 +269,18 @@ async fn handle_stats(state: axum::extract::State<Arc<FaucetState>>) -> Json<Fau
             .unwrap()
             .as_secs();
         limiter
-            .iter()
-            .map(|(_, times)| times.iter().filter(|&&t| now - t < 86400).count())
+            .values()
+            .map(|times| times.iter().filter(|&&t| now - t < 86400).count())
             .sum::<usize>() as u64
     };
 
     Json(FaucetStats {
-        total_dispensed_UDYA: total as f64 / 100_000_000.0,
-        total_requests: total as u64,
+        total_dispensed_udya: total as f64 / 100_000_000.0,
+        total_requests: total,
         requests_today,
         uptime_hours: uptime as f64 / 3600.0,
         rate_limit_secs: state.config.rate_limit_secs,
-        dispense_amount_UDYA: state.config.dispense_amount as f64 / 100_000_000.0,
+        dispense_amount_udya: state.config.dispense_amount as f64 / 100_000_000.0,
         network: state.config.network.clone(),
         status: "running".to_string(),
     })

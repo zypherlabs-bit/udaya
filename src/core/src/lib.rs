@@ -5,6 +5,8 @@ pub mod genesis;
 pub mod script;
 pub mod security;
 pub mod serialization;
+pub mod stability;
+pub mod monitoring;
 pub mod transaction;
 pub mod types;
 pub mod validation;

@@ -230,7 +230,7 @@ async fn handle_stratum_connection(mut stream: tokio::net::TcpStream, state: Arc
                                 continue;
                             }
                             if let Some(params) = msg.get("params").and_then(|p| p.as_array()) {
-                                if let Some(name) = params.get(0).and_then(|p| p.as_str()) {
+                                if let Some(name) = params.first().and_then(|p| p.as_str()) {
                                     worker_name = name.to_string();
                                     authorized = true;
                                     let mut miners = state.miners.lock().await;

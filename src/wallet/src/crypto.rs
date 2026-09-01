@@ -1,7 +1,7 @@
 use hmac::{Hmac, Mac};
 use num_bigint::BigUint;
 use num_traits::cast::ToPrimitive;
-use rand::{rngs::OsRng, Rng, RngCore};
+use rand::{rngs::OsRng, RngCore};
 use ripemd::Ripemd160;
 use secp256k1::{PublicKey, Secp256k1, SecretKey};
 use sha2::{Digest, Sha256};
@@ -21,7 +21,6 @@ use subtle::ConstantTimeEq;
 /// Udaya Coin Type: 257' (0x80000101) — per SLIP-44 convention
 /// Mainnet HRP: "btf" (BIP-173 compliant, 3-char prefix)
 /// Testnet HRP: "tbtf"
-
 type HmacSha512 = Hmac<sha2::Sha512>;
 
 /// Udaya coin type for BIP44 derivation (257' = 0x80000101)
@@ -59,9 +58,9 @@ fn bech32_polymod(values: &[u32]) -> u32 {
     for &v in values {
         let top = chk >> 25;
         chk = ((chk & 0x1ffffff) << 5) ^ v;
-        for i in 0..5 {
+        for (i, &val) in GEN.iter().enumerate() {
             if (top >> i) & 1 == 1 {
-                chk ^= GEN[i];
+                chk ^= val;
             }
         }
     }
@@ -613,7 +612,7 @@ impl Drop for ExtendedKey {
 
 impl ExtendedKey {
     /// Create master key from seed (BIP32)
-    pub fn from_seed(seed: &[u8]) -> Self {
+    pub fn from_seed(seed: &[u8]) -> anyhow::Result<Self> {
         let mut mac = HmacSha512::new_from_slice(b"Bitcoin seed").unwrap();
         mac.update(seed);
         let result = mac.finalize().into_bytes();
@@ -623,20 +622,20 @@ impl ExtendedKey {
         let mut chain_code = [0u8; 32];
         chain_code.copy_from_slice(&result[32..]);
 
-        let public_key = private_to_public(&private_key);
+        let public_key = private_to_public(&private_key)?;
 
-        Self {
+        Ok(Self {
             depth: 0,
             fingerprint: [0u8; 4],
             child_number: [0u8; 4],
             chain_code,
             private_key,
             public_key,
-        }
+        })
     }
 
     /// Derive child key (BIP32 CKD)
-    pub fn derive_child(&self, index: u32) -> Self {
+    pub fn derive_child(&self, index: u32) -> anyhow::Result<Self> {
         let is_hardened = index >= 0x80000000;
 
         let mut mac = HmacSha512::new_from_slice(&self.chain_code).unwrap();
@@ -655,7 +654,6 @@ impl ExtendedKey {
         let mut child_chain_code = [0u8; 32];
         child_chain_code.copy_from_slice(&result[32..]);
 
-        // Add to parent private key (mod n) — simplified, assumes valid range
         let mut child_private = [0u8; 32];
         let mut carry = 0u16;
         for i in (0..32).rev() {
@@ -664,29 +662,29 @@ impl ExtendedKey {
             carry = sum >> 8;
         }
 
-        let public_key = private_to_public(&child_private);
+        let public_key = private_to_public(&child_private)?;
 
         let pub_hash = hash160(&self.public_key);
         let mut fingerprint = [0u8; 4];
         fingerprint.copy_from_slice(&pub_hash[..4]);
 
-        Self {
+        Ok(Self {
             depth: self.depth + 1,
             fingerprint,
             child_number: index.to_be_bytes(),
             chain_code: child_chain_code,
             private_key: child_private,
             public_key,
-        }
+        })
     }
 
     /// Derive path from mnemonic seed (path: 44'/257'/0'/0/0 for BIP-44)
-    pub fn derive_from_path(&self, path: &[u32]) -> Self {
+    pub fn derive_from_path(&self, path: &[u32]) -> anyhow::Result<Self> {
         let mut key = self.clone();
         for &index in path {
-            key = key.derive_child(index);
+            key = key.derive_child(index)?;
         }
-        key
+        Ok(key)
     }
 
     /// Get P2PKH (Legacy) address with Base58Check encoding
@@ -785,9 +783,8 @@ impl ExtendedKey {
 
         let mut private_key = [0u8; 32];
         private_key.copy_from_slice(private_key_bytes);
-        let public_key = private_to_public(&private_key);
+        let public_key = private_to_public(&private_key)?;
 
-        // Verify checksum (last 4 bytes) with constant-time comparison
         let checksum_start = if is_compressed { 34 } else { 33 };
         let provided_checksum = &data[checksum_start..checksum_start + 4];
         let check_data = &data[..checksum_start];
@@ -828,6 +825,16 @@ pub fn derive_bip86_path() -> Vec<u32> {
     vec![0x80000056, UDAYA_COIN_TYPE, 0x80000000, 0, 0]
 }
 
+/// Derive the full BIP-84 path with external index: m/84'/257'/0'/0/{index}
+pub fn derive_bip84_path_with_index(index: u32) -> Vec<u32> {
+    vec![0x80000054, UDAYA_COIN_TYPE, 0x80000000, 0, index]
+}
+
+/// Derive the full BIP-86 path with external index: m/86'/257'/0'/0/{index}
+pub fn derive_bip86_path_with_index(index: u32) -> Vec<u32> {
+    vec![0x80000056, UDAYA_COIN_TYPE, 0x80000000, 0, index]
+}
+
 /// Get x-only public key for Taproot (32 bytes)
 fn get_xonly_pubkey(compressed_pubkey: &[u8; 33]) -> [u8; 32] {
     let mut xonly = [0u8; 32];
@@ -836,23 +843,15 @@ fn get_xonly_pubkey(compressed_pubkey: &[u8; 33]) -> [u8; 32] {
 }
 
 /// Convert private key to public key (compressed)
-fn private_to_public(private_key: &[u8; 32]) -> [u8; 33] {
+fn private_to_public(private_key: &[u8; 32]) -> anyhow::Result<[u8; 33]> {
     let secp = Secp256k1::new();
-    match SecretKey::from_slice(private_key) {
-        Ok(sk) => {
-            let pk = PublicKey::from_secret_key(&secp, &sk);
-            let serialized = pk.serialize();
-            let mut result = [0u8; 33];
-            result.copy_from_slice(&serialized);
-            result
-        }
-        Err(_) => {
-            let mut result = [0u8; 33];
-            result[0] = 0x02;
-            result[1..].copy_from_slice(&private_key[..32]);
-            result
-        }
-    }
+    let sk = SecretKey::from_slice(private_key)
+        .map_err(|e| anyhow::anyhow!("Invalid private key: {}", e))?;
+    let pk = PublicKey::from_secret_key(&secp, &sk);
+    let serialized = pk.serialize();
+    let mut result = [0u8; 33];
+    result.copy_from_slice(&serialized);
+    Ok(result)
 }
 
 /// RIPEMD-160(SHA-256(data))
@@ -1026,7 +1025,7 @@ mod tests {
     #[test]
     fn test_bip32_master_key() {
         let seed = b"test_seed_for_bip32_derivation_test";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         assert_eq!(master.depth, 0);
         assert_eq!(master.private_key.len(), 32);
         assert_eq!(master.chain_code.len(), 32);
@@ -1059,11 +1058,11 @@ mod tests {
     }
 
     #[test]
-    fn test_Udaya_bech32_address_format() {
+    fn test_udaya_bech32_address_format() {
         let seed = b"test_Udaya_bech32_format";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_native_segwit_address(MAINNET_HRP);
         assert!(
             addr.starts_with("btf1"),
@@ -1073,11 +1072,11 @@ mod tests {
     }
 
     #[test]
-    fn test_Udaya_testnet_bech32_address() {
+    fn test_udaya_testnet_bech32_address() {
         let seed = b"test_Udaya_testnet";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_native_segwit_address(TESTNET_HRP);
         assert!(
             addr.starts_with("tbtf1"),
@@ -1086,26 +1085,28 @@ mod tests {
     }
 
     #[test]
-    fn test_bip84_derivation_with_Udaya_coin_type() {
+    fn test_bip84_derivation_with_udaya_coin_type() {
         let seed = b"test_seed_bip84_Udaya";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_native_segwit_address(MAINNET_HRP);
         assert!(addr.starts_with("btf1"));
         assert!(addr.len() > 10);
 
-        // Deterministic test
-        let key2 = ExtendedKey::from_seed(seed).derive_from_path(&path);
+        let key2 = ExtendedKey::from_seed(seed)
+            .expect("Valid seed should produce valid master key")
+            .derive_from_path(&path)
+            .expect("Valid path should derive valid key");
         assert_eq!(addr, key2.to_native_segwit_address(MAINNET_HRP));
     }
 
     #[test]
-    fn test_bip44_derivation_with_Udaya_coin_type() {
+    fn test_bip44_derivation_with_udaya_coin_type() {
         let seed = b"test_seed_bip44_Udaya";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip44_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_p2pkh_address();
         assert!(!addr.is_empty());
     }
@@ -1113,9 +1114,9 @@ mod tests {
     #[test]
     fn test_bip86_taproot_derivation() {
         let seed = b"test_seed_bip86_taproot";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip86_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_taproot_address(MAINNET_HRP);
         assert!(
             addr.starts_with("btf1"),
@@ -1130,9 +1131,9 @@ mod tests {
     #[test]
     fn test_bip49_p2sh_segwit_derivation() {
         let seed = b"test_seed_bip49_segwit";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip49_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
         let addr = key.to_p2sh_segwit_address();
         assert!(addr.starts_with('3'), "P2SH address should start with '3'");
     }
@@ -1140,14 +1141,12 @@ mod tests {
     #[test]
     fn test_wif_export_import() {
         let seed = b"test_seed_wif_roundtrip";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
 
-        // Export as WIF (compressed)
         let wif = master.to_wif(true);
         assert!(wif.len() > 50, "WIF should be a long base58 string");
         assert!(!wif.is_empty());
 
-        // Import back
         let imported = ExtendedKey::from_wif(&wif).expect("Should import WIF");
         assert_eq!(
             master.private_key, imported.private_key,
@@ -1158,7 +1157,6 @@ mod tests {
     #[test]
     fn test_wif_invalid_checksum() {
         let result = ExtendedKey::from_wif("5HueCGU8rMjxEXxiPuD5BDku4MkFqeZyd4dZ1jvhTVqvbTLvyTJ");
-        // This is a valid Bitcoin WIF but we test that parsing works (will fail if checksum bad)
         assert!(
             result.is_ok() || result.is_err(),
             "Should either succeed or fail gracefully"
@@ -1209,7 +1207,7 @@ mod tests {
     #[test]
     fn test_bip32_from_seed_deterministic() {
         let seed = hex::decode("000102030405060708090a0b0c0d0e0f").unwrap();
-        let master = ExtendedKey::from_seed(&seed);
+        let master = ExtendedKey::from_seed(&seed).expect("Valid seed should produce valid master key");
         assert_eq!(master.depth, 0);
         assert_eq!(
             hex::encode(&master.chain_code[..32]),
@@ -1261,22 +1259,26 @@ mod tests {
     #[test]
     fn test_address_generation_deterministic() {
         let seed = b"generate_test_address_12345";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
         let path = derive_bip84_path();
-        let key = master.derive_from_path(&path);
+        let key = master.derive_from_path(&path).expect("Valid path should derive valid key");
 
         let addr = key.to_native_segwit_address(MAINNET_HRP);
         assert!(!addr.is_empty());
 
-        // Deterministic: same seed + same derivation = same address
-        let key2 = ExtendedKey::from_seed(seed).derive_from_path(&path);
+        let key2 = ExtendedKey::from_seed(seed)
+            .expect("Valid seed should produce valid master key")
+            .derive_from_path(&path)
+            .expect("Valid path should derive valid key");
         assert_eq!(
             key.to_native_segwit_address(MAINNET_HRP),
             key2.to_native_segwit_address(MAINNET_HRP)
         );
 
-        // Different seed = different address
-        let key3 = ExtendedKey::from_seed(b"different_seed_67890").derive_from_path(&path);
+        let key3 = ExtendedKey::from_seed(b"different_seed_67890")
+            .expect("Valid seed should produce valid master key")
+            .derive_from_path(&path)
+            .expect("Valid path should derive valid key");
         assert_ne!(
             key.to_native_segwit_address(MAINNET_HRP),
             key3.to_native_segwit_address(MAINNET_HRP)
@@ -1284,7 +1286,7 @@ mod tests {
     }
 
     #[test]
-    fn test_Udaya_coin_type_constant() {
+    fn test_udaya_coin_type_constant() {
         // Udaya_COIN_TYPE = 257' = 0x80000101
         assert_eq!(UDAYA_COIN_TYPE, 0x80000101);
         assert_eq!(UDAYA_COIN_TYPE, 0x80000000u32 + 257);
@@ -1320,17 +1322,19 @@ mod tests {
     #[test]
     fn test_multiple_derivation_paths_different_addresses() {
         let seed = b"test_multiple_paths_same_seed";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
 
-        // Different paths should produce different addresses
         let bip44_addr = master
             .derive_from_path(&derive_bip44_path())
+            .expect("Valid path should derive valid key")
             .to_p2pkh_address();
         let bip84_addr = master
             .derive_from_path(&derive_bip84_path())
+            .expect("Valid path should derive valid key")
             .to_native_segwit_address(MAINNET_HRP);
         let bip86_addr = master
             .derive_from_path(&derive_bip86_path())
+            .expect("Valid path should derive valid key")
             .to_taproot_address(MAINNET_HRP);
 
         assert_ne!(bip44_addr, bip84_addr, "BIP-44 and BIP-84 should differ");
@@ -1340,7 +1344,7 @@ mod tests {
     #[test]
     fn test_wif_compressed_vs_uncompressed() {
         let seed = b"test_wif_compression_flag";
-        let master = ExtendedKey::from_seed(seed);
+        let master = ExtendedKey::from_seed(seed).expect("Valid seed should produce valid master key");
 
         let wif_compressed = master.to_wif(true);
         let wif_uncompressed = master.to_wif(false);
@@ -1350,7 +1354,6 @@ mod tests {
             "Compressed and uncompressed WIFs should differ"
         );
 
-        // Both should import to the same private key
         let imported_comp = ExtendedKey::from_wif(&wif_compressed).unwrap();
         let imported_uncomp = ExtendedKey::from_wif(&wif_uncompressed).unwrap();
         assert_eq!(

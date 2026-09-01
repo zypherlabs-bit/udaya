@@ -28,7 +28,7 @@ fn bench_node_startup(c: &mut Criterion) {
             };
 
             let _db = BlockchainDB::open(&storage_config).unwrap();
-            let _mempool = Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone());
+            let _mempool = Mempool::new(udaya_mempool::MempoolConfig::default(), consensus.clone(), UTXOSet::new());
             let _wallet = Wallet::new("Bench Wallet", "testnet");
         })
     });
@@ -220,5 +220,130 @@ fn bench_startup(c: &mut Criterion) {
     bench_node_startup(c);
 }
 
-criterion_group!(benches, bench_throughput, bench_latency, bench_startup);
+/// Benchmark realistic block processing workload
+fn bench_realistic_block_workload(c: &mut Criterion) {
+    let mut group = c.benchmark_group("realistic_workload");
+    group.sample_size(20);
+    group.measurement_time(std::time::Duration::from_secs(15));
+
+    group.bench_function("block_processing_chain", |b| {
+        b.iter(|| {
+            let consensus = ConsensusEngine::new(ConsensusParams::default());
+            let mut utxo_set = UTXOSet::new();
+            let mut prev_hash = udaya_core::types::BlockHash::default();
+
+            for height in 0..100u64 {
+                let header = udaya_core::types::BlockHeader {
+                    version: 1,
+                    prev_block_hash: prev_hash,
+                    merkle_root: udaya_core::types::MerkleRoot::compute(&[]),
+                    timestamp: (std::time::SystemTime::now()
+                        .duration_since(std::time::UNIX_EPOCH)
+                        .unwrap()
+                        .as_secs() - 100 + height) as u32,
+                    bits: 0x1d00ffff,
+                    nonce: height as u32,
+                };
+                let block = Block {
+                    header,
+                    transactions: vec![],
+                };
+                let _ = consensus.verify_block(&block, &utxo_set, height as u32);
+                prev_hash = block.hash();
+            }
+        })
+    });
+
+    group.finish();
+}
+
+/// Benchmark mempool stress test
+fn bench_mempool_stress(c: &mut Criterion) {
+    let mut group = c.benchmark_group("mempool_stress");
+    group.sample_size(10);
+
+    group.bench_function("mempool_bulk_submit", |b| {
+        b.iter(|| {
+            let consensus = ConsensusEngine::new(ConsensusParams::default());
+            let mempool = Mempool::new(
+                udaya_mempool::MempoolConfig::default(),
+                consensus.clone(),
+            );
+
+            for _ in 0..1000 {
+                let tx = consensus.create_test_transaction();
+                let _ = mempool.submit_transaction(tx, 0, 0);
+            }
+        })
+    });
+
+    group.finish();
+}
+
+/// Benchmark signature verification throughput
+fn bench_signature_throughput(c: &mut Criterion) {
+    let mut group = c.benchmark_group("signature_throughput");
+    group.sample_size(10);
+
+    group.bench_function("batch_signature_verification", |b| {
+        b.iter(|| {
+            let wallet = Wallet::new("Bench", "testnet");
+            let message = b"performance test message";
+
+            for _ in 0..500 {
+                let _ = wallet.sign_message(message);
+            }
+        })
+    });
+
+    group.finish();
+}
+
+/// Benchmark database batch operations
+fn bench_db_batch_operations(c: &mut Criterion) {
+    let temp_dir = tempdir().unwrap();
+    let config = StorageConfig {
+        data_dir: temp_dir.path().to_str().unwrap().to_string(),
+        db_cache_size_mb: 64,
+        max_open_files: 100,
+        enable_compression: false,
+        prune_blocks: false,
+        prune_target_gb: 1,
+    };
+
+    if let Ok(db) = BlockchainDB::open(&config) {
+        let mut group = c.benchmark_group("db_batch");
+        group.sample_size(10);
+
+        group.bench_function("batch_store_blocks", |b| {
+            b.iter(|| {
+                let consensus = ConsensusEngine::new(ConsensusParams::default());
+                for height in 0..50u64 {
+                    let genesis = consensus.create_genesis_block();
+                    let _ = db.store_block(&genesis, height);
+                }
+            })
+        });
+
+        group.finish();
+    }
+
+    let _ = temp_dir.close();
+}
+
+/// Run stress test benchmarks
+fn bench_stress(c: &mut Criterion) {
+    let mut group = c.benchmark_group("stress");
+    group.sample_size(10);
+    group.measurement_time(std::time::Duration::from_secs(20));
+
+    bench_realistic_block_workload(&mut group);
+    bench_mempool_stress(&mut group);
+    bench_signature_throughput(&mut group);
+    bench_db_batch_operations(&mut group);
+
+    group.finish();
+}
+
+criterion_group!(benches, bench_throughput, bench_latency, bench_startup, bench_stress);
 criterion_main!(benches);

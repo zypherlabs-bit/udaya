@@ -58,12 +58,12 @@ pub struct Mempool {
 }
 
 impl Mempool {
-    pub fn new(config: MempoolConfig, consensus: ConsensusEngine) -> Self {
+    pub fn new(config: MempoolConfig, consensus: ConsensusEngine, utxo_set: UTXOSet) -> Self {
         Self {
             transactions: DashMap::new(),
             fee_index: parking_lot::RwLock::new(BTreeMap::new()),
             orphans: DashMap::new(),
-            utxo_set: Arc::new(RwLock::new(UTXOSet::new())),
+            utxo_set: Arc::new(RwLock::new(utxo_set)),
             config,
             validator: TransactionValidator::new(consensus),
             total_bytes: Arc::new(RwLock::new(0)),
@@ -72,7 +72,12 @@ impl Mempool {
 
     /// Check if a transaction is in the mempool (or orphan pool)
     pub fn contains(&self, txid: &Txid) -> bool {
-        self.transactions.contains_key(txid) || self.orphans.contains_key(txid)
+        self.transactions.contains_key(&txid) || self.orphans.contains_key(&txid)
+    }
+
+    /// Sync the mempool's UTXO set with a new one from persistent storage
+    pub fn sync_utxo_set(&self, utxo_set: UTXOSet) {
+        *self.utxo_set.write() = utxo_set;
     }
 
     pub fn submit_transaction(
@@ -116,10 +121,10 @@ impl Mempool {
         {
             let utxo_set = self.utxo_set.read();
             for input in &tx.inputs {
-                if !utxo_set.contains(&input.previous_output) {
-                    if !self.transactions.contains_key(&input.previous_output.txid) {
-                        missing_inputs.push(input.previous_output.clone());
-                    }
+                if !utxo_set.contains(&input.previous_output)
+                    && !self.transactions.contains_key(&input.previous_output.txid)
+                {
+                    missing_inputs.push(input.previous_output.clone());
                 }
             }
         }
@@ -134,7 +139,7 @@ impl Mempool {
                 tx: tx.clone(),
                 txid,
                 fee,
-                fee_rate: if vsize > 0 { fee / vsize } else { 0 },
+                fee_rate: fee.checked_div(vsize).unwrap_or(0),
                 size: tx.size(),
                 vsize,
                 time: current_time,
@@ -161,7 +166,7 @@ impl Mempool {
     ) -> anyhow::Result<()> {
         let fee = self.calculate_fee(&tx, &self.utxo_set.read());
         let vsize = tx.vsize();
-        let fee_rate = if vsize > 0 { fee / vsize } else { 0 };
+        let fee_rate = fee.checked_div(vsize).unwrap_or(0);
 
         {
             let mut utxo_set = self.utxo_set.write();
@@ -375,6 +380,12 @@ struct FeeSample {
     _max_fee_rate: u64,
     avg_fee_rate: u64,
     _tx_count: usize,
+}
+
+impl Default for FeeEstimator {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl FeeEstimator {

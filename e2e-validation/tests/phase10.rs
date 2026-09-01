@@ -92,7 +92,7 @@ fn test_phase10_complete_end_to_end() {
     let (_dir, storage_config) = setup_temp_storage();
     let db = BlockchainDB::open(&storage_config).expect("Failed to open DB");
     let consensus = ConsensusEngine::new(ConsensusParams::default());
-    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone());
+    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone(), UTXOSet::new());
     let explorer = ExplorerEngine::new();
     let secp = Secp256k1::new();
     let now = SystemTime::now()
@@ -490,12 +490,12 @@ fn test_phase10_complete_end_to_end() {
 
     println!("  UTXO set now has {} entries", utxo_set.len());
     assert!(
-        utxo_set.len() > 0,
+        !utxo_set.is_empty(),
         "UTXO set should have entries after mining"
     );
 
     // Remove from mempool
-    mempool.remove_transactions(&[payment_tx.clone()]);
+    mempool.remove_transactions(std::slice::from_ref(&payment_tx));
     let mempool_stats_after = mempool.get_stats();
     assert_eq!(
         mempool_stats_after.total_transactions, 0,
@@ -833,7 +833,7 @@ fn test_phase10_complete_end_to_end() {
     println!("\n══════════════════════════════════════════════════════");
     println!("  ✅ PHASE 10 — REAL-WORLD VALIDATION PASSED");
     println!("══════════════════════════════════════════════════════");
-    println!("");
+    println!();
     println!("  Flow Summary:");
     println!("  ─────────────────────────────────────────────");
     println!("  1. Wallet A created → address generated      ✅");
@@ -871,7 +871,7 @@ fn test_phase10_mempool_orphan_resolution() {
     println!("══════════════════════════════════════════════════════\n");
 
     let consensus = ConsensusEngine::new(ConsensusParams::default());
-    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone());
+    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone(), UTXOSet::new());
     let now: u64 = 1_000_000_000;
     let height: u64 = 100;
 
@@ -1014,7 +1014,7 @@ fn test_phase10_block_template_mining() {
     let (_dir, storage_config) = setup_temp_storage();
     let db = BlockchainDB::open(&storage_config).expect("Failed to open DB");
     let consensus = ConsensusEngine::new(ConsensusParams::default());
-    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone());
+    let mempool = Mempool::new(MempoolConfig::default(), consensus.clone(), UTXOSet::new());
     let now: u64 = 2_000_000_000;
     let height: u64 = 200;
 
@@ -1042,7 +1042,7 @@ fn test_phase10_block_template_mining() {
         let dest_pk = create_deterministic_keypair(format!("DestKey_{}", i).as_bytes()).1;
         let dest_script = templates::p2pkh(&hash160(&dest_pk.serialize()));
 
-        let _funding_outpoint = OutPoint::new(Txid::compute(format!("funding_tx").as_bytes()), 0);
+        let _funding_outpoint = OutPoint::new(Txid::compute("funding_tx".as_bytes()), 0);
         let mut utxo_set = mempool.utxo_set.write();
         utxo_set.add_utxo(
             OutPoint::new(Txid::compute(format!("tx_output_{}", i).as_bytes()), 0),

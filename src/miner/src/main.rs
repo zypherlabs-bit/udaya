@@ -144,7 +144,7 @@ async fn run_solo_miner(
                 let counter = hashes_checked.clone();
 
                 std::thread::spawn(move || {
-                    let mut nonce_start = thread_id as u32 * (u32::MAX / threads as u32);
+                    let nonce_start = thread_id as u32 * (u32::MAX / threads as u32);
                     let nonce_end = if thread_id == threads - 1 {
                         u32::MAX
                     } else {
@@ -227,7 +227,7 @@ async fn run_solo_miner(
 
 async fn run_pool_miner(
     pool_url: &str,
-    wallet: &str,
+    _wallet: &str,
     worker: &str,
     worker_pass: &str,
     _threads: usize,
@@ -399,7 +399,7 @@ async fn handle_pool_message(
                         .unwrap()
                         .as_secs()
                         - start_time;
-                    if elapsed > 0 && *total_shares % 100 == 0 {
+                    if elapsed > 0 && (*total_shares).is_multiple_of(100) {
                         let hash_rate = *total_shares as f64 / elapsed as f64;
                         info!(
                             "Shares: {} valid, {} invalid, {:.2} shares/s",

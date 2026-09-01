@@ -2,9 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 
-/// Udaya API Infrastructure
-/// JSON-RPC, REST, and WebSocket API endpoints
-
+/// Udaya API Infrastructure - JSON-RPC, REST, and WebSocket API endpoints
 /// JSON-RPC Request
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JsonRpcRequest {
@@ -189,6 +187,7 @@ impl Default for ApiConfig {
 }
 
 /// Create standard blockchain info response
+#[allow(clippy::too_many_arguments)]
 pub fn blockchain_info_to_json(
     chain: &str,
     blocks: u64,

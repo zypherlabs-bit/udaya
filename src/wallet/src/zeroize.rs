@@ -145,6 +145,7 @@ pub struct MemoryAuditEntry {
 
 /// Run a comprehensive memory handling audit - VERIFIED at runtime
 /// All entries marked true have been confirmed via testing
+#[allow(clippy::vec_init_then_push)]
 pub fn run_memory_audit() -> Vec<MemoryAuditEntry> {
     let mut results = Vec::new();
 

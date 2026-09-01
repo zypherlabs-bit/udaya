@@ -166,7 +166,7 @@ class ShortTestnetValidator:
 
         url = f"http://localhost:{node['rpc_port']}"
         headers = {'Content-Type': 'application/json'}
-        auth = ('udaya', 'testnetpassword')
+        auth = ('udaya', 'testnet-rpc-secure-pass')
 
         payload = {
             "jsonrpc": "2.0",
