@@ -1,0 +1,54 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/ug-core",
+    "crates/ug-consensus",
+    "crates/ug-net",
+    "crates/ug-node",
+]
+# The pre-existing prototype/scaffold directories are intentionally not part of
+# this workspace. They remain in the repository as historical research output
+# and are not compiled into the Udaya Global node.
+exclude = [
+    "src",
+    "prototype",
+    "crates/udaya-primitives",
+    "crates/udaya-crypto",
+    "crates/udaya-consensus",
+    "crates/udaya-admission",
+    "crates/udaya-committee",
+    "crates/udaya-randomness",
+    "crates/udaya-execution",
+    "crates/udaya-p2p",
+    "crates/udaya-storage",
+    "crates/udaya-state",
+    "crates/udaya-node",
+    "crates/udaya-wallet-core",
+    "crates/udaya-rpc",
+    "crates/udaya-explorer",
+    "crates/udaya-simulator",
+    "crates/udaya-security-tests",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+
+[workspace.dependencies]
+bech32 = "0.11"
+clap = { version = "4.4", features = ["derive"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+ed25519-dalek = { version = "2", features = ["rand_core", "zeroize"] }
+hex = "0.4"
+proptest = "1.4"
+rand = "0.8"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sha2 = "0.10"
+snow = "0.10"
+tempfile = "3.8"
+thiserror = "1.0"
+tokio = { version = "1.35", features = ["full"] }
+x25519-dalek = { version = "2", features = ["static_secrets"] }
+zeroize = { version = "1", features = ["derive"] }

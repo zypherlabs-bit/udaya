@@ -1,0 +1,17 @@
+# cargo-audit configuration for Udaya Global.
+[advisories]
+ignore = []
+informational_warnings = ["unmaintained", "unsound", "notice"]
+severity_threshold = "low"
+
+[output]
+format = "json"
+file = "test-results/dependency-audit.json"
+quiet = false
+color = "auto"
+
+[database]
+path = "~/.cargo/advisory-db"
+url = "https://github.com/rustsec/advisory-db.git"
+fetch = true
+stale = false

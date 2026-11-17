@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Releases &amp; Downloads — Udaya Global</title>
+    <meta name="description" content="Udaya Global source code, release binaries, SBOMs and the final GO/NO-GO report.">
+    <link rel="stylesheet" href="/css/ecosystem.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="/logo/udaya_logo_favicon.png">
+    <style>
+        body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 0; background: #0b0f1a; color: #e5e7eb; }
+        a { color: #00e5ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .container { max-width: 860px; margin: 0 auto; padding: 40px 20px; }
+        header { border-bottom: 1px solid #1f2a44; padding-bottom: 16px; margin-bottom: 32px; }
+        header a.back { color: #9ca3af; text-decoration: none; font-size: 0.9rem; }
+        header a.back:hover { color: #fff; }
+        h1 { font-size: 1.75rem; margin: 0 0 8px 0; letter-spacing: -0.4px; }
+        h2 { font-size: 1.25rem; margin: 32px 0 12px 0; color: #00e5ff; }
+        p { line-height: 1.6; color: #cbd5e1; }
+        .card { background: #111827; border: 1px solid #1f2a44; border-radius: 12px; padding: 20px 24px; margin: 16px 0; }
+        .card h3 { margin: 0 0 10px 0; font-size: 1.05rem; color: #fff; }
+        .card ul { margin: 0 0 12px 0; padding-left: 20px; color: #cbd5e1; }
+        .card ul li { margin: 4px 0; }
+        .btn { display: inline-block; background: #00e5ff; color: #00161c; padding: 10px 18px; border-radius: 8px; font-weight: 700; margin: 6px 8px 6px 0; text-decoration: none; }
+        .btn:hover { background: #33f0ff; }
+        .btn-ghost { display: inline-block; background: transparent; color: #00e5ff; border: 1px solid #00e5ff; padding: 10px 18px; border-radius: 8px; font-weight: 700; margin: 6px 8px 6px 0; text-decoration: none; }
+        .btn-ghost:hover { background: rgba(0,229,255,0.1); }
+        .tag { display: inline-block; font-size: 0.75rem; padding: 2px 8px; border-radius: 6px; margin-right: 6px; margin-bottom: 6px; }
+        .tag-nogo { background: #7f1d1d; color: #fecaca; border: 1px solid #991b1b; }
+        .tag-info { background: #1e3a8a; color: #bfdbfe; border: 1px solid #2563eb; }
+        pre { background: #000; padding: 12px 16px; border-radius: 8px; overflow: auto; font-size: 0.85rem; color: #a5f3fc; }
+        code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; margin: 24px 0; }
+        .notice { background: #451a03; border: 1px solid #9a3412; color: #fed7aa; border-radius: 8px; padding: 14px 18px; margin: 20px 0; }
+        .notice b { color: #fdba74; }
+    </style>
+</head>
+<body>
+    <header>
+        <a class="back" href="/">&#8592; Back to Udaya Global</a>
+        <h1>Releases &amp; Downloads</h1>
+        <p>Udaya Global — independent Layer-1 blockchain (U-ADC consensus).</p>
+    </header>
+
+    <div class="notice">
+        <b>Release status: NO-GO for production mainnet.</b> The codebase passes all achievable automated
+        quality, correctness, consensus and monetary-isolation gates, but production launch conditions are not
+        yet met (no wallet, no external security audit, no transport hardening, no separately authorized reward
+        reserve, no signed release). See the <a href="#gono">GO/NO-GO report</a>. Do not treat any artifact
+        below as production-ready mainnet software.
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h3>Source code</h3>
+            <p>Udaya Global is developed in the <a href="https://github.com/zypherlabs-bit/udaya" target="_blank" rel="noopener">zypherlabs-bit/udaya</a> repository, in the <code>udaya-global/</code> workspace.</p>
+            <p>The pre-existing Udaya proof-of-work mainnet (root <code>src/</code>) is protected and is <b>not</b> modified by Udaya Global.</p>
+            <a class="btn" href="https://github.com/zypherlabs-bit/udaya" target="_blank">View on GitHub</a>
+        </div>
+
+        <div class="card">
+            <h3>SBOM (software bill of materials)</h3>
+            <p>CycloneDX JSON SBOMs are generated for each workspace crate as part of the release quality gates:</p>
+            <ul>
+                <li><code>ug-core.cdx.json</code></li>
+                <li><code>ug-consensus.cdx.json</code></li>
+                <li><code>ug-net.cdx.json</code></li>
+                <li><code>ug-node.cdx.json</code></li>
+            </ul>
+            <a class="btn-ghost" href="https://github.com/zypherlabs-bit/udaya" target="_blank">Browse SBOMs</a>
+        </div>
+    </div>
+
+    <h2 id="install">Node installation</h2>
+    <div class="card">
+        <h3>Build from source</h3>
+        <p>Udaya Global is a Rust workspace (edition 2021). Build and test with:</p>
+        <pre>cargo build --workspace
+cargo test --workspace
+cargo clippy --workspace --all-targets
+cargo fmt --check --all</pre>
+        <p>The GNU Windows target requires the MinGW linker from <code>C:\msys64\mingw64\bin</code> (set
+        <code>CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER</code>).</p>
+    </div>
+
+    <h2 id="gono">GO / NO-GO report</h2>
+    <div class="card">
+        <h3>Final certification</h3>
+        <div class="tag tag-nogo">VERDICT: NO-GO</div>
+        <div class="tag tag-info">Not authorized for production mainnet launch</div>
+        <p>Read the full engineering assessment:</p>
+        <ul>
+            <li><a href="#gono-report">UDAYA_GLOBAL_FINAL_GO_NO_GO_REPORT.md</a> — overall verdict, build/test/security/economic results, remaining risks</li>
+            <li><a href="#completion-report">FINAL_PROJECT_COMPLETION_REPORT.md</a> — completed features, architecture, testing, remaining work</li>
+        </ul>
+        <p>Both reports are published in the repository under <code>udaya-global/docs/release/</code>.</p>
+        <a class="btn" href="https://github.com/zypherlabs-bit/udaya" target="_blank">Read reports on GitHub</a>
+    </div>
+
+    <h2>What is implemented vs. planned</h2>
+    <div class="card">
+        <table style="width:100%;border-collapse:collapse;color:#cbd5e1;">
+            <thead><tr><th style="text-align:left;padding:6px;border-bottom:1px solid #1f2a44;">Implemented</th><th style="text-align:left;padding:6px;border-bottom:1px solid #1f2a44;">Planned / not yet complete</th></tr></thead>
+            <tbody>
+                <tr><td style="padding:6px;border-bottom:1px solid #1f2a44;">U-ADC consensus (3f+1, 2f+1 quorum)</td><td style="padding:6px;border-bottom:1px solid #1f2a44;">Wallet (create/import/recover/sign/send)</td></tr>
+                <tr><td style="padding:6px;border-bottom:1px solid #1f2a44;">UTXO transactions, double-spend prevention</td><td style="padding:6px;border-bottom:1px solid #1f2a44;">RPC server and block explorer</td></tr>
+                <tr><td style="padding:6px;border-bottom:1px solid #1f2a44;">Universal fee policy (UG-UFP)</td><td style="padding:6px;border-bottom:1px solid #1f2a44;">QUIC, NAT traversal, full DHT, IPv6</td></tr>
+                <tr><td style="padding:6px;border-bottom:1px solid #1f2a44;">Community incentives accounting (UG-CIIP)</td><td style="padding:6px;border-bottom:1px solid #1f2a44;">Committee rotation, slashing, VRF</td></tr>
+                <tr><td style="padding:6px;border-bottom:1px solid #1f2a44;">Quality gates: build, test, clippy, audit, deny, SBOM</td><td style="padding:6px;border-bottom:1px solid #1f2a44;">Independent external security audit</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <footer style="margin-top:48px;padding-top:24px;border-top:1px solid #1f2a44;color:#6b7280;font-size:0.85rem;">
+        Udaya Global &middot; Open source &middot; Not financial advice &middot; Do not publish private keys or seed phrases.
+    </footer>
+</body>
+</html>

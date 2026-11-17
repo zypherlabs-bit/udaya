@@ -1,0 +1,27 @@
+[package]
+name = "ug-net"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+ug-core = { path = "../ug-core" }
+ug-consensus = { path = "../ug-consensus" }
+ed25519-dalek.workspace = true
+hex.workspace = true
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+snow.workspace = true
+thiserror.workspace = true
+tokio.workspace = true
+x25519-dalek.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+tempfile.workspace = true
+
+[[bench]]
+name = "net"
+harness = false

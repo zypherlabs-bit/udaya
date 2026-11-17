@@ -1,0 +1,31 @@
+[package]
+name = "ug-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Udaya Global canonical types, transaction model, UTXO state and block execution"
+
+[dependencies]
+bech32.workspace = true
+ed25519-dalek.workspace = true
+hex.workspace = true
+
+rand.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+zeroize.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+proptest.workspace = true
+tempfile.workspace = true
+
+[[bench]]
+name = "core"
+harness = false
+
+[lib]
+name = "ug_core"
+path = "src/lib.rs"
